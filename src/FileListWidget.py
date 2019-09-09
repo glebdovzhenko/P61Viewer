@@ -10,13 +10,9 @@ class FileListWidget(QWidget):
     def __init__(self, parent=None, *args):
         super().__init__(parent, *args)
 
-        default_list = []
-        self.file_opener = lambda *xs: True  # int(xs[0][-4]) % 2
-
         # List model - view
-        self.file_list_model = FileListModel(default_list)
+        self.file_list_model = FileListModel([])
         self.file_list_view = QListView()
-        self.file_list_view.setSelectionMode(QAbstractItemView.MultiSelection)
         self.file_list_view.setModel(self.file_list_model)
 
         # buttons
@@ -27,14 +23,15 @@ class FileListWidget(QWidget):
         bplus.clicked.connect(self.bplus_onclick)
         bminus.clicked.connect(self.bminus_onclick)
 
+        # properties
+        self.file_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+        # layouts
         layout = QGridLayout()
         layout.addWidget(bplus, 1, 2, 1, 1)
         layout.addWidget(bminus, 1, 3, 1, 1)
         layout.addWidget(self.file_list_view, 2, 1, 1, 3)
         self.setLayout(layout)
-
-    def set_file_opener(self, fn):
-        self.file_opener = fn
 
     def bminus_onclick(self):
         rows = [i.row() for i in self.file_list_view.selectedIndexes()]
