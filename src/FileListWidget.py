@@ -66,7 +66,7 @@ class FileListWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    qapp = QApplication(sys.argv)
+    q_app = QApplication(sys.argv)
     app = FileListWidget()
     app.show()
-    sys.exit(qapp.exec_())
+    sys.exit(q_app.exec_())

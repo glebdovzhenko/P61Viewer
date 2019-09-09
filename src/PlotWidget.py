@@ -34,7 +34,7 @@ class PlotWidget(QWidget):
 
 
 if __name__ == '__main__':
-    qapp = QApplication(sys.argv)
+    q_app = QApplication(sys.argv)
     app = PlotWidget()
     app.show()
-    sys.exit(qapp.exec_())
+    sys.exit(q_app.exec_())
