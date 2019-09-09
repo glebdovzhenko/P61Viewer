@@ -77,9 +77,9 @@ class FileListWidget(QWidget):
 
         for row in rows:
             self.file_list_model.file_data_list[row].set_show_status(bool(self.check_box.checkState()))
-
-        self.file_list_model.dataChanged.emit(self.file_list_model.index(min(rows)),
-                                              self.file_list_model.index(max(rows)))
+        if rows:
+            self.file_list_model.dataChanged.emit(self.file_list_model.index(min(rows)),
+                                                  self.file_list_model.index(max(rows)))
 
     def on_selection_changed(self):
         status = [bool(self.file_list_model.data(idx, role=Qt.CheckStateRole))
