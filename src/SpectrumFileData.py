@@ -14,8 +14,8 @@ class SpectrumFileData:
 
     def short_name(self):
         tmp = os.path.basename(self._name)
-        if len(tmp) > 20:
-            return '...' + tmp[-20:]
+        if len(tmp) > 30:
+            return '...' + tmp[-30:]
         else:
             return '.../' + tmp
 
@@ -24,6 +24,9 @@ class SpectrumFileData:
 
     def change_show_status(self):
         self._show = not self._show
+
+    def set_show_status(self, value):
+        self._show = value
 
     def set_name(self, new_name):
         self._name = new_name

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QApplication, QAbstractItemView, QPushButton, QGridLayout, QFileDialog, \
-    QErrorMessage, QListView
-from PyQt5.QtCore import QSize
+    QErrorMessage, QListView, QCheckBox
+from PyQt5.QtCore import QSize, Qt
 
 from src.SpectrumFileData import SpectrumFileData
 from src.FileListModel import FileListModel
@@ -15,23 +15,31 @@ class FileListWidget(QWidget):
         self.file_list_view = QListView()
         self.file_list_view.setModel(self.file_list_model)
 
-        # buttons
+        # buttons and checkboxes
         bplus = QPushButton('+')
         bminus = QPushButton('-')
+        self.check_box = QCheckBox(' ')
+        self.check_box.setTristate(False)
         bplus.setFixedSize(QSize(51, 32))
         bminus.setFixedSize(QSize(51, 32))
         bplus.clicked.connect(self.bplus_onclick)
         bminus.clicked.connect(self.bminus_onclick)
+        self.check_box.clicked.connect(self.check_box_on_click)
 
         # properties
         self.file_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         # layouts
         layout = QGridLayout()
-        layout.addWidget(bplus, 1, 2, 1, 1)
-        layout.addWidget(bminus, 1, 3, 1, 1)
-        layout.addWidget(self.file_list_view, 2, 1, 1, 3)
         self.setLayout(layout)
+        layout.addWidget(self.check_box, 1, 1, 1, 1)
+        layout.addWidget(bplus, 1, 3, 1, 1)
+        layout.addWidget(bminus, 1, 4, 1, 1)
+        layout.addWidget(self.file_list_view, 2, 1, 1, 4)
+
+        # signal handlers
+        self.file_list_view.selectionModel().selectionChanged.connect(self.on_selection_changed)
+        self.file_list_model.dataChanged.connect(self.on_selection_changed)
 
     def bminus_onclick(self):
         rows = [i.row() for i in self.file_list_view.selectedIndexes()]
@@ -62,6 +70,27 @@ class FileListWidget(QWidget):
             msg.exec_()
 
         self.file_list_model.append_files(success)
+
+    def check_box_on_click(self):
+        self.check_box.setTristate(False)
+        rows = [idx.row() for idx in self.file_list_view.selectionModel().selectedIndexes()]
+
+        for row in rows:
+            self.file_list_model.file_data_list[row].set_show_status(bool(self.check_box.checkState()))
+
+        self.file_list_model.dataChanged.emit(self.file_list_model.index(min(rows)),
+                                              self.file_list_model.index(max(rows)))
+
+    def on_selection_changed(self):
+        status = [bool(self.file_list_model.data(idx, role=Qt.CheckStateRole))
+                  for idx in self.file_list_view.selectionModel().selectedIndexes()]
+
+        if all(status):
+            self.check_box.setCheckState(Qt.Checked)
+        elif not any(status):
+            self.check_box.setCheckState(Qt.Unchecked)
+        else:
+            self.check_box.setCheckState(Qt.PartiallyChecked)
 
 
 if __name__ == '__main__':

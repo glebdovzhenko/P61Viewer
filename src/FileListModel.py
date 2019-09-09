@@ -24,7 +24,7 @@ class FileListModel(QAbstractListModel):
             return False
 
         if role == Qt.CheckStateRole:
-            self.file_data_list[index.row()].change_show_status()
+            self.file_data_list[index.row()].set_show_status(bool(value))
             self.dataChanged.emit(index, index)
             return True
         return False
