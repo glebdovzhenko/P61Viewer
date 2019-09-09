@@ -19,13 +19,13 @@ class SpectrumViewer(QMainWindow):
 
         self.setCentralWidget(self.cw)
 
-        self.file_w.table_model.dataChanged.connect(self.on_data_changed)
+        self.file_w.file_list_model.dataChanged.connect(self.on_data_changed)
 
     def on_data_changed(self):
-        self.plot_w._line_ax.clear()
-        for dd in self.file_w.table_model.data_to_plot():
-            self.plot_w._line_ax.plot(dd['keV'], dd['Int'])
-        self.plot_w._line_ax.figure.canvas.draw()
+        self.plot_w.clear_line_axes()
+        for dd in self.file_w.file_list_model.data_to_plot():
+            self.plot_w.plot_line_axes(dd['keV'], dd['Int'])
+        self.plot_w.update_line_axes()
 
 
 if __name__ == '__main__':
