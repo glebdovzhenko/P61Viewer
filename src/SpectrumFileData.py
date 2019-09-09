@@ -2,6 +2,7 @@ import os
 import json
 import h5py
 import pandas as pd
+from matplotlib.lines import Line2D
 
 
 class SpectrumFileData:
@@ -11,6 +12,7 @@ class SpectrumFileData:
         self.plot_color = None
         self.spectrum_data = None
         self.spectrum_metadata = None
+        self.plot_line = None
 
     def short_name(self):
         tmp = os.path.basename(self._name)
@@ -31,6 +33,13 @@ class SpectrumFileData:
     def set_name(self, new_name):
         self._name = new_name
 
+    def set_plot_color(self, color):
+        self.plot_color = color
+        self.plot_line.set_color(color)
+
+    def get_color(self):
+        return int(self.plot_color[1:3], 16), int(self.plot_color[3:5], 16), int(self.plot_color[5:7], 16)
+
     def get_name(self):
         return self._name
 
@@ -44,6 +53,7 @@ class SpectrumFileData:
                 self.spectrum_data = pd.DataFrame(f['Spectrum'][:], columns=['keV', 'Int'])
                 self.spectrum_metadata = json.loads(f['Metadata'][()])
                 self.set_name(f_name)
+                self.plot_line = Line2D(self.spectrum_data['keV'], self.spectrum_data['Int'])
                 return True
         except Exception as e:
             return False

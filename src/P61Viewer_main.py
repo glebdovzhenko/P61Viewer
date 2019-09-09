@@ -5,8 +5,6 @@ from src.PlotWidget import PlotWidget
 
 
 class SpectrumViewer(QMainWindow):
-    color_cycle = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-                   '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
@@ -32,9 +30,10 @@ class SpectrumViewer(QMainWindow):
 
     def on_data_changed(self):
         self.plot_w.clear_line_axes()
-        for dd in self.file_w.file_list_model.data_to_plot():
-            self.plot_w.plot_line_axes(dd['keV'], dd['Int'])
-        self.plot_w.update_line_axes()
+        for line in self.file_w.file_list_model.data_to_plot():
+            self.plot_w.axes_add_line(line)
+        self.plot_w.update_line_axes(autoscale=False)
+
 
 
 if __name__ == '__main__':
