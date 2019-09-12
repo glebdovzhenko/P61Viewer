@@ -63,6 +63,8 @@ class SpectrumFileData:
         try:
             with h5py.File(f_name, 'r') as f:
                 frames = np.sum(f['entry/instrument/xspress3/%s/histogram' % channel][:], axis=0)
+                frames[:20] = 0.0
+                frames[-1] = 0.0
                 bins = np.arange(frames.shape[0])
                 print(frames)
                 print(bins)
