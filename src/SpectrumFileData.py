@@ -2,6 +2,7 @@ import os
 import json
 import h5py
 import pandas as pd
+import numpy as np
 from matplotlib.lines import Line2D
 
 
@@ -56,4 +57,19 @@ class SpectrumFileData:
                 self.plot_line = Line2D(self.spectrum_data['keV'], self.spectrum_data['Int'])
                 return True
         except Exception as e:
+            return False
+
+    def init_from_nexus(self, f_name, channel):
+        try:
+            with h5py.File(f_name, 'r') as f:
+                frames = np.sum(f['entry/instrument/xspress3/%s/histogram' % channel][:], axis=0)
+                bins = np.arange(frames.shape[0])
+                print(frames)
+                print(bins)
+                self.spectrum_data = pd.DataFrame({'Bins': bins, 'Int': frames})
+                self.set_name(f_name + ':' + channel)
+                self.plot_line = Line2D(self.spectrum_data['Bins'], self.spectrum_data['Int'])
+                return True
+        except Exception as e:
+            print(e)
             return False

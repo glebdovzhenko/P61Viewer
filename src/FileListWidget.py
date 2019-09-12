@@ -53,14 +53,22 @@ class FileListWidget(QWidget):
         files, _ = \
             QFileDialog.getOpenFileNames(self, 'Add spectra',
                                          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/pwdr_h5',
-                                         'All Files (*);;HDF5 files (*.h5)', options=QFileDialog.Options())
+                                         'All Files (*);;HDF5 files (*.h5);;NEXUS files (*.nxs)',
+                                         options=QFileDialog.Options())
         files = [ff for ff in files if ff not in self.file_list_model.get_names()]
 
         success, failed = [], []
+        # for ff in files:
+        #     tmp = SpectrumFileData('')
+        #     if tmp.init_from_h5(ff):
+        #         success.append(tmp)
+        #     else:
+        #         failed.append(ff)
+
         for ff in files:
-            tmp = SpectrumFileData('')
-            if tmp.init_from_h5(ff):
-                success.append(tmp)
+            tmp0, tmp1 = SpectrumFileData(''), SpectrumFileData('')
+            if tmp0.init_from_nexus(ff, 'channel00') and tmp1.init_from_nexus(ff, 'channel01'):
+                success.extend([tmp0, tmp1])
             else:
                 failed.append(ff)
 
