@@ -47,6 +47,7 @@ class NexusHistogram:
         self._plot_color_mpl = nval
         self._plot_color_qt = int(self._plot_color_mpl[1:3], 16), int(self._plot_color_mpl[3:5], 16), \
                               int(self._plot_color_mpl[5:7], 16)
+        self._plot_line.set_color(nval)
 
     def get_dataset_id(self):
         return self._dataset_id

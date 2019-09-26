@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QWidget, QApplication, QAbstractItemView, QPushButto
     QErrorMessage, QListView, QCheckBox
 from PyQt5.QtCore import QSize, Qt
 
-from src.SpectrumFileData import SpectrumFileData
 from src.FileListModel import FileListModel
 
 

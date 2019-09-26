@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton
 import sys
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -13,7 +13,7 @@ class PlotWidget(QWidget):
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
-        self._line_ax.set_xlabel('Bins')
+        self._line_ax.set_xlabel('Energy, [keV]')
         self._line_ax.set_ylabel('Intensity, [counts]')
 
         # buttons

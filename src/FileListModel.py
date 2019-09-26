@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
 from PyQt5.QtGui import QColor
-from src.SpectrumFileData import SpectrumFileData
+from src.NexusHistogram import NexusHistogram
+import os
 
 
 class FileListModel(QAbstractListModel):
@@ -23,21 +24,21 @@ class FileListModel(QAbstractListModel):
             return QVariant()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            return QVariant(self._histogram_list[index.row()].short_name())
+            return QVariant(self._histogram_list[index.row()].name)
         elif role == Qt.ForegroundRole:
-            if self._histogram_list[index.row()].show():
-                return QColor(*self._histogram_list[index.row()].get_color(), 255)
+            if self._histogram_list[index.row()].plot_show:
+                return QColor(*self._histogram_list[index.row()].plot_color_qt, 255)
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
-            return Qt.Checked if self._histogram_list[index.row()].show() else Qt.Unchecked
+            return Qt.Checked if self._histogram_list[index.row()].plot_show else Qt.Unchecked
 
     def setData(self, index: QModelIndex, value, role: int = Qt.EditRole):
         if not index.isValid():
             return False
 
         if role == Qt.CheckStateRole:
-            self._histogram_list[index.row()].set_show_status(bool(value))
+            self._histogram_list[index.row()].plot_show = bool(value)
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -53,7 +54,7 @@ class FileListModel(QAbstractListModel):
 
     def insertRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
         self.beginInsertRows(parent, row, row + count - 1)
-        self._histogram_list = self._histogram_list[:row] + [SpectrumFileData('') for _ in range(count)] + \
+        self._histogram_list = self._histogram_list[:row] + [NexusHistogram() for _ in range(count)] + \
                                self._histogram_list[row:]
         self.endInsertRows()
         return True
@@ -62,12 +63,9 @@ class FileListModel(QAbstractListModel):
         self._color_count += 1
         return self.color_cycle[self._color_count % len(self.color_cycle)]
 
-    def get_names(self):
-        return [x.get_name() for x in self._histogram_list]
-
     def data_to_plot(self):
         for ff in self._histogram_list:
-            if ff.show():
+            if ff.plot_show:
                 yield ff.plot_line
 
     def get_plot_show(self, idxs):
@@ -75,25 +73,34 @@ class FileListModel(QAbstractListModel):
 
     def update_plot_show(self, idxs, value):
         for idx in idxs:
-            self._histogram_list[idx.row()].set_show_status(value)
+            self._histogram_list[idx.row()].plot_show = value
         self.dataChanged.emit(min(idxs), max(idxs))
 
     def append_files(self, f_list):
-        names = [x.get_name() for x in self._histogram_list]
+        ids = [x.dataset_id for x in self._histogram_list]
+        ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', 'entry/instrument/xspress3/channel01/histogram'
 
         success, failed = [], []
         for ff in f_list:
-            tmp0, tmp1 = SpectrumFileData(''), SpectrumFileData('')
-            if tmp0.init_from_nexus(ff, 'channel00') and tmp1.init_from_nexus(ff, 'channel01'):
-                success.extend([tmp0, tmp1])
-            else:
-                failed.append(ff)
+            if (ff + ':' + ch0) not in ids:
+                tmp0 = NexusHistogram()
+                if tmp0.fill(ff, ch0, os.path.basename(ff) + ':ch0'):
+                    success.append(tmp0)
+                else:
+                    failed.append(ff)
+
+            if (ff + ':' + ch1) not in ids:
+                tmp1 = NexusHistogram()
+                if tmp1.fill(ff, ch1, os.path.basename(ff) + ':ch1'):
+                    success.append(tmp1)
+                else:
+                    failed.append(ff)
 
         rc, fl = self.rowCount(), len(success)
         self.insertRows(rc, fl)
         for i in range(rc, rc + fl):
             self._histogram_list[i] = success[i - rc]
-            self._histogram_list[i].set_plot_color(self._next_color())
+            self._histogram_list[i].plot_color_mpl = self._next_color()
         self.dataChanged.emit(self.index(rc, 0), self.index(rc + fl, 0))
 
         return failed
