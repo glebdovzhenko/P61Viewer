@@ -12,10 +12,6 @@ class FileListModel(QAbstractListModel):
         self.file_data_list = init_data.copy()
         self._color_count = 0
 
-    def _next_color(self):
-        self._color_count += 1
-        return self.color_cycle[self._color_count % len(self.color_cycle)]
-
     def rowCount(self, parent=QModelIndex()) -> int:
         return len(self.file_data_list)
 
@@ -58,6 +54,10 @@ class FileListModel(QAbstractListModel):
             self.file_data_list[row:]
         self.endInsertRows()
         return True
+
+    def _next_color(self):
+        self._color_count += 1
+        return self.color_cycle[self._color_count % len(self.color_cycle)]
 
     def append_files(self, f_list):
         rc, fl = self.rowCount(), len(f_list)
