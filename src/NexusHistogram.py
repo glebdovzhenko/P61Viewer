@@ -5,7 +5,7 @@ from matplotlib.lines import Line2D
 
 
 class NexusHistogram:
-    kev_per_bin = 50
+    kev_per_bin = 50.
 
     def __init__(self):
         self._dataset = None         # internal
