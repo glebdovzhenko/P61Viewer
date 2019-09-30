@@ -8,8 +8,8 @@ import os
 
 
 if __name__ == '__main__':
-    wd = 'test_files/pwdr_csv'
-    dd = 'test_files/pwdr_nexus'
+    wd = 'test_files/generated/pwdr_csv'
+    dd = 'test_files/generated/pwdr_nexus'
 
     tmpl = 'Al2236-%05d_tif_A%d.csv'
     n_bins = 4096
