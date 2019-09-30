@@ -108,7 +108,7 @@ class LorentzianFit(PeakFit):
 
 class PsVoigtFit(PeakFit):
     param_names = ('A', 'n', 'x0', 'g', 's', 'a', 'b')
-    func_label = 'y[x] = %s * (%s * exp{-0.5 * ((x - %s) / %s) ** 2} + ' \
+    func_label = 'y[x] = %s * (%s * exp{-0.5 * ((x - %s) / %s) ** 2} + \n' \
                  '((1 - %s) * %s ** 2) / ((x - %s) ** 2 + %s ** 2))) + %s * x + %s' \
                  % (param_names[0], param_names[1], param_names[2], param_names[4], param_names[1],
                     param_names[3], param_names[2], param_names[3], param_names[5], param_names[6])
@@ -134,25 +134,30 @@ class PsVoigtFit(PeakFit):
 
 
 if __name__ == '__main__':
-    import pandas as pd
+    from src.NexusHistogram import NexusHistogram
     from matplotlib import pyplot as plt
+    import os
 
-    d = pd.read_csv('/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/pwdr_csv/Al2236-00065_tif_A0.csv',
-                    skiprows=12, header=0, index_col='x')
-    d.drop(['y_calc', 'y_bkg', 'Q'], axis=1, inplace=True)
-    d = d[4.4:4.65]
+    f_name = '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/' \
+             'Co57_2019-09-30::09:10:30_.nxs'
+    ch_name = 'entry/instrument/xspress3/channel00/histogram'
 
-    gf = GaussianFit(xdata=d.index, ydata=d['y_obs'])
+    d = NexusHistogram()
+    d.fill(f_name, ch_name, os.path.basename(f_name) + ':ch0')
+    d = d._dataset
+    d = d[120:124]
+
+    gf = GaussianFit(xdata=d.index, ydata=d.values)
     gf.minimize()
     print(gf.func_label)
     print(gf.pretty_params)
 
-    lf = LorentzianFit(xdata=d.index, ydata=d['y_obs'])
+    lf = LorentzianFit(xdata=d.index, ydata=d.values)
     lf.minimize()
     print(lf.func_label)
     print(lf.pretty_params)
 
-    pvf = PsVoigtFit(xdata=d.index, ydata=d['y_obs'])
+    pvf = PsVoigtFit(xdata=d.index, ydata=d.values)
     pvf.minimize()
     print(pvf.func_label)
     print(pvf.pretty_params)

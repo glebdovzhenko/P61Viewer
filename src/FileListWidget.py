@@ -41,15 +41,13 @@ class FileListWidget(QWidget):
         self.file_list_model.dataChanged.connect(self.check_box_update)
 
     def bminus_onclick(self):
-        rows = [i.row() for i in self.file_list_view.selectedIndexes()]
-        for i in sorted(rows, reverse=True):
-            self.file_list_model.removeRow(i)
+        self.file_list_model.remove_files(self.file_list_view.selectedIndexes())
 
     def bplus_onclick(self):
         files, _ = \
             QFileDialog.getOpenFileNames(self, 'Add spectra',
                                          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/pwdr_h5',
-                                         'All Files (*);;HDF5 files (*.h5);;NEXUS files (*.nxs)',
+                                         'All Files (*);;NEXUS files (*.nxs)',
                                          options=QFileDialog.Options())
 
         failed = self.file_list_model.append_files(files)

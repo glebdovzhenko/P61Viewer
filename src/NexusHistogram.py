@@ -5,7 +5,7 @@ from matplotlib.lines import Line2D
 
 
 class NexusHistogram:
-    kev_per_bin = 50.
+    kev_per_bin = 5E-2
 
     def __init__(self):
         self._dataset = None         # internal
@@ -70,8 +70,10 @@ class NexusHistogram:
                 frames[-1] = 0.0
 
                 kev = (np.arange(frames.shape[0]) + 0.5) * self.kev_per_bin
-                self._dataset = pd.DataFrame({'keV': kev, 'Int': frames})
-                self._plot_line = Line2D(self._dataset['keV'], self._dataset['Int'])
+                # self._dataset = pd.DataFrame({'keV': kev, 'Int': frames})
+                # self._plot_line = Line2D(self._dataset['keV'], self._dataset['Int'])
+                self._dataset = pd.Series(frames, index=kev)
+                self._plot_line = Line2D(self._dataset.index, self._dataset.values)
 
                 # TODO: add metadata fill
 

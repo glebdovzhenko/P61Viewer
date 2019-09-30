@@ -74,7 +74,8 @@ class FileListModel(QAbstractListModel):
     def update_plot_show(self, idxs, value):
         for idx in idxs:
             self._histogram_list[idx.row()].plot_show = value
-        self.dataChanged.emit(min(idxs), max(idxs))
+        if idxs:
+            self.dataChanged.emit(min(idxs), max(idxs))
 
     def append_files(self, f_list):
         ids = [x.dataset_id for x in self._histogram_list]
@@ -104,3 +105,9 @@ class FileListModel(QAbstractListModel):
         self.dataChanged.emit(self.index(rc, 0), self.index(rc + fl, 0))
 
         return failed
+
+    def remove_files(self, idx):
+        rows = [i.row() for i in idx]
+        for i in sorted(rows, reverse=True):
+            self.removeRow(i)
+        self.dataChanged.emit(min(idx), max(idx))
