@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, QHBoxLayout
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 
 from src.PeakFit import GaussianFit, LorentzianFit, PsVoigtFit

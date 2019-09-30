@@ -4,7 +4,7 @@ from src.FileListWidget import FileListWidget
 from src.PlotWidget import PlotWidget
 
 
-class SpectrumViewer(QMainWindow):
+class P61BViewer(QMainWindow):
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
@@ -35,9 +35,8 @@ class SpectrumViewer(QMainWindow):
         self.plot_w.update_line_axes(autoscale=False)
 
 
-
 if __name__ == '__main__':
     q_app = QApplication(sys.argv)
-    app = SpectrumViewer()
+    app = P61BViewer()
     app.show()
     sys.exit(q_app.exec_())
