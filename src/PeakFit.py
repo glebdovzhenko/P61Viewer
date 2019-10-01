@@ -11,8 +11,9 @@ class PeakFit(metaclass=abc.ABCMeta):
 
     def __init__(self, xdata, ydata):
         self.state = self.states[0]
-        self.param_values = []
-        self.param_errs = []
+        self.param_values = np.array([0.0] * len(self.param_names))
+        self.param_errs = np.array([np.inf] * len(self.param_names))
+        self.param_use = np.array([True] * len(self.param_names))
         self.fit_err = np.inf
 
         self.xdata = np.array(xdata)
@@ -34,18 +35,6 @@ class PeakFit(metaclass=abc.ABCMeta):
     @property
     def fit_ydata(self):
         return self.function(self.xdata, *self.param_values)
-
-    def minimize(self):
-        try:
-            popt, pcov = curve_fit(f=self.function, xdata=self.xdata, ydata=self.ydata, p0=self.param_values,
-                                   bounds=self.bounds)
-            self.state = self.states[2]
-            self.param_values = popt
-            self.param_errs = np.sqrt(np.diag(pcov))
-        except (ValueError, OptimizeWarning) as e:
-            self.state = self.states[1]
-            print(e)
-        self.fit_err = np.sum((self.ydata - self.fit_ydata) ** 2) / self.ydata.shape[0]
 
     @property
     def pretty_params(self):
@@ -69,12 +58,39 @@ class PeakFit(metaclass=abc.ABCMeta):
     def guess_intercept(self):
         return self.ydata[self.xmi] - self.param_values[3] * self.xdata[self.xmi]
 
+    def set_param_use(self, n_val):
+        if len(n_val) != len(self.param_use):
+            raise ValueError()
+
+        self.param_use[:] = list(map(bool, n_val))
+
+    def minimize(self):
+        if not any(self.param_use):
+            return
+
+        aa = np.array(self.param_values)
+
+        def fit_fn(x, *args):
+            aa[self.param_use] = args
+            return self.function(x, *aa)
+
+        try:
+            popt, pcov = curve_fit(f=fit_fn, xdata=self.xdata, ydata=self.ydata, p0=self.param_values[self.param_use],
+                                   bounds=(self.bounds[0][self.param_use], self.bounds[1][self.param_use]))
+            self.state = self.states[2]
+            self.param_values[self.param_use] = popt
+            self.param_errs[self.param_use] = np.sqrt(np.diag(pcov))
+        except (ValueError, OptimizeWarning) as e:
+            self.state = self.states[1]
+            print(e)
+        self.fit_err = np.sum((self.ydata - self.fit_ydata) ** 2) / self.ydata.shape[0]
+
 
 class GaussianFit(PeakFit):
     param_names = ('A', 'x0', 's', 'a', 'b')
     func_label = 'y[x] = %s * exp{-0.5 * ((x - %s) / %s) ** 2} + %s * x + %s' % param_names
-    bounds = ((0., -np.inf, 0., -np.inf, -np.inf),
-              (np.inf, np.inf, np.inf, np.inf, np.inf))
+    bounds = np.array(((0., -np.inf, 0., -np.inf, -np.inf),
+                      (np.inf, np.inf, np.inf, np.inf, np.inf)))
 
     @staticmethod
     def function(x, *args):
@@ -95,8 +111,8 @@ class LorentzianFit(PeakFit):
     param_names = ('A', 'x0', 'g', 'a', 'b')
     func_label = 'y[x] = (%s * %s ** 2) / ((x - %s) ** 2 + %s ** 2) + %s * x + %s' % \
                  (param_names[0], param_names[2],param_names[1], param_names[2], param_names[3], param_names[4])
-    bounds = ((0., -np.inf, 0., -np.inf, -np.inf),
-              (np.inf, np.inf, np.inf, np.inf, np.inf))
+    bounds = np.array(((0., -np.inf, 0., -np.inf, -np.inf),
+                      (np.inf, np.inf, np.inf, np.inf, np.inf)))
 
     @staticmethod
     def function(x, *args):
@@ -112,8 +128,8 @@ class PsVoigtFit(PeakFit):
                  '((1 - %s) * %s ** 2) / ((x - %s) ** 2 + %s ** 2))) + %s * x + %s' \
                  % (param_names[0], param_names[1], param_names[2], param_names[4], param_names[1],
                     param_names[3], param_names[2], param_names[3], param_names[5], param_names[6])
-    bounds = ((0., 0, -np.inf, 0., 0., -np.inf, -np.inf),
-              (np.inf, 1., np.inf, np.inf, np.inf, np.inf, np.inf))
+    bounds = np.array(((0., 0, -np.inf, 0., 0., -np.inf, -np.inf),
+                      (np.inf, 1., np.inf, np.inf, np.inf, np.inf, np.inf)))
 
     @staticmethod
     def function(x, *args):
@@ -148,6 +164,7 @@ if __name__ == '__main__':
     d = d[120:124]
 
     gf = GaussianFit(xdata=d.index, ydata=d.values)
+    gf.set_param_use([0, 0, 1, 0, 0])
     gf.minimize()
     print(gf.func_label)
     print(gf.pretty_params)
@@ -162,13 +179,10 @@ if __name__ == '__main__':
     print(pvf.func_label)
     print(pvf.pretty_params)
 
-    plt.subplot(311)
+    plt.figure()
     plt.plot(gf.xdata, gf.ydata, linestyle='', marker='o')
-    plt.plot(gf.xdata, gf.fit_ydata)
-    plt.subplot(312)
-    plt.plot(lf.xdata, lf.ydata, linestyle='', marker='o')
-    plt.plot(lf.xdata, lf.fit_ydata)
-    plt.subplot(313)
-    plt.plot(pvf.xdata, pvf.ydata, linestyle='', marker='o')
-    plt.plot(pvf.xdata, pvf.fit_ydata)
+    plt.plot(gf.xdata, gf.fit_ydata, label='Gaussian')
+    plt.plot(lf.xdata, lf.fit_ydata, label='Lorentzian')
+    plt.plot(pvf.xdata, pvf.fit_ydata, label='p.-Voigt')
+    plt.legend()
     plt.show()
