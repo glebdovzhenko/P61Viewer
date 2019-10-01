@@ -1,7 +1,105 @@
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
+import re
 
 from src.PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
+
+
+class FloatEdit(QWidget):
+    offset = 2
+    button_w = 20
+    edit_w = 80
+    total_h = 25
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args)
+
+        decrease = QPushButton('<', parent=self)
+        self.edit = QLineEdit(parent=self)
+        increase = QPushButton('>', parent=self)
+
+        self.float_regexp = re.compile(r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[\+-]*[0-9]+))?)?$')
+
+        value = kwargs.pop('value')
+        self.set_text(value)
+
+        decrease.setFixedWidth(self.button_w)
+        decrease.setFixedHeight(self.total_h)
+        decrease.move(0, 0)
+
+        self.edit.setFixedWidth(self.edit_w)
+        self.edit.setFixedHeight(self.total_h)
+        self.edit.move(self.button_w + self.offset, 0)
+
+        increase.setFixedWidth(self.button_w)
+        increase.setFixedHeight(self.total_h)
+        increase.move(self.button_w + 2 * self.offset + self.edit_w, 0)
+
+        self.setFixedWidth(4 * self.offset + 2 * self.button_w + self.edit_w)
+        self.setFixedHeight(self.total_h)
+
+        self.edit.textChanged.connect(self.on_text_changed)
+        self.edit.returnPressed.connect(self.on_text_submitted)
+        increase.clicked.connect(self.on_increase)
+        decrease.clicked.connect(self.on_decrease)
+
+    def on_text_changed(self):
+        if not self.float_regexp.match(self.edit.text()):
+            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
+        else:
+            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 255, 255);}')
+
+    def on_text_submitted(self):
+        value = self.get_value()
+        if value is not None:
+            self.set_text(value)
+
+    def get_value(self):
+        m = self.float_regexp.match(self.edit.text())
+        if not m:
+            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 0, 0);}')
+            return None
+        else:
+            gd = m.groupdict()
+            value = float(gd['main'])
+            if gd['decimal'] is not None:
+                value += (float(gd['decimal']) if value >= 0 else -float(gd['decimal'])) * 10 ** (-len(gd['decimal']))
+            if gd['exp'] is not None:
+                value *= 10 ** (int(gd['exp']))
+            return value
+
+    def set_text(self, val):
+        self.edit.setText('%.03E' % val)
+
+    def on_increase(self):
+        value = self.get_value()
+        if value is not None:
+            dv = abs(0.1 * value)
+            self.set_text(value + dv)
+
+    def on_decrease(self):
+        value = self.get_value()
+        if value is not None:
+            dv = abs(0.1 * value)
+            self.set_text(value - dv)
+
+
+class FitParamWidget(QWidget):
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args)
+
+        name = kwargs.pop('name')
+        value = kwargs.pop('value')
+
+        optimize = QCheckBox()
+        label = QLabel(name)
+        edit = FloatEdit(value=value)
+
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(optimize)
+        layout.addWidget(label)
+        layout.addWidget(edit)
 
 
 class PeakFitWidget(QWidget):
@@ -17,19 +115,12 @@ class PeakFitWidget(QWidget):
         super().__init__(parent, *kwargs)
 
         # fit area left border changer
-        area_left_minus = QPushButton('<')
-        area_left_value = QLineEdit()
-        area_left_value.setFixedWidth(40)
-        area_left_plus = QPushButton('>')
-
+        area_left = FloatEdit(value=0)
+        area_right = FloatEdit(value=1)
         area_label = QLabel('Selected area')
         area_label.setFixedWidth(100)
 
         # fit area right border changer
-        area_right_minus = QPushButton('<')
-        area_right_value = QLineEdit()
-        area_right_value.setFixedWidth(40)
-        area_right_plus = QPushButton('>')
 
         # function label
         function_label = QLabel()
@@ -38,30 +129,13 @@ class PeakFitWidget(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(area_left_minus, 1, 1, 1, 1)
-        layout.addWidget(area_left_value, 1, 2, 1, 1)
-        layout.addWidget(area_left_plus, 1, 3, 1, 1)
-        layout.addWidget(area_label, 1, 4, 1, 1)
-        layout.addWidget(area_right_minus, 1, 5, 1, 1)
-        layout.addWidget(area_right_value, 1, 6, 1, 1)
-        layout.addWidget(area_right_plus, 1, 7, 1, 1)
-        layout.addWidget(function_label, 2, 1, 1, 7)
+        layout.addWidget(area_left, 1, 1, 1, 1)
+        layout.addWidget(area_label, 1, 2, 1, 1)
+        layout.addWidget(area_right, 1, 3, 1, 1)
+        layout.addWidget(function_label, 2, 1, 1, 4)
 
         for i, name in enumerate(self.peak_fit_cls.param_names):
-            cb = QCheckBox()
-            l = QLabel('  ' + name + ' ' * (4 - len(name)))
-            bm = QPushButton('<')
-            bp = QPushButton('>')
-            v = QLineEdit()
-            v.setFixedWidth(40)
-            tmp_l = QHBoxLayout()
-            tmp_l.addWidget(cb)
-            tmp_l.addWidget(l)
-            tmp_l.addWidget(bm)
-            tmp_l.addWidget(v)
-            tmp_l.addWidget(bp)
-            tmp_l.addStretch(1)
-            layout.addLayout(tmp_l, 3 + i, 1, 1, 7)
+            layout.addWidget(FitParamWidget(name=name, value=i), 3 + i, 1, 1, 7)
 
 
 if __name__ == '__main__':

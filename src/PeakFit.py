@@ -162,6 +162,7 @@ if __name__ == '__main__':
     d.fill(f_name, ch_name, os.path.basename(f_name) + ':ch0')
     d = d._dataset
     d = d[120:124]
+    # d = d[135:138]
 
     gf = GaussianFit(xdata=d.index, ydata=d.values)
     gf.set_param_use([0, 0, 1, 0, 0])
