@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, QHBoxLayout
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal, Qt
 import re
 
 from src.PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
@@ -11,6 +12,8 @@ class FloatEdit(QWidget):
     edit_w = 80
     total_h = 25
 
+    returnPressed = pyqtSignal()
+
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent, *args)
 
@@ -18,10 +21,10 @@ class FloatEdit(QWidget):
         self.edit = QLineEdit(parent=self)
         increase = QPushButton('>', parent=self)
 
-        self.float_regexp = re.compile(r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[\+-]*[0-9]+))?)?$')
+        self.float_regexp = re.compile(r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[+-]*[0-9]+))?)?$')
 
         value = kwargs.pop('value')
-        self.set_text(value)
+        self.set_value(value)
 
         decrease.setFixedWidth(self.button_w)
         decrease.setFixedHeight(self.total_h)
@@ -40,19 +43,10 @@ class FloatEdit(QWidget):
 
         self.edit.textChanged.connect(self.on_text_changed)
         self.edit.returnPressed.connect(self.on_text_submitted)
-        increase.clicked.connect(self.on_increase)
-        decrease.clicked.connect(self.on_decrease)
+        self.edit.editingFinished.connect(self.on_text_submitted)
 
-    def on_text_changed(self):
-        if not self.float_regexp.match(self.edit.text()):
-            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
-        else:
-            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 255, 255);}')
-
-    def on_text_submitted(self):
-        value = self.get_value()
-        if value is not None:
-            self.set_text(value)
+        increase.clicked.connect(self._on_increase)
+        decrease.clicked.connect(self._on_decrease)
 
     def get_value(self):
         m = self.float_regexp.match(self.edit.text())
@@ -68,20 +62,36 @@ class FloatEdit(QWidget):
                 value *= 10 ** (int(gd['exp']))
             return value
 
-    def set_text(self, val):
+    def set_value(self, val):
+        if not isinstance(val, (float, int)):
+            raise ValueError()
         self.edit.setText('%.03E' % val)
+        self.returnPressed.emit()
 
-    def on_increase(self):
+    def on_text_changed(self):
+        if not self.float_regexp.match(self.edit.text()):
+            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
+        else:
+            self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 255, 255);}')
+
+    def on_text_submitted(self):
+        value = self.get_value()
+        if value is not None:
+            self.set_value(value)
+
+    def _on_increase(self):
         value = self.get_value()
         if value is not None:
             dv = abs(0.1 * value)
-            self.set_text(value + dv)
+            self.set_value(value + dv)
 
-    def on_decrease(self):
+    def _on_decrease(self):
         value = self.get_value()
         if value is not None:
             dv = abs(0.1 * value)
-            self.set_text(value - dv)
+            self.set_value(value - dv)
+
+    value = property(fget=get_value, fset=set_value)
 
 
 class FitParamWidget(QWidget):
@@ -90,16 +100,24 @@ class FitParamWidget(QWidget):
 
         name = kwargs.pop('name')
         value = kwargs.pop('value')
+        error = kwargs.pop('error')
 
         optimize = QCheckBox()
-        label = QLabel(name)
+        name = QLabel(name + ' = ')
         edit = FloatEdit(value=value)
+        error = QLabel('± %.03E' % error)
+
+        optimize.setFixedWidth(20)
+        # label.setAlignment(Qt.AlignRight)
+        name.setFixedWidth(25)
 
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(optimize)
-        layout.addWidget(label)
+        layout.addWidget(name)
         layout.addWidget(edit)
+        layout.addWidget(error)
+        self.setFixedWidth(300)
 
 
 class PeakFitWidget(QWidget):
@@ -135,7 +153,7 @@ class PeakFitWidget(QWidget):
         layout.addWidget(function_label, 2, 1, 1, 4)
 
         for i, name in enumerate(self.peak_fit_cls.param_names):
-            layout.addWidget(FitParamWidget(name=name, value=i), 3 + i, 1, 1, 7)
+            layout.addWidget(FitParamWidget(name=name, value=i, error=0), 3 + i, 1, 1, 7)
 
 
 if __name__ == '__main__':
