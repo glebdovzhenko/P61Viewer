@@ -15,8 +15,10 @@ a = Analysis(['P61BViewerMain.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           [],
@@ -27,6 +29,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=False )
+
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -35,9 +38,10 @@ coll = COLLECT(exe,
                upx=True,
                upx_exclude=[],
                name='P61BViewerMain')
+
 app = BUNDLE(coll,
              name='P61BViewer.app',
-             icon=None,
+             icon='../img/icon.icns',
              info_plist={
                   'NSHighResolutionCapable': 'True'
                 },
