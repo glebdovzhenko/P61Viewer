@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
+from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, pyqtSignal
 from PyQt5.QtGui import QColor
 from NexusHistogram import NexusHistogram
 import os
@@ -7,6 +7,7 @@ import os
 class FileListModel(QAbstractListModel):
     color_cycle = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
+    filesAdded = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -102,7 +103,10 @@ class FileListModel(QAbstractListModel):
         for i in range(rc, rc + fl):
             self._histogram_list[i] = success[i - rc]
             self._histogram_list[i].plot_color_mpl = self._next_color()
-        self.dataChanged.emit(self.index(rc, 0), self.index(rc + fl, 0))
+
+        if success:
+            self.dataChanged.emit(self.index(rc, 0), self.index(rc + fl, 0))
+            self.filesAdded.emit()
 
         return failed
 

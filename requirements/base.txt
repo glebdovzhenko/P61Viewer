@@ -4,5 +4,6 @@ pandas
 scipy
 PyQt5==5.9.2
 matplotlib
-fbs
+tornado
+pyinstaller
 py2app

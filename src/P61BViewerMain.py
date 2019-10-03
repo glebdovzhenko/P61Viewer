@@ -11,7 +11,7 @@ class P61BViewer(QMainWindow):
 
         # initiate self
         self.resize(1200, 800)
-        self.setWindowTitle('P61 Spectrum Viewer')
+        self.setWindowTitle('P61B Spectrum Viewer')
 
         # initiate widgets
         self.cw = QWidget(parent=self)
@@ -27,12 +27,16 @@ class P61BViewer(QMainWindow):
 
         # signal handlers
         self.file_w.file_list_model.dataChanged.connect(self.on_data_changed)
+        self.file_w.file_list_model.filesAdded.connect(self.on_files_added)
 
     def on_data_changed(self):
         self.plot_w.clear_line_axes()
         for line in self.file_w.file_list_model.data_to_plot():
             self.plot_w.axes_add_line(line)
         self.plot_w.update_line_axes(autoscale=False)
+
+    def on_files_added(self):
+        self.plot_w.update_line_axes()
 
 
 if __name__ == '__main__':
