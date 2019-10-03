@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
 from PyQt5.QtGui import QColor
-from src.NexusHistogram import NexusHistogram
+from NexusHistogram import NexusHistogram
 import os
 
 

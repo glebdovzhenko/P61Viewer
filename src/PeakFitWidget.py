@@ -3,7 +3,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, Qt
 import re
 
-from src.PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
+from PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
 
 
 class FloatEdit(QWidget):

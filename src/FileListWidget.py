@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QApplication, QAbstractItemView, QPushButto
     QErrorMessage, QListView, QCheckBox
 from PyQt5.QtCore import QSize, Qt
 
-from src.FileListModel import FileListModel
+from FileListModel import FileListModel
 
 
 class FileListWidget(QWidget):

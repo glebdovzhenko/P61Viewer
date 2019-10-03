@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHBoxLayout, QWidget
 import sys
-from src.FileListWidget import FileListWidget
-from src.PlotWidget import PlotWidget
+from FileListWidget import FileListWidget
+from PlotWidget import PlotWidget
 
 
 class P61BViewer(QMainWindow):
