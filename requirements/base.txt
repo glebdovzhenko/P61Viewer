@@ -1,0 +1,8 @@
+numpy
+h5py
+pandas
+scipy
+PyQt5==5.9.2
+matplotlib
+fbs
+py2app
