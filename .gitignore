@@ -126,5 +126,5 @@ dmypy.json
 .pyre/
 
 .idea
-ViewerMac.app
+apps/P61BViewer.app
 *.DS_Store
