@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, \
+    QHBoxLayout, QTabWidget, QListWidget, QVBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, Qt
 import re
@@ -113,52 +114,65 @@ class FitParamWidget(QWidget):
 
         layout = QHBoxLayout()
         self.setLayout(layout)
-        layout.addWidget(optimize)
-        layout.addWidget(name)
-        layout.addWidget(edit)
-        layout.addWidget(error)
+        layout.addWidget(optimize, alignment=Qt.AlignLeft)
+        layout.addWidget(name, alignment=Qt.AlignLeft)
+        layout.addWidget(edit, alignment=Qt.AlignLeft)
+        layout.addWidget(error, alignment=Qt.AlignLeft)
         self.setFixedWidth(300)
 
 
-class PeakFitWidget(QWidget):
+class PeakFitTab(QWidget):
     imgs = {GaussianFit: '../img/gaussian_eq.png',
             LorentzianFit: '../img/lorentzian_eq.png',
-            PsVoigtFit: '../img/pvoigt_eq.png'}
+            PsVoigtFit: '../img/pvoigt_eq2.png'}
 
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, function_class, image, parent=None, *args):
+        super().__init__(parent, *args)
 
-        if 'fitter' in kwargs:
-            self.peak_fit_cls = kwargs.pop('fitter')
-
-        super().__init__(parent, *kwargs)
-
-        # fit area left border changer
-        area_left = FloatEdit(value=0)
-        area_right = FloatEdit(value=1)
-        area_label = QLabel('Selected area')
-        area_label.setFixedWidth(100)
-
-        # fit area right border changer
-
-        # function label
+        self.peak_fit_cls = function_class
         function_label = QLabel()
-        pm = QPixmap(self.imgs[self.peak_fit_cls])
-        function_label.setPixmap(pm)
+        function_label.setPixmap(image)
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(area_left, 1, 1, 1, 1)
-        layout.addWidget(area_label, 1, 2, 1, 1)
-        layout.addWidget(area_right, 1, 3, 1, 1)
         layout.addWidget(function_label, 2, 1, 1, 4)
 
         for i, name in enumerate(self.peak_fit_cls.param_names):
             layout.addWidget(FitParamWidget(name=name, value=i, error=0), 3 + i, 1, 1, 7)
 
 
+class PeakFitWidget(QWidget):
+    def __init__(self, parent=None, *args):
+        super().__init__(parent, *args)
+
+        self.tabs = QTabWidget()
+        self.gaussian = PeakFitTab(GaussianFit, QPixmap('../img/gaussian_eq.png'), parent=self.tabs)
+        self.lorentzian = PeakFitTab(LorentzianFit, QPixmap('../img/lorentzian_eq.png'), parent=self.tabs)
+        self.p_voigt = PeakFitTab(PsVoigtFit, QPixmap('../img/pvoigt_eq2.png'), parent=self.tabs)
+
+        self.tabs.addTab(self.gaussian, 'Gaussian')
+        self.tabs.addTab(self.lorentzian, 'Lorentzian')
+        self.tabs.addTab(self.p_voigt, 'p.-Voigt')
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.tabs)
+        self.setLayout(layout)
+
+        fit_layout = QGridLayout()
+        b_fit_this = QPushButton('Fit this')
+        b_fit_all = QPushButton('Fit all')
+        b_fit_all.setFixedWidth(90)
+        b_fit_this.setFixedWidth(90)
+        file_list = QListWidget()
+        fit_layout.addWidget(b_fit_this, 1, 1, 1, 1, alignment=Qt.AlignLeft)
+        fit_layout.addWidget(b_fit_all, 2, 1, 1, 1, alignment=Qt.AlignLeft)
+        fit_layout.addWidget(file_list, 1, 2, 2, 1)
+        layout.addLayout(fit_layout)
+
+
 if __name__ == '__main__':
     import sys
     q_app = QApplication(sys.argv)
-    app = PeakFitWidget(fitter=PsVoigtFit)
+    app = PeakFitWidget()
     app.show()
     sys.exit(q_app.exec_())
