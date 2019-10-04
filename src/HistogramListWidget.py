@@ -2,15 +2,15 @@ from PyQt5.QtWidgets import QWidget, QApplication, QAbstractItemView, QPushButto
     QErrorMessage, QListView, QCheckBox
 from PyQt5.QtCore import QSize, Qt
 
-from FileListModel import FileListModel
+from HistogramListModel import HistogramListModel
 
 
-class FileListWidget(QWidget):
+class HistogramListWidget(QWidget):
     def __init__(self, parent=None, *args):
         super().__init__(parent, *args)
 
         # List model - view
-        self.file_list_model = FileListModel()
+        self.file_list_model = HistogramListModel()
         self.file_list_view = QListView()
         self.file_list_view.setModel(self.file_list_model)
 
@@ -60,11 +60,11 @@ class FileListWidget(QWidget):
     def check_box_on_click(self):
         self.check_box.setTristate(False)
 
-        self.file_list_model.update_plot_show(self.file_list_view.selectionModel().selectedIndexes(),
+        self.file_list_model.update_active(self.file_list_view.selectionModel().selectedIndexes(),
                                               bool(self.check_box.checkState()))
 
     def check_box_update(self):
-        status = self.file_list_model.get_plot_show(self.file_list_view.selectionModel().selectedIndexes())
+        status = self.file_list_model.get_active(self.file_list_view.selectionModel().selectedIndexes())
 
         if all(status):
             self.check_box.setCheckState(Qt.Checked)
@@ -77,6 +77,6 @@ class FileListWidget(QWidget):
 if __name__ == '__main__':
     import sys
     q_app = QApplication(sys.argv)
-    app = FileListWidget()
+    app = HistogramListWidget()
     app.show()
     sys.exit(q_app.exec_())

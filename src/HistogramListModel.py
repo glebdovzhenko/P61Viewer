@@ -1,10 +1,10 @@
-from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, pyqtSignal
+from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, pyqtSignal, QSortFilterProxyModel
 from PyQt5.QtGui import QColor
 from NexusHistogram import NexusHistogram
 import os
 
 
-class FileListModel(QAbstractListModel):
+class HistogramListModel(QAbstractListModel):
     color_cycle = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
     filesAdded = pyqtSignal()
@@ -27,19 +27,19 @@ class FileListModel(QAbstractListModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             return QVariant(self._histogram_list[index.row()].name)
         elif role == Qt.ForegroundRole:
-            if self._histogram_list[index.row()].plot_show:
+            if self._histogram_list[index.row()].active:
                 return QColor(*self._histogram_list[index.row()].plot_color_qt, 255)
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
-            return Qt.Checked if self._histogram_list[index.row()].plot_show else Qt.Unchecked
+            return Qt.Checked if self._histogram_list[index.row()].active else Qt.Unchecked
 
     def setData(self, index: QModelIndex, value, role: int = Qt.EditRole):
         if not index.isValid():
             return False
 
         if role == Qt.CheckStateRole:
-            self._histogram_list[index.row()].plot_show = bool(value)
+            self._histogram_list[index.row()].active = bool(value)
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -66,15 +66,15 @@ class FileListModel(QAbstractListModel):
 
     def data_to_plot(self):
         for ff in self._histogram_list:
-            if ff.plot_show:
+            if ff.active:
                 yield ff.plot_line
 
-    def get_plot_show(self, idxs):
+    def get_active(self, idxs):
         return [bool(self.data(idx, role=Qt.CheckStateRole)) for idx in idxs]
 
-    def update_plot_show(self, idxs, value):
+    def update_active(self, idxs, value):
         for idx in idxs:
-            self._histogram_list[idx.row()].plot_show = value
+            self._histogram_list[idx.row()].active = value
         if idxs:
             self.dataChanged.emit(min(idxs), max(idxs))
 
@@ -115,3 +115,15 @@ class FileListModel(QAbstractListModel):
         for i in sorted(rows, reverse=True):
             self.removeRow(i)
         self.dataChanged.emit(min(idx), max(idx))
+
+    def is_active(self, row):
+        return self._histogram_list[row].active
+
+
+class ActiveItemsProxyModel(QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def filterAcceptsRow(self, source_row, idx: QModelIndex):
+        return self.sourceModel().is_active(source_row)
+

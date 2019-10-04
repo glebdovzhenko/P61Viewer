@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHBoxLayout, QWidget, QTabWidget
 import sys
-from FileListWidget import FileListWidget
+from HistogramListWidget import HistogramListWidget
+from HistogramListModel import ActiveItemsProxyModel
 from PlotWidget import PlotWidget
 from PeakFitWidget import PeakFitWidget
 
@@ -19,10 +20,14 @@ class P61BViewer(QMainWindow):
         self.setCentralWidget(self.cw)
         view_tab = QWidget()
 
-        self.file_w = FileListWidget(parent=self)
+        self.file_w = HistogramListWidget(parent=self)
         self.view_plot_w = PlotWidget(parent=self)
         self.fit_plot_w = PlotWidget(parent=self, controls=False)
         self.peak_f_w = PeakFitWidget(parent=self)
+
+        proxy_model = ActiveItemsProxyModel()
+        proxy_model.setSourceModel(self.file_w.file_list_model)
+        self.peak_f_w.file_list.setModel(proxy_model)
 
         # set up layouts
         view_layout = QHBoxLayout()
