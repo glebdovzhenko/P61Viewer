@@ -1,15 +1,16 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication, QHBoxLayout, QWidget, QTabWidget
 import sys
 from HistogramListWidget import HistogramListWidget
-from HistogramListModel import ActiveItemsProxyModel
 from PlotWidget import PlotWidget
 from PeakFitWidget import PeakFitWidget
+from AppState import AppState
 
 
 class P61BViewer(QMainWindow):
-
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
+
+        self.app_state = AppState()
 
         # initiate self
         self.resize(1200, 800)
@@ -20,14 +21,10 @@ class P61BViewer(QMainWindow):
         self.setCentralWidget(self.cw)
         view_tab = QWidget()
 
-        self.file_w = HistogramListWidget(parent=self)
+        self.file_w = HistogramListWidget(self.app_state, parent=self)
         self.view_plot_w = PlotWidget(parent=self)
         self.fit_plot_w = PlotWidget(parent=self, controls=False)
         self.peak_f_w = PeakFitWidget(parent=self)
-
-        proxy_model = ActiveItemsProxyModel()
-        proxy_model.setSourceModel(self.file_w.file_list_model)
-        self.peak_f_w.file_list.setModel(proxy_model)
 
         # set up layouts
         view_layout = QHBoxLayout()
@@ -49,8 +46,9 @@ class P61BViewer(QMainWindow):
         self.file_w.file_list_model.filesAdded.connect(self.on_files_added)
 
     def on_data_changed(self):
+        # TODO: so this is sort of stupid because I should only update the lines that have changed, not all of them
         self.view_plot_w.clear_line_axes()
-        for line in self.file_w.file_list_model.data_to_plot():
+        for line in self.app_state.get_plot_lines():
             self.view_plot_w.axes_add_line(line)
         self.view_plot_w.update_line_axes(autoscale=False)
 

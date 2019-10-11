@@ -3,14 +3,15 @@ from PyQt5.QtWidgets import QWidget, QApplication, QAbstractItemView, QPushButto
 from PyQt5.QtCore import QSize, Qt
 
 from HistogramListModel import HistogramListModel
+from AppState import AppState
 
 
 class HistogramListWidget(QWidget):
-    def __init__(self, parent=None, *args):
+    def __init__(self, app_state: AppState, parent=None, *args):
         super().__init__(parent, *args)
 
         # List model - view
-        self.file_list_model = HistogramListModel()
+        self.file_list_model = HistogramListModel(app_state)
         self.file_list_view = QListView()
         self.file_list_view.setModel(self.file_list_model)
 
