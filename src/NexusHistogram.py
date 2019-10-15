@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import h5py
 from matplotlib.lines import Line2D
 
@@ -7,7 +8,6 @@ class NexusHistogram:
     kev_per_bin = 5E-2
 
     def __init__(self):
-        self._dataset = None         # internal
         self._intensities = None     # internal
         self._energies = None        # internal
         self._name = ''              # only get
@@ -53,12 +53,16 @@ class NexusHistogram:
     def get_dataset_id(self):
         return self._dataset_id
 
+    def get_dataset(self):
+        return pd.Series(self._intensities, index=self._energies)
+
     name = property(fget=get_name, fset=set_name)
     active = property(fget=get_active, fset=set_active)
     plot_line = property(fget=get_plot_line)
     plot_color_mpl = property(fget=get_plot_color_mpl, fset=set_plot_color_mpl)
     plot_color_qt = property(fget=get_plot_color_qt)
     dataset_id = property(fget=get_dataset_id)
+    dataset = property(fget=get_dataset)
 
     def fill(self, file, field, name):
         try:

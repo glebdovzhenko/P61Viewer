@@ -22,9 +22,9 @@ class P61BViewer(QMainWindow):
         view_tab = QWidget()
 
         self.file_w = HistogramListWidget(self.app_state, parent=self)
-        self.view_plot_w = PlotWidget(parent=self)
-        self.fit_plot_w = PlotWidget(parent=self, controls=False)
-        self.peak_f_w = PeakFitWidget(parent=self)
+        self.view_plot_w = PlotWidget(self.app_state, parent=self)
+        self.fit_plot_w = PlotWidget(self.app_state, parent=self, controls=False)
+        self.peak_f_w = PeakFitWidget(self.app_state, parent=self)
 
         # set up layouts
         view_layout = QHBoxLayout()

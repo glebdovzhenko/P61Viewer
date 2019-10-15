@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 import re
 
 from PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
+from AppState import AppState
 
 
 class FloatEdit(QWidget):
@@ -16,7 +17,7 @@ class FloatEdit(QWidget):
     returnPressed = pyqtSignal()
 
     def __init__(self, parent=None, *args, **kwargs):
-        super().__init__(parent, *args)
+        QWidget.__init__(self, parent, *args)
 
         decrease = QPushButton('<', parent=self)
         self.edit = QLineEdit(parent=self)
@@ -97,7 +98,7 @@ class FloatEdit(QWidget):
 
 class FitParamWidget(QWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super().__init__(parent, *args)
+        QWidget.__init__(self, parent, *args)
 
         name = kwargs.pop('name')
         value = kwargs.pop('value')
@@ -127,7 +128,7 @@ class PeakFitTab(QWidget):
             PsVoigtFit: '../img/pvoigt_eq2.png'}
 
     def __init__(self, function_class, image, parent=None, *args):
-        super().__init__(parent, *args)
+        QWidget.__init__(self, parent, *args)
 
         self.peak_fit_cls = function_class
         function_label = QLabel()
@@ -142,8 +143,10 @@ class PeakFitTab(QWidget):
 
 
 class PeakFitWidget(QWidget):
-    def __init__(self, parent=None, *args):
-        super().__init__(parent, *args)
+    def __init__(self, app_state: AppState, parent=None, *args):
+        QWidget.__init__(self, parent, *args)
+
+        self.app_state = app_state
 
         self.tabs = QTabWidget()
         self.gaussian = PeakFitTab(GaussianFit, QPixmap('../img/gaussian_eq.png'), parent=self.tabs)

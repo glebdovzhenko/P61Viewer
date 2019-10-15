@@ -8,7 +8,7 @@ from AppState import AppState
 
 class HistogramListWidget(QWidget):
     def __init__(self, app_state: AppState, parent=None, *args):
-        super().__init__(parent, *args)
+        QWidget.__init__(self, parent, *args)
 
         # List model - view
         self.file_list_model = HistogramListModel(app_state)

@@ -1,8 +1,10 @@
 from NexusHistogram import NexusHistogram
+from PyQt5.QtCore import QObject
 
 
-class AppState:
+class AppState(QObject):
     def __init__(self):
+        QObject.__init__(self, parent=None)
         self._histograms = []
 
     def get_histogram(self, idx: int) -> NexusHistogram:

@@ -11,58 +11,48 @@ class HistogramListModel(QAbstractListModel):
     filesAdded = pyqtSignal()
 
     def __init__(self, app_state: AppState, parent=None):
-        super().__init__(parent)
-        self._histogram_list = []
+        QAbstractListModel.__init__(self, parent)
         self._color_count = 0
         self.app_state = app_state
 
     def rowCount(self, parent=QModelIndex()) -> int:
-        # return len(self._histogram_list)
         return self.app_state.histogram_list_len()
 
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> QVariant:
         if not index.isValid():
             return QVariant()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
             return QVariant(self.app_state.get_histogram(index.row()).name)
-            # return QVariant(self._histogram_list[index.row()].name)
         elif role == Qt.ForegroundRole:
-            # if self._histogram_list[index.row()].active:
             if self.app_state.get_histogram(index.row()).active:
                 return QColor(*self.app_state.get_histogram(index.row()).plot_color_qt, 255)
-                # return QColor(*self._histogram_list[index.row()].plot_color_qt, 255)
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
             return Qt.Checked if self.app_state.get_histogram(index.row()).active else Qt.Unchecked
-            # return Qt.Checked if self._histogram_list[index.row()].active else Qt.Unchecked
 
-    def setData(self, index: QModelIndex, value, role: int = Qt.EditRole):
+    def setData(self, index: QModelIndex, value, role: int = Qt.EditRole) -> bool:
         if not index.isValid():
             return False
 
         if role == Qt.CheckStateRole:
-            # self._histogram_list[index.row()].active = bool(value)
             self.app_state.get_histogram(index.row()).active = bool(value)
             self.dataChanged.emit(index, index)
             return True
         return False
 
-    def flags(self, index: QModelIndex):
+    def flags(self, index: QModelIndex) -> QVariant:
         return QAbstractListModel.flags(self, index) | Qt.ItemIsUserCheckable
 
     def removeRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
         self.beginRemoveRows(parent, row, row + count - 1)
-        # del self._histogram_list[row:row + count]
         self.app_state.del_histograms(row, row + count)
         self.endRemoveRows()
         return True
 
     def insertRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
         self.beginInsertRows(parent, row, row + count - 1)
-        # self._histogram_list = self._histogram_list[:row] + [NexusHistogram() for _ in range(count)] + \
-        #                        self._histogram_list[row:]
         self.app_state.insert_histograms(row, count)
 
         self.endInsertRows()
@@ -77,7 +67,6 @@ class HistogramListModel(QAbstractListModel):
 
     def update_active(self, idxs, value):
         for idx in idxs:
-            # self._histogram_list[idx.row()].active = value
             self.app_state.get_histogram(idx.row()).active = value
         if idxs:
             self.dataChanged.emit(min(idxs), max(idxs))

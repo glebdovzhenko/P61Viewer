@@ -155,12 +155,12 @@ if __name__ == '__main__':
     import os
 
     f_name = '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/' \
-             'Co57_2019-09-30::09:10:30_.nxs'
+             'Co57_2019-09-30_09-10-30_.nxs'
     ch_name = 'entry/instrument/xspress3/channel00/histogram'
 
     d = NexusHistogram()
     d.fill(f_name, ch_name, os.path.basename(f_name) + ':ch0')
-    d = d._dataset
+    d = d.dataset
     d = d[120:124]
     # d = d[135:138]
 
