@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton, QVBoxLayout
 import sys
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -22,16 +22,11 @@ class PlotWidget(QWidget):
         autoscale_btn = QPushButton('A')
         autoscale_btn.clicked.connect(lambda *args: self.update_line_axes(autoscale=True))
 
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(line_canvas)
         if controls:
-            layout = QGridLayout()
-            self.setLayout(layout)
-            layout.addWidget(line_canvas, 1, 1, 1, 2)
-            layout.addWidget(autoscale_btn, 2, 1, 1, 1)
-            layout.addWidget(NavigationToolbar(line_canvas, self), 2, 2, 1, 1)
-        else:
-            layout = QHBoxLayout()
-            self.setLayout(layout)
-            layout.addWidget(line_canvas)
+            layout.addWidget(NavigationToolbar(line_canvas, self))
 
     def clear_line_axes(self):
         del self._line_ax.lines[:]
@@ -42,6 +37,7 @@ class PlotWidget(QWidget):
     def update_line_axes(self, autoscale=True):
         if autoscale:
             self._line_ax.autoscale()
+            self._line_ax.figure.canvas.toolbar.update()
         self._line_ax.figure.canvas.draw()
 
 
