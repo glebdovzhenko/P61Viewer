@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
-from HistogramListWidget import HistogramListWidget
-from PlotWidget import PlotWidget
+from PlotWidgets import MainPlotWidget
+from ListWidgets import EditableListWidget
 from PeakFitWidget import PeakFitWidget
 from P61BApp import P61BApp
 
@@ -19,9 +19,9 @@ class P61BViewer(QMainWindow):
         self.setCentralWidget(self.cw)
         view_tab = QWidget()
 
-        self.file_w = HistogramListWidget(parent=self)
-        self.view_plot_w = PlotWidget(parent=self)
-        self.fit_plot_w = PlotWidget(parent=self, controls=False)
+        self.file_w = EditableListWidget(parent=self)
+        self.view_plot_w = MainPlotWidget(parent=self)
+        # self.fit_plot_w = PlotWidget(parent=self, controls=False)
         self.peak_f_w = PeakFitWidget(parent=self)
 
         # set up layouts
@@ -34,24 +34,10 @@ class P61BViewer(QMainWindow):
         fit_layout = QHBoxLayout()
         fit_tab.setLayout(fit_layout)
         fit_layout.addWidget(self.peak_f_w, 1)
-        fit_layout.addWidget(self.fit_plot_w, 3)
+        # fit_layout.addWidget(self.fit_plot_w, 3)
 
         self.cw.addTab(view_tab, 'View')
         self.cw.addTab(fit_tab, 'Fit')
-
-        # signal handlers
-        self.file_w.file_list_model.dataChanged.connect(self.on_data_changed)
-        self.file_w.file_list_model.filesAdded.connect(self.on_files_added)
-
-    def on_data_changed(self):
-        # TODO: so this is sort of stupid because I should only update the lines that have changed, not all of them
-        self.view_plot_w.clear_line_axes()
-        for line in P61BApp.instance().project.get_plot_lines():
-            self.view_plot_w.axes_add_line(line)
-        self.view_plot_w.update_line_axes(autoscale=False)
-
-    def on_files_added(self):
-        self.view_plot_w.update_line_axes()
 
 
 if __name__ == '__main__':

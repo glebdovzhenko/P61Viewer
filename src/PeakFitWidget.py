@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, \
-    QHBoxLayout, QTabWidget, QListView, QVBoxLayout
+    QHBoxLayout, QTabWidget, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap
 import re
 
 from PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
+from ListWidgets import ActiveListWidget
 from P61BApp import P61BApp
 
 
@@ -164,7 +165,7 @@ class PeakFitWidget(QWidget):
         b_fit_all = QPushButton('Fit all')
         b_fit_all.setFixedWidth(90)
         b_fit_this.setFixedWidth(90)
-        self.file_list = QListView()
+        self.file_list = ActiveListWidget()
         fit_layout.addWidget(b_fit_this, 1, 1, 1, 1, alignment=Qt.AlignLeft)
         fit_layout.addWidget(b_fit_all, 2, 1, 1, 1, alignment=Qt.AlignLeft)
         fit_layout.addWidget(self.file_list, 1, 2, 2, 1)
