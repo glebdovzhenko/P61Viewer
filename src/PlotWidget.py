@@ -1,18 +1,15 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 import sys
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-from AppState import AppState
-
 
 class PlotWidget(QWidget):
-    def __init__(self, app_state: AppState, parent=None, controls=True):
+    def __init__(self, parent=None, controls=True):
         QWidget.__init__(self, parent=parent)
 
-        self.app_state = app_state
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
         self._line_ax.set_xlabel('Energy, [keV]')

@@ -1,7 +1,8 @@
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, pyqtSignal, QSortFilterProxyModel
 from PyQt5.QtGui import QColor
 from NexusHistogram import NexusHistogram
-from AppState import AppState
+from P61BViewerProject import P61BViewerProject
+from P61BApp import P61BApp
 import os
 
 
@@ -10,34 +11,33 @@ class HistogramListModel(QAbstractListModel):
                    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
     filesAdded = pyqtSignal()
 
-    def __init__(self, app_state: AppState, parent=None):
+    def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
         self._color_count = 0
-        self.app_state = app_state
 
     def rowCount(self, parent=QModelIndex()) -> int:
-        return self.app_state.histogram_list_len()
+        return P61BApp.instance().project.histogram_list_len()
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> QVariant:
         if not index.isValid():
             return QVariant()
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            return QVariant(self.app_state.get_histogram(index.row()).name)
+            return QVariant(P61BApp.instance().project.get_histogram(index.row()).name)
         elif role == Qt.ForegroundRole:
-            if self.app_state.get_histogram(index.row()).active:
-                return QColor(*self.app_state.get_histogram(index.row()).plot_color_qt, 255)
+            if P61BApp.instance().project.get_histogram(index.row()).active:
+                return QColor(*P61BApp.instance().project.get_histogram(index.row()).plot_color_qt, 255)
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
-            return Qt.Checked if self.app_state.get_histogram(index.row()).active else Qt.Unchecked
+            return Qt.Checked if P61BApp.instance().project.get_histogram(index.row()).active else Qt.Unchecked
 
     def setData(self, index: QModelIndex, value, role: int = Qt.EditRole) -> bool:
         if not index.isValid():
             return False
 
         if role == Qt.CheckStateRole:
-            self.app_state.get_histogram(index.row()).active = bool(value)
+            P61BApp.instance().project.get_histogram(index.row()).active = bool(value)
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -47,13 +47,13 @@ class HistogramListModel(QAbstractListModel):
 
     def removeRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
         self.beginRemoveRows(parent, row, row + count - 1)
-        self.app_state.del_histograms(row, row + count)
+        P61BApp.instance().project.del_histograms(row, row + count)
         self.endRemoveRows()
         return True
 
     def insertRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
         self.beginInsertRows(parent, row, row + count - 1)
-        self.app_state.insert_histograms(row, count)
+        P61BApp.instance().project.insert_histograms(row, count)
 
         self.endInsertRows()
         return True
@@ -67,12 +67,12 @@ class HistogramListModel(QAbstractListModel):
 
     def update_active(self, idxs, value):
         for idx in idxs:
-            self.app_state.get_histogram(idx.row()).active = value
+            P61BApp.instance().project.get_histogram(idx.row()).active = value
         if idxs:
             self.dataChanged.emit(min(idxs), max(idxs))
 
     def append_files(self, f_list):
-        ids = self.app_state.get_hist_ids()
+        ids = P61BApp.instance().project.get_hist_ids()
         ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', 'entry/instrument/xspress3/channel01/histogram'
 
         success, failed = [], []
@@ -96,8 +96,8 @@ class HistogramListModel(QAbstractListModel):
         for i in range(rc, rc + fl):
             # self._histogram_list[i] = success[i - rc]
             # self._histogram_list[i].plot_color_mpl = self._next_color()
-            self.app_state.set_histogram(i, success[i - rc])
-            self.app_state.get_histogram(i).plot_color_mpl = self._next_color()
+            P61BApp.instance().project.set_histogram(i, success[i - rc])
+            P61BApp.instance().project.get_histogram(i).plot_color_mpl = self._next_color()
 
         if success:
             self.dataChanged.emit(self.index(rc, 0), self.index(rc + fl, 0))
@@ -112,6 +112,6 @@ class HistogramListModel(QAbstractListModel):
         self.dataChanged.emit(min(idx), max(idx))
 
     def is_active(self, row):
-        return self.app_state.get_histogram(row).active
+        return P61BApp.instance().project.get_histogram(row).active
         # return self._histogram_list[row].active
 

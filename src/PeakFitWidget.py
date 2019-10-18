@@ -1,11 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, \
+from PyQt5.QtWidgets import QWidget, QPushButton, QLineEdit, QGridLayout, QLabel, QCheckBox, \
     QHBoxLayout, QTabWidget, QListView, QVBoxLayout
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QPixmap
 import re
 
 from PeakFit import GaussianFit, LorentzianFit, PsVoigtFit
-from AppState import AppState
+from P61BApp import P61BApp
 
 
 class FloatEdit(QWidget):
@@ -143,10 +143,8 @@ class PeakFitTab(QWidget):
 
 
 class PeakFitWidget(QWidget):
-    def __init__(self, app_state: AppState, parent=None, *args):
+    def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
-
-        self.app_state = app_state
 
         self.tabs = QTabWidget()
         self.gaussian = PeakFitTab(GaussianFit, QPixmap('../img/gaussian_eq.png'), parent=self.tabs)
@@ -175,7 +173,7 @@ class PeakFitWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = QApplication(sys.argv)
+    q_app = P61BApp(sys.argv)
     app = PeakFitWidget()
     app.show()
     sys.exit(q_app.exec_())

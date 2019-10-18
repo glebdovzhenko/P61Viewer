@@ -1,16 +1,14 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QHBoxLayout, QWidget, QTabWidget
+from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
 from HistogramListWidget import HistogramListWidget
 from PlotWidget import PlotWidget
 from PeakFitWidget import PeakFitWidget
-from AppState import AppState
+from P61BApp import P61BApp
 
 
 class P61BViewer(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
-
-        self.app_state = AppState()
 
         # initiate self
         self.resize(1200, 800)
@@ -21,10 +19,10 @@ class P61BViewer(QMainWindow):
         self.setCentralWidget(self.cw)
         view_tab = QWidget()
 
-        self.file_w = HistogramListWidget(self.app_state, parent=self)
-        self.view_plot_w = PlotWidget(self.app_state, parent=self)
-        self.fit_plot_w = PlotWidget(self.app_state, parent=self, controls=False)
-        self.peak_f_w = PeakFitWidget(self.app_state, parent=self)
+        self.file_w = HistogramListWidget(parent=self)
+        self.view_plot_w = PlotWidget(parent=self)
+        self.fit_plot_w = PlotWidget(parent=self, controls=False)
+        self.peak_f_w = PeakFitWidget(parent=self)
 
         # set up layouts
         view_layout = QHBoxLayout()
@@ -48,7 +46,7 @@ class P61BViewer(QMainWindow):
     def on_data_changed(self):
         # TODO: so this is sort of stupid because I should only update the lines that have changed, not all of them
         self.view_plot_w.clear_line_axes()
-        for line in self.app_state.get_plot_lines():
+        for line in P61BApp.instance().project.get_plot_lines():
             self.view_plot_w.axes_add_line(line)
         self.view_plot_w.update_line_axes(autoscale=False)
 
@@ -57,7 +55,7 @@ class P61BViewer(QMainWindow):
 
 
 if __name__ == '__main__':
-    q_app = QApplication(sys.argv)
+    q_app = P61BApp(sys.argv)
     app = P61BViewer()
     app.show()
     sys.exit(q_app.exec_())

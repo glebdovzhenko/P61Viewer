@@ -2,7 +2,7 @@ from NexusHistogram import NexusHistogram
 from PyQt5.QtCore import QObject
 
 
-class AppState(QObject):
+class P61BViewerProject(QObject):
     def __init__(self):
         QObject.__init__(self, parent=None)
         self._histograms = []
