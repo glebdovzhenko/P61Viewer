@@ -7,3 +7,4 @@ matplotlib
 tornado
 pyinstaller
 py2app
+lmfit

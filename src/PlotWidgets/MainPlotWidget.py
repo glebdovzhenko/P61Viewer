@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+import copy
 
 from P61BApp import P61BApp
 
@@ -24,6 +25,33 @@ class MainPlotWidget(QWidget):
         P61BApp.instance().project.histsAdded.connect(self.on_hists_added)
         P61BApp.instance().project.histsRemoved.connect(self.on_hists_removed)
         P61BApp.instance().project.histsActiveChanged.connect(self.on_hists_ac)
+
+        self._line_ax.set_xlim = self._xlim_wrapper(self._line_ax.set_xlim)
+        self._line_ax.set_ylim = self._ylim_wrapper(self._line_ax.set_ylim)
+
+    def _xlim_wrapper(self, fn):
+        tmp = copy.copy(fn)
+
+        def result(*args, **kwargs):
+            if isinstance(args[0], tuple):
+                P61BApp.instance().project.plot_xlim = args[0]
+            else:
+                P61BApp.instance().project.plot_xlim = args[:2]
+            return tmp(*args, **kwargs)
+
+        return result
+
+    def _ylim_wrapper(self, fn):
+        tmp = copy.copy(fn)
+
+        def result(*args, **kwargs):
+            if isinstance(args[0], tuple):
+                P61BApp.instance().project.plot_ylim = args[0]
+            else:
+                P61BApp.instance().project.plot_ylim = args[:2]
+            return tmp(*args, **kwargs)
+
+        return result
 
     def clear_line_axes(self):
         del self._line_ax.lines[:]

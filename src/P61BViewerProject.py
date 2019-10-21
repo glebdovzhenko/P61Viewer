@@ -10,12 +10,34 @@ class P61BViewerProject(QObject):
     histsAdded = pyqtSignal()
     histsRemoved = pyqtSignal()
     histsActiveChanged = pyqtSignal()
+    selectedHistChanged = pyqtSignal()
+    plotLimUpdated = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self, parent=None)
         self._histograms = []
         self._active_hs = []
         self._color_count = 0
+        self.selected_id = 0
+        self._plot_xlim = (0, 1)
+        self._plot_ylim = (0, 1)
+
+    def set_plot_xlim(self, val):
+        self._plot_xlim = val
+        self.plotLimUpdated.emit()
+
+    def get_plot_xlim(self):
+        return self._plot_xlim
+
+    def set_plot_ylim(self, val):
+        self._plot_ylim = val
+        self.plotLimUpdated.emit()
+
+    def get_plot_ylim(self):
+        return self._plot_ylim
+
+    plot_xlim = property(fget=get_plot_xlim, fset=set_plot_xlim)
+    plot_ylim = property(fget=get_plot_ylim, fset=set_plot_ylim)
 
     def get_histogram(self, idx: int) -> NexusHistogram:
         return self._histograms[idx]
@@ -23,8 +45,14 @@ class P61BViewerProject(QObject):
     def get_active_histogram(self, idx: int) -> NexusHistogram:
         return self._active_hs[idx]
 
-    def set_histogram(self, idx: int, value: NexusHistogram):
-        self._histograms[idx] = value
+    def set_selected_id(self, idx: int):
+        if 0 <= idx < self.histogram_list_len(active=True):
+            self.selected_id = idx
+            self.selectedHistChanged.emit()
+
+    def get_selected_hist(self):
+        if 0 <= self.selected_id < self.histogram_list_len(active=True):
+            return self.get_active_histogram(self.selected_id)
 
     def _update_active(self):
         self._active_hs = [h for h in self._histograms if h.active]

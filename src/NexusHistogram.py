@@ -16,6 +16,7 @@ class NexusHistogram:
         self._plot_color_mpl = None  # only get
         self._plot_color_qt = None   # only get
         self._plot_line = None       # only get
+        self._fit_line = None
 
     def get_name(self):
         return self._name
@@ -49,6 +50,7 @@ class NexusHistogram:
         self._plot_color_qt = int(self._plot_color_mpl[1:3], 16), int(self._plot_color_mpl[3:5], 16), \
                               int(self._plot_color_mpl[5:7], 16)
         self._plot_line.set_color(nval)
+        self._fit_line.set_color(nval)
 
     def get_dataset_id(self):
         return self._dataset_id
@@ -78,6 +80,7 @@ class NexusHistogram:
                 self._intensities = frames
                 self._energies = kev
                 self._plot_line = Line2D(self._energies, self._intensities)
+                self._fit_line = Line2D(self._energies, self._intensities, marker='o', linestyle='')
 
                 # TODO: add metadata fill
 

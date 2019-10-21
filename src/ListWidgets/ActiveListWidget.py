@@ -62,6 +62,7 @@ class ActiveListWidget(QWidget):
         ids = self.list.selectionModel().selectedIndexes()
         if ids:
             idx = ids[0].row()
+            P61BApp.instance().project.set_selected_id(idx)
 
 
 if __name__ == '__main__':

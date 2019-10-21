@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
-from PlotWidgets import MainPlotWidget
+from PlotWidgets import MainPlotWidget, FitPlotWidget
 from ListWidgets import EditableListWidget
-from PeakFitWidget import PeakFitWidget
 from P61BApp import P61BApp
 
 
@@ -21,8 +20,7 @@ class P61BViewer(QMainWindow):
 
         self.file_w = EditableListWidget(parent=self)
         self.view_plot_w = MainPlotWidget(parent=self)
-        # self.fit_plot_w = PlotWidget(parent=self, controls=False)
-        self.peak_f_w = PeakFitWidget(parent=self)
+        self.fit_plot_w = FitPlotWidget(parent=self)
 
         # set up layouts
         view_layout = QHBoxLayout()
@@ -33,8 +31,8 @@ class P61BViewer(QMainWindow):
         fit_tab = QWidget()
         fit_layout = QHBoxLayout()
         fit_tab.setLayout(fit_layout)
-        fit_layout.addWidget(self.peak_f_w, 1)
-        # fit_layout.addWidget(self.fit_plot_w, 3)
+        # fit_layout.addWidget(self.peak_f_w, 1)
+        fit_layout.addWidget(self.fit_plot_w, 3)
 
         self.cw.addTab(view_tab, 'View')
         self.cw.addTab(fit_tab, 'Fit')
