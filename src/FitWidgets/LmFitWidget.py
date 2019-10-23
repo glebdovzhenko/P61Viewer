@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog
+from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog, QScrollArea, QHBoxLayout
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
 from P61BApp import P61BApp
 from lmfit import models as lmfit_models
@@ -22,7 +22,8 @@ class LmFitBuilderModel(QAbstractListModel):
         row = ii.row()
 
         if role == Qt.DisplayRole:
-            return QVariant(P61BApp.instance().project.get_lmfit_model(row).name)
+            md = P61BApp.instance().project.get_lmfit_model(row)
+            return QVariant(md._name + ':' + md.prefix)
 
     def remove_row_by_idx(self, idx):
         self.beginRemoveRows(idx, idx.row(), idx.row())
@@ -52,22 +53,32 @@ class LmFitWidget(QWidget):
         #         if issubclass(getattr(lmfit_models, k), Model):
         #             self.model_names.append(k)
         # self.model_names.remove('Model')
+        # self.model_names.remove('ExpressionModel')
         # self.model_names.remove('ComplexConstantModel')
         self.model_names = ['VoigtModel', 'SkewedVoigtModel', 'ConstantModel', 'LinearModel',  'PolynomialModel']
 
-        self.label = QLabel('Build your model by adding elements to the right:')
-        self.list_all = QListWidget()
-        self.list_selected = QListView()
+        self.label = QLabel('Build your model by adding elements to the right:', parent=self)
+        self.list_all = QListWidget(parent=self)
+        self.list_selected = QListView(parent=self)
         self.list_selected_md = LmFitBuilderModel()
         self.list_selected.setModel(self.list_selected_md)
         self.list_all.addItems(self.model_names)
 
-        self.btn_add = QPushButton('>')
-        self.btn_rm = QPushButton('<')
+        self.list_all.setFixedWidth(150)
+        self.list_all.setFixedHeight(200)
+        self.list_selected.setFixedWidth(150)
+        self.list_selected.setFixedHeight(200)
+
+        self.btn_add = QPushButton('>', parent=self)
+        self.btn_rm = QPushButton('<', parent=self)
         self.btn_add.clicked.connect(self.on_btn_add)
         self.btn_rm.clicked.connect(self.on_btn_rm)
 
-        self.lmfit_view = LmfitModelWidget(parent=self)
+        self.scroll_area = QScrollArea(parent=self)
+        self.lmfit_view = LmfitModelWidget(parent=self.scroll_area)
+        self.scroll_area.setWidget(self.lmfit_view)
+        # self.scroll_area.setFixedHeight(400)
+        # self.scroll_area.setFixedWidth(370)
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -76,7 +87,7 @@ class LmFitWidget(QWidget):
         layout.addWidget(self.list_selected, 2, 3, 4, 1)
         layout.addWidget(self.btn_add, 3, 2, 1, 1)
         layout.addWidget(self.btn_rm, 4, 2, 1, 1)
-        layout.addWidget(self.lmfit_view, 6, 1, 1, 4)
+        layout.addWidget(self.scroll_area, 6, 1, 1, 3)
 
     def on_btn_add(self):
         if self.list_all.selectedItems():

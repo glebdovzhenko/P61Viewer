@@ -1,7 +1,6 @@
 from NexusHistogram import NexusHistogram
 from PyQt5.QtCore import QObject, pyqtSignal
 import os
-from lmfit.models import GaussianModel
 from functools import reduce
 
 
@@ -12,8 +11,8 @@ class P61BViewerProject(QObject):
                 'DampedOscillatorModel': 'do', 'DonaichModel': 'don', 'ExponentialGaussianModel': 'exg',
                 'ExponentialModel': 'e', 'ExpressionModel': 'expr', 'GaussianModel': 'g', 'LinearModel': 'lin',
                 'LognormalModel': 'lgn', 'LorentzianModel': 'lor', 'MoffatModel': 'mof', 'ParabolicModel': 'par',
-                'Pearson7Model': '7p', 'PolynomialModel': 'poly', 'PowerLawModel': 'pow', 'PseudoVoigtModel': 'pv',
-                'QuadraticModel': 'quad', 'RectangleModel': 'rect', 'SkewedGaussianModel': 'sg',
+                'Pearson7Model': '7p', 'PolynomialModel': 'pol', 'PowerLawModel': 'pow', 'PseudoVoigtModel': 'pv',
+                'QuadraticModel': 'qua', 'RectangleModel': 'rct', 'SkewedGaussianModel': 'sg',
                 'SkewedVoigtModel': 'sv', 'SplitLorentzianModel': 'spl', 'StepModel': 'stp', 'StudentsTModel': 'st',
                 'VoigtModel': 'v'}
 
@@ -29,7 +28,7 @@ class P61BViewerProject(QObject):
         self._histograms = []
         self._active_hs = []
         self._lmfit_models = []
-        self._lmfit_composite_model = GaussianModel()
+        self._lmfit_composite_model = None
         self._color_count = 0
         self.selected_id = 0
         self._plot_xlim = (0, 1)
@@ -156,7 +155,10 @@ class P61BViewerProject(QObject):
     def remove_lmfit_model(self, idx):
         if 0 <= idx < len(self._lmfit_models):
             del self._lmfit_models[idx]
-            self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+            if self._lmfit_models:
+                self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+            else:
+                self._lmfit_composite_model = None
             self.compositeModelUpdated.emit()
 
     def append_lmfit_model(self, md):
@@ -164,7 +166,10 @@ class P61BViewerProject(QObject):
             md.prefix = self.prefixes[md._name] + '%d_' % ii
             if md.name not in self.lmfit_model_names:
                 self._lmfit_models.append(md)
-                self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+                if self._lmfit_models:
+                    self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+                else:
+                    self._lmfit_composite_model = None
                 self.compositeModelUpdated.emit()
                 return True
         return False
