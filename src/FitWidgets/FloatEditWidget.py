@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QLineEdit
 from PyQt5.QtCore import pyqtSignal
 import re
+import numpy as np
 
 
 class FloatEditWidget(QWidget):
@@ -11,7 +12,7 @@ class FloatEditWidget(QWidget):
 
     valueUserUpd = pyqtSignal(float)
 
-    def __init__(self, parent=None):
+    def __init__(self, value=0., value_min=-np.inf, value_max=np.inf, parent=None):
         QWidget.__init__(self, parent=parent)
 
         decrease = QPushButton('<', parent=self)
@@ -20,7 +21,9 @@ class FloatEditWidget(QWidget):
 
         self.float_regexp = re.compile(r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[+-]*[0-9]+))?)?$')
 
-        self.set_value(0)
+        self.value_min = value_min
+        self.value_max = value_max
+        self.set_value(value)
 
         decrease.setFixedWidth(self.button_w)
         decrease.setFixedHeight(self.total_h)
@@ -43,6 +46,9 @@ class FloatEditWidget(QWidget):
 
         increase.clicked.connect(self._on_increase)
         decrease.clicked.connect(self._on_decrease)
+
+    def check_min_max(self, val):
+        return self.value_max > val > self.value_min
 
     def get_value(self):
         m = self.float_regexp.match(self.edit.text())

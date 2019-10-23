@@ -1,22 +1,35 @@
 from NexusHistogram import NexusHistogram
 from PyQt5.QtCore import QObject, pyqtSignal
 import os
+from lmfit.models import GaussianModel
+from functools import reduce
 
 
 class P61BViewerProject(QObject):
     color_cycle = ('#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf')
+    prefixes = {'BreitWignerModel': 'bw', 'ConstantModel': 'c', 'DampedHarmonicOscillatorModel': 'dho',
+                'DampedOscillatorModel': 'do', 'DonaichModel': 'don', 'ExponentialGaussianModel': 'exg',
+                'ExponentialModel': 'e', 'ExpressionModel': 'expr', 'GaussianModel': 'g', 'LinearModel': 'lin',
+                'LognormalModel': 'lgn', 'LorentzianModel': 'lor', 'MoffatModel': 'mof', 'ParabolicModel': 'par',
+                'Pearson7Model': '7p', 'PolynomialModel': 'poly', 'PowerLawModel': 'pow', 'PseudoVoigtModel': 'pv',
+                'QuadraticModel': 'quad', 'RectangleModel': 'rect', 'SkewedGaussianModel': 'sg',
+                'SkewedVoigtModel': 'sv', 'SplitLorentzianModel': 'spl', 'StepModel': 'stp', 'StudentsTModel': 'st',
+                'VoigtModel': 'v'}
 
     histsAdded = pyqtSignal()
     histsRemoved = pyqtSignal()
     histsActiveChanged = pyqtSignal()
     selectedHistChanged = pyqtSignal()
     plotLimUpdated = pyqtSignal()
+    compositeModelUpdated = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self, parent=None)
         self._histograms = []
         self._active_hs = []
+        self._lmfit_models = []
+        self._lmfit_composite_model = GaussianModel()
         self._color_count = 0
         self.selected_id = 0
         self._plot_xlim = (0, 1)
@@ -125,3 +138,33 @@ class P61BViewerProject(QObject):
         self._update_active()
         self.histsAdded.emit()
         return failed
+
+    @property
+    def lmfit_model_names(self):
+        return [md.name for md in self._lmfit_models]
+
+    @property
+    def lmfit_composite_model(self):
+        return self._lmfit_composite_model
+
+    def lmfit_models_len(self):
+        return len(self._lmfit_models)
+
+    def get_lmfit_model(self, idx):
+        return self._lmfit_models[idx]
+
+    def remove_lmfit_model(self, idx):
+        if 0 <= idx < len(self._lmfit_models):
+            del self._lmfit_models[idx]
+            self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+            self.compositeModelUpdated.emit()
+
+    def append_lmfit_model(self, md):
+        for ii in range(1, 11):
+            md.prefix = self.prefixes[md._name] + '%d_' % ii
+            if md.name not in self.lmfit_model_names:
+                self._lmfit_models.append(md)
+                self._lmfit_composite_model = reduce(lambda a, b: a + b, self._lmfit_models)
+                self.compositeModelUpdated.emit()
+                return True
+        return False

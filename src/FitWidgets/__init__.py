@@ -1,1 +1,1 @@
-from .SinglePeakFitWidget import SinglePeakFitWidget
+from .LmFitWidget import LmFitWidget
