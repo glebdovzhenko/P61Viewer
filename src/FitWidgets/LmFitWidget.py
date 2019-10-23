@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog, QScrollArea, QHBoxLayout
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
-from P61BApp import P61BApp
 from lmfit import models as lmfit_models
 from lmfit import Model
 import inspect
 
+from P61BApp import P61BApp
+from ListWidgets import ActiveListWidget
 from FitWidgets.LmFitModelWidget import LmfitModelWidget
 
 
@@ -55,7 +56,7 @@ class LmFitWidget(QWidget):
         # self.model_names.remove('Model')
         # self.model_names.remove('ExpressionModel')
         # self.model_names.remove('ComplexConstantModel')
-        self.model_names = ['VoigtModel', 'SkewedVoigtModel', 'ConstantModel', 'LinearModel',  'PolynomialModel']
+        self.model_names = ['PseudoVoigtModel', 'SkewedVoigtModel', 'ConstantModel', 'LinearModel',  'PolynomialModel']
 
         self.label = QLabel('Build your model by adding elements to the right:', parent=self)
         self.list_all = QListWidget(parent=self)
@@ -77,8 +78,12 @@ class LmFitWidget(QWidget):
         self.scroll_area = QScrollArea(parent=self)
         self.lmfit_view = LmfitModelWidget(parent=self.scroll_area)
         self.scroll_area.setWidget(self.lmfit_view)
-        # self.scroll_area.setFixedHeight(400)
-        # self.scroll_area.setFixedWidth(370)
+
+        self.active_list = ActiveListWidget()
+
+        self.fit_btn = QPushButton('Fit this')
+        self.fit_all_btn = QPushButton('Fit all')
+        self.copy_btn = QPushButton('Copy params')
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -88,6 +93,10 @@ class LmFitWidget(QWidget):
         layout.addWidget(self.btn_add, 3, 2, 1, 1)
         layout.addWidget(self.btn_rm, 4, 2, 1, 1)
         layout.addWidget(self.scroll_area, 6, 1, 1, 3)
+        layout.addWidget(self.active_list, 7, 2, 3, 2)
+        layout.addWidget(self.fit_btn, 7, 1, 1, 1)
+        layout.addWidget(self.fit_all_btn, 8, 1, 1, 1)
+        layout.addWidget(self.copy_btn, 9, 1, 1, 1)
 
     def on_btn_add(self):
         if self.list_all.selectedItems():

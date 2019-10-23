@@ -1,5 +1,5 @@
 import numpy as np
-from lmfit.models import LinearModel, GaussianModel, LorentzianModel, PseudoVoigtModel
+from lmfit.models import LinearModel, GaussianModel, LorentzianModel, PseudoVoigtModel, VoigtModel
 
 
 if __name__ == '__main__':
@@ -8,9 +8,9 @@ if __name__ == '__main__':
     from NexusHistogram import NexusHistogram
     from matplotlib import pyplot as plt
 
-    md = GaussianModel()
+    md = PseudoVoigtModel()
 
-    print(md.name)
+    print(md.param_names)
 
     # data = NexusHistogram()
     # data.fill('/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_09-10-30_.nxs',

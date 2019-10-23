@@ -1,7 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 import numpy as np
-from lmfit import Model
-from lmfit.models import PseudoVoigtModel, LinearModel
 
 from P61BApp import P61BApp
 from FitWidgets.FitParamWidget import FitParamWidget
@@ -17,8 +15,6 @@ class LmfitModelWidget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.setFixedWidth(300)
-
         self.on_composite_model_upd()
 
     def on_composite_model_upd(self):
@@ -30,13 +26,15 @@ class LmfitModelWidget(QWidget):
         model = P61BApp.instance().project.lmfit_composite_model
         if model is None:
             self.setFixedHeight(20)
+            self.setFixedWidth(100)
             return
 
         for ii, k in enumerate(model.param_names):
-            self.param_widgets[k] = FitParamWidget(parent=self, name=k, value=0.0, error=np.inf, label_w=100)
+            self.param_widgets[k] = FitParamWidget(parent=self, name=k, value=0.0, error=np.inf, label_w=110)
             self.layout.addWidget(self.param_widgets[k])
 
         self.setFixedHeight(1.4 * sum(map(lambda x: x.height(), self.param_widgets.values())))
+        self.setFixedWidth(1.1 * max(map(lambda x: x.width(), self.param_widgets.values())))
 
 
 if __name__ == '__main__':
