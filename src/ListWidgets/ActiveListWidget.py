@@ -8,41 +8,46 @@ from P61BApp import P61BApp
 class ActiveListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
+        self.q_app = P61BApp.instance()
 
-        P61BApp.instance().project.histsAdded.connect(self.on_hists_added)
-        P61BApp.instance().project.histsRemoved.connect(self.on_hists_removed)
-        P61BApp.instance().project.histsActiveChanged.connect(self.on_hists_ac)
+        self.q_app.dataRowsAppended.connect(self.on_hists_added)
+        self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
+        self.q_app.dataActiveChanged.connect(self.on_hists_ac)
+
+        self._data = self.q_app.data[self.q_app.data['Active']]
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return P61BApp.instance().project.histogram_list_len(active=True)
+        return self._data.shape[0]
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
 
-        row = ii.row()
-
         if role == Qt.DisplayRole:
-            return QVariant(P61BApp.instance().project.get_active_histogram(row).name)
+            return self._data.iloc[ii.row()]['ScreenName']
         elif role == Qt.ForegroundRole:
-            if P61BApp.instance().project.get_active_histogram(row).active:
-                return QColor(*P61BApp.instance().project.get_active_histogram(row).plot_color_qt, 255)
-            else:
-                return QColor(0, 0, 0, 255)
+            return QColor(self._data.iloc[ii.row()]['Color'])
 
-    def on_hists_added(self):
-        self.dataChanged.emit(self.index(0), self.index(self.rowCount()))
+    def on_hists_added(self, n_rows):
+        # TODO: redo
+        self._data = self.q_app.data[self.q_app.data['Active']]
+        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
-    def on_hists_removed(self):
-        self.dataChanged.emit(self.index(0), self.index(self.rowCount()))
+    def on_hists_removed(self, rows):
+        # TODO: redo
+        self._data = self.q_app.data[self.q_app.data['Active']]
+        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
-    def on_hists_ac(self):
-        self.dataChanged.emit(self.index(0), self.index(self.rowCount()))
+    def on_hists_ac(self, rows):
+        # TODO: redo
+        self._data = self.q_app.data[self.q_app.data['Active']]
+        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
 
 class ActiveListWidget(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
+        self.q_app = P61BApp.instance()
 
         # list
         self._model = ActiveListModel()
@@ -59,15 +64,16 @@ class ActiveListWidget(QWidget):
         self.list.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
     def on_selection_changed(self):
-        ids = self.list.selectionModel().selectedIndexes()
+        ids = self.list.selectedIndexes()
         if ids:
-            idx = ids[0].row()
-            P61BApp.instance().project.set_selected_id(idx)
+            self.q_app.selected_active_row = ids[0].row()
+            self.q_app.selectedActiveChanged.emit(ids[0].row())
 
 
 if __name__ == '__main__':
     import sys
     from ListWidgets.EditableListWidget import EditableListWidget
+
     q_app = P61BApp(sys.argv)
     app = EditableListWidget()
     app.show()

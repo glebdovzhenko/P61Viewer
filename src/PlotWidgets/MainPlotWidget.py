@@ -11,6 +11,7 @@ from P61BApp import P61BApp
 class MainPlotWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
+        self.q_app = P61BApp.instance()
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
@@ -22,66 +23,51 @@ class MainPlotWidget(QWidget):
         layout.addWidget(line_canvas)
         layout.addWidget(NavigationToolbar(line_canvas, self))
 
-        P61BApp.instance().project.histsAdded.connect(self.on_hists_added)
-        P61BApp.instance().project.histsRemoved.connect(self.on_hists_removed)
-        P61BApp.instance().project.histsActiveChanged.connect(self.on_hists_ac)
+        self.q_app.dataRowsAppended.connect(self.on_data_rows_appended)
+        self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
+        self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
 
-        self._line_ax.set_xlim = self._xlim_wrapper(self._line_ax.set_xlim)
-        self._line_ax.set_ylim = self._ylim_wrapper(self._line_ax.set_ylim)
+        self._line_ax.set_xlim = self.set_lim_wrapper(self._line_ax.set_xlim, 'PlotXLim')
+        self._line_ax.set_ylim = self.set_lim_wrapper(self._line_ax.set_ylim, 'PlotYLim')
 
-    def _xlim_wrapper(self, fn):
-        tmp = copy.copy(fn)
+    def on_data_rows_appended(self, n_rows):
+        for ii in range(self.q_app.data.shape[0] - n_rows, self.q_app.data.shape[0]):
+            self._line_ax.plot(self.q_app.data.iloc[ii]['DataX'], self.q_app.data.iloc[ii]['DataY'],
+                               color=str(hex(self.q_app.data.iloc[ii]['Color'])).replace('0x', '#'))
+        self.update_line_axes()
 
-        def result(*args, **kwargs):
-            if isinstance(args[0], tuple):
-                P61BApp.instance().project.plot_xlim = args[0]
+    def on_data_rows_removed(self, rows):
+        for ii in sorted(rows, reverse=True):
+            self._line_ax.lines[ii].remove()
+        self.update_line_axes(autoscale=False)
+
+    def on_data_active_changed(self, rows):
+        for ii in rows:
+            if self.q_app.data.iloc[ii]['Active']:
+                self._line_ax.lines[ii].set_linestyle('-')
             else:
-                P61BApp.instance().project.plot_xlim = args[:2]
-            return tmp(*args, **kwargs)
+                self._line_ax.lines[ii].set_linestyle('')
+        self.update_line_axes(autoscale=False)
 
-        return result
+    def set_lim_wrapper(self, set_lim, param):
+        set_lim_copy = copy.copy(set_lim)
 
-    def _ylim_wrapper(self, fn):
-        tmp = copy.copy(fn)
-
-        def result(*args, **kwargs):
+        def my_set_lim(*args, **kwargs):
             if isinstance(args[0], tuple):
-                P61BApp.instance().project.plot_ylim = args[0]
+                self.q_app.params[param] = args[0]
             else:
-                P61BApp.instance().project.plot_ylim = args[:2]
-            return tmp(*args, **kwargs)
+                self.q_app.params[param] = args[:2]
 
-        return result
+            self.q_app.plotXYLimChanged.emit()
+            return set_lim_copy(*args, **kwargs)
 
-    def clear_line_axes(self):
-        del self._line_ax.lines[:]
-
-    def axes_add_line(self, line):
-        self._line_ax.add_line(line)
+        return my_set_lim
 
     def update_line_axes(self, autoscale=True):
         if autoscale:
             self._line_ax.autoscale()
             self._line_ax.figure.canvas.toolbar.update()
         self._line_ax.figure.canvas.draw()
-
-    def on_hists_added(self):
-        self.clear_line_axes()
-        for line in P61BApp.instance().project.get_plot_lines():
-            self.axes_add_line(line)
-        self.update_line_axes()
-
-    def on_hists_removed(self):
-        self.clear_line_axes()
-        for line in P61BApp.instance().project.get_plot_lines():
-            self.axes_add_line(line)
-        self.update_line_axes(autoscale=False)
-
-    def on_hists_ac(self):
-        self.clear_line_axes()
-        for line in P61BApp.instance().project.get_plot_lines():
-            self.axes_add_line(line)
-        self.update_line_axes(autoscale=False)
 
 
 if __name__ == '__main__':

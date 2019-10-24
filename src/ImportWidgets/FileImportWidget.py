@@ -14,16 +14,6 @@ class FileImportWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61BApp.instance()
 
-        self.colorwheel = self._colorwheel()
-
-    @staticmethod
-    def _colorwheel():
-        ii = 0
-        wheel = (0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd, 0x8c564b, 0xe377c2, 0x7f7f7f, 0xbcbd22, 0x17becf)
-        while True:
-            yield wheel[ii % len(wheel)]
-            ii += 1
-
     def open_files(self, f_names):
         # TODO: add check if the files are already open
         ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', \
@@ -31,7 +21,7 @@ class FileImportWidget(QWidget):
 
         failed = []
         for ff in f_names:
-            for channel in (ch0, ch1):
+            for ii, channel in enumerate((ch0, ch1)):
                 try:
                     with h5py.File(ff, 'r') as f:
                         frames = np.sum(f[channel], axis=0)
@@ -39,18 +29,20 @@ class FileImportWidget(QWidget):
                         frames[-1] = 0.0
                         kev = (np.arange(frames.shape[0]) + 0.5) * self.kev_per_bin
 
-                        self.q_app.data.loc[len(self.q_app.data.index) + 1] = {
+                        self.q_app.data.loc[len(self.q_app.data.index)] = {
                                 'DataX': kev,
                                 'DataY': frames,
-                                'DataID': ff + '::' + channel,
-                                'ScreenName': os.path.basename(ff) + ':' + channel[-2:],
+                                'DataID': ff + ':' + channel,
+                                'ScreenName': os.path.basename(ff) + ':' + '%02d' % ii,
                                 'Active': True,
-                                'Color': next(self.colorwheel)
+                                'Color': next(self.q_app.params['ColorWheel'])
                             }
 
                 except Exception as e:
                     print(e)
                     failed.append(ff + '::' + channel)
+
+        self.q_app.dataRowsAppended.emit(len(f_names) * 2 - len(failed))
 
         if failed:
             msg = QErrorMessage()
@@ -69,4 +61,5 @@ if __name__ == '__main__':
          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-00-32_.nxs',
          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-17-13_.nxs'])
     print(q_app.data)
+    print(q_app.data.iloc[0])
     sys.exit(q_app.exec())

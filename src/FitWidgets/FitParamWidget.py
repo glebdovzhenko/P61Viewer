@@ -3,6 +3,8 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from FitWidgets.FloatEditWidget import FloatEditWidget
 import numpy as np
 
+from P61BApp import P61BApp
+
 
 class FitParamWidget(QWidget):
     offset = 2
@@ -49,8 +51,6 @@ class FitParamWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    from P61BApp import P61BApp
-
     q_app = P61BApp(sys.argv)
     app = FitParamWidget(name='Parameter', value=3.1E-2, error=np.inf)
     app.show()

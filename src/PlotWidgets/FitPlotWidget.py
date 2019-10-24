@@ -9,6 +9,7 @@ from P61BApp import P61BApp
 class FitPlotWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
+        self.q_app = P61BApp.instance()
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
@@ -19,12 +20,22 @@ class FitPlotWidget(QWidget):
         self.setLayout(layout)
         layout.addWidget(line_canvas)
 
-        P61BApp.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
-        P61BApp.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
+        self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
+        self.q_app.selectedActiveChanged.connect(self.on_selected_active_changed)
 
-    def on_plot_lim_upd(self):
-        self._line_ax.set_xlim(*P61BApp.instance().project.plot_xlim)
-        self._line_ax.set_ylim(*P61BApp.instance().project.plot_ylim)
+        # P61BApp.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
+        # P61BApp.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
+
+    def on_plot_lim_changed(self):
+        self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
+        self._line_ax.set_ylim(*self.q_app.params['PlotYLim'])
+        self._line_ax.figure.canvas.draw()
+
+    def on_selected_active_changed(self, idx):
+        self.clear_line_axes()
+        data = self.q_app.data[self.q_app.data['Active']]
+        self._line_ax.plot(data.iloc[idx]['DataX'], data.iloc[idx]['DataY'],
+                           color=str(hex(data.iloc[idx]['Color'])).replace('0x', '#'), marker='o', linestyle='')
         self._line_ax.figure.canvas.draw()
 
     def clear_line_axes(self):
@@ -32,12 +43,6 @@ class FitPlotWidget(QWidget):
 
     def axes_add_line(self, line):
         self._line_ax.add_line(line)
-
-    def on_selected_h_change(self):
-        self.clear_line_axes()
-        h = P61BApp.instance().project.get_selected_hist()
-        self.axes_add_line(h._fit_line)
-        self._line_ax.figure.canvas.draw()
 
 
 if __name__ == '__main__':

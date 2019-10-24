@@ -10,20 +10,17 @@ class LmfitModelWidget(QWidget):
         QWidget.__init__(self, parent=parent)
 
         self.param_widgets = dict()
-        P61BApp.instance().project.compositeModelUpdated.connect(self.on_composite_model_upd)
-
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.on_composite_model_upd()
+        self.update_repr(None)
 
-    def on_composite_model_upd(self):
+    def update_repr(self, model):
         for k in self.param_widgets:
             self.layout.removeWidget(self.param_widgets[k])
             self.param_widgets[k].setParent(None)
         self.param_widgets.clear()
 
-        model = P61BApp.instance().project.lmfit_composite_model
         if model is None:
             self.setFixedHeight(20)
             self.setFixedWidth(100)

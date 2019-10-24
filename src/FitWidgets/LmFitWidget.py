@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog, QScrollArea, QHBoxLayout
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
 from lmfit import models as lmfit_models
+from functools import reduce
 from lmfit import Model
 import inspect
 
@@ -10,37 +11,57 @@ from FitWidgets.LmFitModelWidget import LmfitModelWidget
 
 
 class LmFitBuilderModel(QAbstractListModel):
+
+    prefixes = {'BreitWignerModel': 'bw', 'ConstantModel': 'c', 'DampedHarmonicOscillatorModel': 'dho',
+                'DampedOscillatorModel': 'do', 'DonaichModel': 'don', 'ExponentialGaussianModel': 'exg',
+                'ExponentialModel': 'e', 'ExpressionModel': 'expr', 'GaussianModel': 'g', 'LinearModel': 'lin',
+                'LognormalModel': 'lgn', 'LorentzianModel': 'lor', 'MoffatModel': 'mof', 'ParabolicModel': 'par',
+                'Pearson7Model': '7p', 'PolynomialModel': 'pol', 'PowerLawModel': 'pow', 'PseudoVoigtModel': 'pv',
+                'QuadraticModel': 'qua', 'RectangleModel': 'rct', 'SkewedGaussianModel': 'sg',
+                'SkewedVoigtModel': 'sv', 'SplitLorentzianModel': 'spl', 'StepModel': 'stp', 'StudentsTModel': 'st',
+                'VoigtModel': 'v'}
+
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent=parent)
+        self.q_app = P61BApp.instance()
+
+        self._model_list = []
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return P61BApp.instance().project.lmfit_models_len()
+        return len(self._model_list)
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
 
-        row = ii.row()
-
         if role == Qt.DisplayRole:
-            md = P61BApp.instance().project.get_lmfit_model(row)
+            md = self._model_list[ii.row()]
             return QVariant(md._name + ':' + md.prefix)
 
     def remove_row_by_idx(self, idx):
         self.beginRemoveRows(idx, idx.row(), idx.row())
-        P61BApp.instance().project.remove_lmfit_model(idx.row())
+        del self._model_list[idx.row()]
         self.endRemoveRows()
 
     def append_row(self, model_name, **kwargs):
         kwargs.update({'name': model_name})
-        new_model = getattr(lmfit_models, model_name)(**kwargs)
+        prefixes = [md.prefix for md in self._model_list]
+        for ii in range(10):
+            prx = self.prefixes[model_name] + str(ii) + '_'
+            if prx not in prefixes:
+                kwargs.update({'prefix': prx})
+                break
 
-        max_idx = self.index(self.rowCount())
-        self.beginInsertRows(max_idx, self.rowCount(), self.rowCount() + 1)
-        failed = P61BApp.instance().project.append_lmfit_model(new_model)
+        new_model = getattr(lmfit_models, model_name)(**kwargs)
+        self.beginInsertRows(self.index(self.rowCount()), self.rowCount(), self.rowCount() + 1)
+        self._model_list.append(new_model)
         self.endInsertRows()
-        # self.dataChanged.emit(max_idx, self.index(self.rowCount()))
-        return failed
+
+    def get_composite(self):
+        if self._model_list:
+            return reduce(lambda a, b: a + b, self._model_list)
+        else:
+            return None
 
 
 class LmFitWidget(QWidget):
@@ -110,10 +131,13 @@ class LmFitWidget(QWidget):
                 pass
             else:
                 self.list_selected_md.append_row(model_name)
+        self.lmfit_view.update_repr(self.list_selected_md.get_composite())
 
     def on_btn_rm(self):
         if self.list_selected.selectedIndexes():
             self.list_selected_md.remove_row_by_idx(self.list_selected.selectedIndexes()[0])
+            self.list_selected.clearSelection()
+        self.lmfit_view.update_repr(self.list_selected_md.get_composite())
 
 
 if __name__ == '__main__':

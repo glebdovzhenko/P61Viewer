@@ -3,6 +3,8 @@ from PyQt5.QtCore import pyqtSignal
 import re
 import numpy as np
 
+from P61BApp import P61BApp
+
 
 class FloatEditWidget(QWidget):
     offset = 2
@@ -101,7 +103,6 @@ class FloatEditWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    from P61BApp import P61BApp
     q_app = P61BApp(sys.argv)
     app = FloatEditWidget()
     app.show()
