@@ -34,7 +34,6 @@ class P61BViewerProject(QObject):
         self.selected_id = 0
         self._plot_xlim = (0, 1)
         self._plot_ylim = (0, 1)
-        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'Active', 'Color'))
 
     def set_plot_xlim(self, val):
         self._plot_xlim = val
