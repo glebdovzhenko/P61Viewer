@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog, QScrollArea, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QListWidget, QGridLayout, QLabel, QPushButton, QListView, QInputDialog
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt
 from lmfit import models as lmfit_models
 from functools import reduce
@@ -6,8 +6,6 @@ from lmfit import Model
 import inspect
 
 from P61BApp import P61BApp
-from ListWidgets import ActiveListWidget
-from FitWidgets.LmFitModelWidget import LmfitModelWidget
 
 
 class LmFitBuilderModel(QAbstractListModel):
@@ -57,16 +55,20 @@ class LmFitBuilderModel(QAbstractListModel):
         self._model_list.append(new_model)
         self.endInsertRows()
 
-    def get_composite(self):
+    def set_composite(self):
         if self._model_list:
-            return reduce(lambda a, b: a + b, self._model_list)
+            self.q_app.params['LmFitModel'] = reduce(lambda a, b: a + b, self._model_list)
+            self.q_app.lmFitModelUpdated.emit()
         else:
-            return None
+            self.q_app.params['LmFitModel'] = None
+            self.q_app.lmFitModelUpdated.emit()
 
 
-class LmFitWidget(QWidget):
+class LmFitBuilderWidget(QWidget):
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
+        self.q_app = P61BApp.instance()
 
         # special cases: ExpressionModel and PolynomialModel
         # self.model_names = []
@@ -80,69 +82,54 @@ class LmFitWidget(QWidget):
         self.model_names = ['PseudoVoigtModel', 'SkewedVoigtModel', 'ConstantModel', 'LinearModel',  'PolynomialModel']
 
         self.label = QLabel('Build your model by adding elements to the right:', parent=self)
-        self.list_all = QListWidget(parent=self)
-        self.list_selected = QListView(parent=self)
-        self.list_selected_md = LmFitBuilderModel()
-        self.list_selected.setModel(self.list_selected_md)
-        self.list_all.addItems(self.model_names)
+        self.lmfit_selector = QListWidget(parent=self)
+        self.lmfit_builder = QListView(parent=self)
+        self.lmfit_builder_md = LmFitBuilderModel()
+        self.lmfit_builder.setModel(self.lmfit_builder_md)
+        self.lmfit_selector.addItems(self.model_names)
 
-        self.list_all.setFixedWidth(150)
-        self.list_all.setFixedHeight(100)
-        self.list_selected.setFixedWidth(150)
-        self.list_selected.setFixedHeight(100)
+        self.lmfit_selector.setFixedWidth(150)
+        self.lmfit_selector.setFixedHeight(100)
+        self.lmfit_builder.setFixedWidth(150)
+        self.lmfit_builder.setFixedHeight(100)
 
         self.btn_add = QPushButton('>', parent=self)
         self.btn_rm = QPushButton('<', parent=self)
         self.btn_add.clicked.connect(self.on_btn_add)
         self.btn_rm.clicked.connect(self.on_btn_rm)
 
-        self.scroll_area = QScrollArea(parent=self)
-        self.lmfit_view = LmfitModelWidget(parent=self.scroll_area)
-        self.scroll_area.setWidget(self.lmfit_view)
-
-        self.active_list = ActiveListWidget()
-
-        self.fit_btn = QPushButton('Fit this')
-        self.fit_all_btn = QPushButton('Fit all')
-        self.copy_btn = QPushButton('Copy params')
-
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.label, 1, 1, 1, 3)
-        layout.addWidget(self.list_all, 2, 1, 4, 1)
-        layout.addWidget(self.list_selected, 2, 3, 4, 1)
+        layout.addWidget(self.lmfit_selector, 2, 1, 4, 1)
+        layout.addWidget(self.lmfit_builder, 2, 3, 4, 1)
         layout.addWidget(self.btn_add, 3, 2, 1, 1)
         layout.addWidget(self.btn_rm, 4, 2, 1, 1)
-        layout.addWidget(self.scroll_area, 6, 1, 1, 3)
-        layout.addWidget(self.active_list, 7, 2, 3, 2)
-        layout.addWidget(self.fit_btn, 7, 1, 1, 1)
-        layout.addWidget(self.fit_all_btn, 8, 1, 1, 1)
-        layout.addWidget(self.copy_btn, 9, 1, 1, 1)
 
     def on_btn_add(self):
-        if self.list_all.selectedItems():
-            model_name = self.list_all.selectedItems()[0].text()
+        if self.lmfit_selector.selectedItems():
+            model_name = self.lmfit_selector.selectedItems()[0].text()
             if model_name == 'PolynomialModel':
                 item, ok = QInputDialog.getItem(self, 'PolynomialModel', 'Polynomial degree',
                                                 ('3', '4', '5', '6', '7'), 0, False)
                 if ok and item:
-                    self.list_selected_md.append_row(model_name, degree=int(item))
+                    self.lmfit_builder_md.append_row(model_name, degree=int(item))
             elif model_name == 'ExpressionModel':
                 pass
             else:
-                self.list_selected_md.append_row(model_name)
-        self.lmfit_view.update_repr(self.list_selected_md.get_composite())
+                self.lmfit_builder_md.append_row(model_name)
+        self.lmfit_builder_md.set_composite()
 
     def on_btn_rm(self):
-        if self.list_selected.selectedIndexes():
-            self.list_selected_md.remove_row_by_idx(self.list_selected.selectedIndexes()[0])
-            self.list_selected.clearSelection()
-        self.lmfit_view.update_repr(self.list_selected_md.get_composite())
+        if self.lmfit_builder.selectedIndexes():
+            self.lmfit_builder_md.remove_row_by_idx(self.lmfit_builder.selectedIndexes()[0])
+            self.lmfit_builder.clearSelection()
+        self.lmfit_builder_md.set_composite()
 
 
 if __name__ == '__main__':
     import sys
     q_app = P61BApp(sys.argv)
-    app = LmFitWidget()
+    app = LmFitBuilderWidget()
     app.show()
     sys.exit(q_app.exec())

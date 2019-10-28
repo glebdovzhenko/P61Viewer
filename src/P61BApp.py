@@ -10,17 +10,18 @@ class P61BApp(QApplication):
     dataActiveChanged = pyqtSignal(list)
     selectedActiveChanged = pyqtSignal(int)
     plotXYLimChanged = pyqtSignal()
+    lmFitModelUpdated = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
 
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResults'))
         self.params = {
+            'LmFitModel': None,
             'SelectedActiveRow': -1,
             'ColorWheel': self._color_wheel(),
             'PlotXLim': (0, 1),
             'PlotYLim': (0, 1),
-            'LmFitModel': None,
         }
 
     @staticmethod

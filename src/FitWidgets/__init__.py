@@ -1,1 +1,1 @@
-from .LmFitWidget import LmFitWidget
+from .FitWidget import FitWidget

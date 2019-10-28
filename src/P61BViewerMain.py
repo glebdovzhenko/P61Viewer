@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
 from PlotWidgets import MainPlotWidget, FitPlotWidget
 from ListWidgets import EditableListWidget
-from FitWidgets import LmFitWidget
+from FitWidgets import FitWidget
 from P61BApp import P61BApp
 
 
@@ -20,7 +20,7 @@ class P61BViewer(QMainWindow):
         view_tab = QWidget()
 
         self.file_w = EditableListWidget(parent=self)
-        self.fit_w = LmFitWidget(parent=self)
+        self.fit_w = FitWidget(parent=self)
         self.view_plot_w = MainPlotWidget(parent=self)
         self.fit_plot_w = FitPlotWidget(parent=self)
 
