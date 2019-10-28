@@ -19,6 +19,8 @@ class FileImportWidget(QWidget):
         ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', \
                    'entry/instrument/xspress3/channel01/histogram'
 
+        columns = list(self.q_app.data.columns)
+
         failed = []
         for ff in f_names:
             for ii, channel in enumerate((ch0, ch1)):
@@ -29,14 +31,17 @@ class FileImportWidget(QWidget):
                         frames[-1] = 0.0
                         kev = (np.arange(frames.shape[0]) + 0.5) * self.kev_per_bin
 
-                        self.q_app.data.loc[len(self.q_app.data.index)] = {
+                        row = {c: None for c in columns}
+                        row.update({
                                 'DataX': kev,
                                 'DataY': frames,
                                 'DataID': ff + ':' + channel,
                                 'ScreenName': os.path.basename(ff) + ':' + '%02d' % ii,
                                 'Active': True,
                                 'Color': next(self.q_app.params['ColorWheel'])
-                            }
+                            })
+
+                        self.q_app.data.loc[len(self.q_app.data.index)] = row
 
                 except Exception as e:
                     print(e)

@@ -87,9 +87,9 @@ class LmFitWidget(QWidget):
         self.list_all.addItems(self.model_names)
 
         self.list_all.setFixedWidth(150)
-        self.list_all.setFixedHeight(200)
+        self.list_all.setFixedHeight(100)
         self.list_selected.setFixedWidth(150)
-        self.list_selected.setFixedHeight(200)
+        self.list_selected.setFixedHeight(100)
 
         self.btn_add = QPushButton('>', parent=self)
         self.btn_rm = QPushButton('<', parent=self)
