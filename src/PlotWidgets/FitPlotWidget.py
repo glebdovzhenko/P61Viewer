@@ -33,9 +33,11 @@ class FitPlotWidget(QWidget):
 
     def on_selected_active_changed(self, idx):
         self.clear_line_axes()
-        data = self.q_app.data[self.q_app.data['Active']]
-        self._line_ax.plot(data.iloc[idx]['DataX'], data.iloc[idx]['DataY'],
-                           color=str(hex(data.iloc[idx]['Color'])).replace('0x', '#'), marker='o', linestyle='')
+        if idx != -1:
+            data = self.q_app.data[self.q_app.data['Active']]
+            self._line_ax.plot(data.iloc[idx]['DataX'], data.iloc[idx]['DataY'],
+                               color=str(hex(data.iloc[idx]['Color'])).replace('0x', '#'),
+                               marker='o', linestyle='')
         self._line_ax.figure.canvas.draw()
 
     def clear_line_axes(self):

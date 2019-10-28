@@ -15,12 +15,12 @@ class P61BApp(QApplication):
         QApplication.__init__(self, *args, **kwargs)
 
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResults'))
-        self.selected_active_row = 0
         self.params = {
+            'SelectedActiveRow': -1,
             'ColorWheel': self._color_wheel(),
             'PlotXLim': (0, 1),
             'PlotYLim': (0, 1),
-            'LmFitModel': None
+            'LmFitModel': None,
         }
 
     @staticmethod
