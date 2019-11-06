@@ -15,7 +15,7 @@ class P61BApp(QApplication):
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
 
-        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResults'))
+        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResult'))
         self.params = {
             'LmFitModel': None,
             'SelectedIndex': -1,

@@ -62,6 +62,7 @@ class FitModelBuilderModel(QAbstractListModel):
         else:
             self.q_app.params['LmFitModel'] = None
             self.q_app.lmFitModelUpdated.emit()
+        self.q_app.data.loc[:, 'FitResult'] = None
 
 
 class FitModelBuilderWidget(QWidget):

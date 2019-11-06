@@ -35,9 +35,16 @@ class FitPlotWidget(QWidget):
     def on_selected_active_changed(self, idx):
         self.clear_line_axes()
         if idx != -1:
-            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color']]
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
             self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'),
                                marker='o', linestyle='')
+            if data['FitResult'] is not None:
+                xx = data['DataX']
+                sel = (self.q_app.params['PlotXLim'][0] < xx) & (self.q_app.params['PlotXLim'][1] > xx)
+                xx = xx[sel]
+                self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
+                                   color=str(hex(data['Color'])).replace('0x', '#'),
+                                   marker='', linestyle='--')
         self._line_ax.figure.canvas.draw()
 
     def clear_line_axes(self):
