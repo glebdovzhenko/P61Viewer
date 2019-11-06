@@ -66,5 +66,5 @@ if __name__ == '__main__':
          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-00-32_.nxs',
          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-17-13_.nxs'])
     print(q_app.data)
-    print(q_app.data.iloc[0])
+    print(q_app.data.loc[0])
     sys.exit(q_app.exec())

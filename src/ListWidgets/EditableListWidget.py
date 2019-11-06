@@ -36,14 +36,14 @@ class EditableListModel(QAbstractListModel):
             return QVariant
 
         if role == Qt.DisplayRole:
-            return self._data.iloc[ii.row()]['ScreenName']
+            return self._data.loc[ii.row(), 'ScreenName']
         elif role == Qt.ForegroundRole:
-            if self._data.iloc[ii.row()]['Active']:
-                return QColor(self._data.iloc[ii.row()]['Color'])
+            if self._data.loc[ii.row(), 'Active']:
+                return QColor(self._data.loc[ii.row(), 'Color'])
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
-            return Qt.Checked if self._data.iloc[ii.row()]['Active'] else Qt.Unchecked
+            return Qt.Checked if self._data.loc[ii.row(), 'Active'] else Qt.Unchecked
 
     def setData(self, ii: QModelIndex, value, role=None):
         if not ii.isValid():
@@ -120,7 +120,7 @@ class EditableListWidget(QWidget):
 
     def check_box_update(self):
         rows = [idx.row() for idx in self.list.selectedIndexes()]
-        status = self.q_app.data.iloc[rows]['Active']
+        status = self.q_app.data.loc[rows, 'Active']
 
         if all(status):
             self.check_box.setCheckState(Qt.Checked)

@@ -9,50 +9,55 @@ class ActiveListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
         self.q_app = P61BApp.instance()
+        self._data = self.q_app.data
+        self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
         self.q_app.dataRowsAppended.connect(self.on_hists_added)
         self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
         self.q_app.dataActiveChanged.connect(self.on_hists_ac)
 
-        self._data = self.q_app.data[self.q_app.data['Active']]
-
     def rowCount(self, parent=None, *args, **kwargs):
-        return self._data.shape[0]
+        return self._active_idx.shape[0]
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
 
+        a_row = self._active_idx[ii.row()]
         if role == Qt.DisplayRole:
-            return self._data.iloc[ii.row()]['ScreenName']
+            return self._data.loc[a_row, 'ScreenName']
         elif role == Qt.ForegroundRole:
-            return QColor(self._data.iloc[ii.row()]['Color'])
+            return QColor(self._data.loc[a_row, 'Color'])
 
     def update_selection(self):
-        if self._data.shape[0] == 0:
-            self.q_app.params['SelectedActiveRow'] = -1
-            self.q_app.selectedActiveChanged.emit(-1)
-        elif 0 <= self.q_app.params['SelectedActiveRow'] < self._data.shape[0]:
-            self.q_app.selectedActiveChanged.emit(self.q_app.params['SelectedActiveRow'])
+        if self._active_idx.shape[0] == 0:
+            self.q_app.params['SelectedIndex'] = -1
+            self.q_app.selectedIndexChanged.emit(-1)
+        elif self.q_app.params['SelectedIndex'] in self._active_idx:
+            self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
         else:
-            self.q_app.params['SelectedActiveRow'] = 0
-            self.q_app.selectedActiveChanged.emit(0)
+            self.q_app.params['SelectedIndex'] = self._active_idx[0]
+            self.q_app.selectedIndexChanged.emit(self._active_idx[0])
+
+    def _upd(self):
+        self._data = self.q_app.data
+        self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
     def on_hists_added(self, n_rows):
         # TODO: redo
-        self._data = self.q_app.data[self.q_app.data['Active']]
+        self._upd()
         self.update_selection()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
     def on_hists_removed(self, rows):
         # TODO: redo
-        self._data = self.q_app.data[self.q_app.data['Active']]
+        self._upd()
         self.update_selection()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
     def on_hists_ac(self, rows):
         # TODO: redo
-        self._data = self.q_app.data[self.q_app.data['Active']]
+        self._upd()
         self.update_selection()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
@@ -75,13 +80,13 @@ class ActiveListWidget(QWidget):
 
         # signals
         self.list.selectionModel().selectionChanged.connect(self.on_selection_changed)
-        self.q_app.selectedActiveChanged.connect(self.on_active_changed)
+        self.q_app.selectedIndexChanged.connect(self.on_active_changed)
 
     def on_selection_changed(self):
         ids = self.list.selectedIndexes()
         if ids:
-            self.q_app.selected_active_row = ids[0].row()
-            self.q_app.selectedActiveChanged.emit(ids[0].row())
+            self.q_app.params['SelectedIndex'] = self.q_app.data[self.q_app.data['Active']].index[ids[0].row()]
+            self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
 
     def on_active_changed(self, n_row):
         # TODO: this handler is being called each time on_selection_changed is called

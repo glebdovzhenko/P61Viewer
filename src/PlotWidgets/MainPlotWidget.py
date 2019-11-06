@@ -32,8 +32,8 @@ class MainPlotWidget(QWidget):
 
     def on_data_rows_appended(self, n_rows):
         for ii in range(self.q_app.data.shape[0] - n_rows, self.q_app.data.shape[0]):
-            self._line_ax.plot(self.q_app.data.iloc[ii]['DataX'], self.q_app.data.iloc[ii]['DataY'],
-                               color=str(hex(self.q_app.data.iloc[ii]['Color'])).replace('0x', '#'))
+            data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
+            self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'))
         self.update_line_axes()
 
     def on_data_rows_removed(self, rows):
@@ -43,7 +43,7 @@ class MainPlotWidget(QWidget):
 
     def on_data_active_changed(self, rows):
         for ii in rows:
-            if self.q_app.data.iloc[ii]['Active']:
+            if self.q_app.data.loc[ii, 'Active']:
                 self._line_ax.lines[ii].set_linestyle('-')
             else:
                 self._line_ax.lines[ii].set_linestyle('')

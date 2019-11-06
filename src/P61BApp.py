@@ -8,7 +8,7 @@ class P61BApp(QApplication):
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
-    selectedActiveChanged = pyqtSignal(int)
+    selectedIndexChanged = pyqtSignal(int)
     plotXYLimChanged = pyqtSignal()
     lmFitModelUpdated = pyqtSignal()
 
@@ -18,7 +18,7 @@ class P61BApp(QApplication):
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResults'))
         self.params = {
             'LmFitModel': None,
-            'SelectedActiveRow': -1,
+            'SelectedIndex': -1,
             'ColorWheel': self._color_wheel(),
             'PlotXLim': (0, 1),
             'PlotYLim': (0, 1),

@@ -21,7 +21,8 @@ class FitPlotWidget(QWidget):
         layout.addWidget(line_canvas)
 
         self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
-        self.q_app.selectedActiveChanged.connect(self.on_selected_active_changed)
+        self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
+        self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
 
         # P61BApp.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
         # P61BApp.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
@@ -34,9 +35,8 @@ class FitPlotWidget(QWidget):
     def on_selected_active_changed(self, idx):
         self.clear_line_axes()
         if idx != -1:
-            data = self.q_app.data[self.q_app.data['Active']]
-            self._line_ax.plot(data.iloc[idx]['DataX'], data.iloc[idx]['DataY'],
-                               color=str(hex(data.iloc[idx]['Color'])).replace('0x', '#'),
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color']]
+            self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'),
                                marker='o', linestyle='')
         self._line_ax.figure.canvas.draw()
 
