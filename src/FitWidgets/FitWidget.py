@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
 
 from P61BApp import P61BApp
 from ListWidgets import ActiveListWidget
-from FitWidgets.LmFitInspectorWidget import LmFitInspectorWidget
-from FitWidgets.LmFitBuilderWidget import LmFitBuilderWidget
+from FitWidgets.FitModelInspectorWidget import LmFitInspectorWidget
+from FitWidgets.FitModelBuilderWidget import FitModelBuilderWidget
 
 
 class FitWidget(QWidget):
@@ -11,7 +11,7 @@ class FitWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61BApp.instance()
 
-        self.lmfit_builder = LmFitBuilderWidget()
+        self.lmfit_builder = FitModelBuilderWidget()
         self.lmfit_inspector = LmFitInspectorWidget(parent=self)
 
         self.active_list = ActiveListWidget()

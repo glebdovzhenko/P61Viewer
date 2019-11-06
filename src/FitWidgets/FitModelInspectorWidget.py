@@ -5,7 +5,7 @@ from P61BApp import P61BApp
 from FitWidgets.FitParamWidget import FitParamWidget
 
 
-class LmFitInspector(QWidget):
+class FitModelInspector(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61BApp.instance()
@@ -43,7 +43,7 @@ class LmFitInspector(QWidget):
 class LmFitInspectorWidget(QScrollArea):
     def __init__(self, parent=None):
         QScrollArea.__init__(self, parent=parent)
-        self.inspector = LmFitInspector()
+        self.inspector = FitModelInspector()
         self.setWidget(self.inspector)
 
 

@@ -8,7 +8,7 @@ import inspect
 from P61BApp import P61BApp
 
 
-class LmFitBuilderModel(QAbstractListModel):
+class FitModelBuilderModel(QAbstractListModel):
 
     prefixes = {'BreitWignerModel': 'bw', 'ConstantModel': 'c', 'DampedHarmonicOscillatorModel': 'dho',
                 'DampedOscillatorModel': 'do', 'DonaichModel': 'don', 'ExponentialGaussianModel': 'exg',
@@ -64,7 +64,7 @@ class LmFitBuilderModel(QAbstractListModel):
             self.q_app.lmFitModelUpdated.emit()
 
 
-class LmFitBuilderWidget(QWidget):
+class FitModelBuilderWidget(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -84,7 +84,7 @@ class LmFitBuilderWidget(QWidget):
         self.label = QLabel('Build your model by adding elements to the right:', parent=self)
         self.lmfit_selector = QListWidget(parent=self)
         self.lmfit_builder = QListView(parent=self)
-        self.lmfit_builder_md = LmFitBuilderModel()
+        self.lmfit_builder_md = FitModelBuilderModel()
         self.lmfit_builder.setModel(self.lmfit_builder_md)
         self.lmfit_selector.addItems(self.model_names)
 
@@ -130,6 +130,6 @@ class LmFitBuilderWidget(QWidget):
 if __name__ == '__main__':
     import sys
     q_app = P61BApp(sys.argv)
-    app = LmFitBuilderWidget()
+    app = FitModelBuilderWidget()
     app.show()
     sys.exit(q_app.exec())

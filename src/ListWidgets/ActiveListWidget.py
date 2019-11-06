@@ -90,7 +90,6 @@ class ActiveListWidget(QWidget):
             self.list.selectionModel().select(self._model.index(0), QItemSelectionModel.Select)
 
 
-
 if __name__ == '__main__':
     import sys
     from ListWidgets.EditableListWidget import EditableListWidget
