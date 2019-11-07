@@ -37,14 +37,21 @@ class FitPlotWidget(QWidget):
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
             self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'),
-                               marker='o', linestyle='')
+                               marker='', linestyle='-')
             if data['FitResult'] is not None:
                 xx = data['DataX']
                 sel = (self.q_app.params['PlotXLim'][0] < xx) & (self.q_app.params['PlotXLim'][1] > xx)
                 xx = xx[sel]
+
                 self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
-                                   color=str(hex(data['Color'])).replace('0x', '#'),
+                                   color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
                                    marker='', linestyle='--')
+                cmps = data['FitResult'].eval_components(x=xx)
+
+                for cmp in cmps:
+                    self._line_ax.plot(xx, cmps[cmp],
+                                       color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
+                                       marker='', linestyle='--')
         self._line_ax.figure.canvas.draw()
 
     def clear_line_axes(self):
