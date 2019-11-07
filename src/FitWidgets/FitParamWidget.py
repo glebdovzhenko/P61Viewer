@@ -3,7 +3,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from FitWidgets.FloatEditWidget import FloatEditWidget
 import numpy as np
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class FitParamWidget(QWidget):
@@ -51,7 +51,7 @@ class FitParamWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = FitParamWidget(name='Parameter', value=3.1E-2, error=np.inf)
     app.show()
     sys.exit(q_app.exec())

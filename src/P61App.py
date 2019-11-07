@@ -3,7 +3,7 @@ from PyQt5.QtCore import pyqtSignal
 import pandas as pd
 
 
-class P61BApp(QApplication):
+class P61App(QApplication):
 
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)

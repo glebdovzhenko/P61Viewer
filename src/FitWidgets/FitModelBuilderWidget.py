@@ -5,7 +5,7 @@ from functools import reduce
 from lmfit import Model
 import inspect
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class FitModelBuilderModel(QAbstractListModel):
@@ -21,7 +21,7 @@ class FitModelBuilderModel(QAbstractListModel):
 
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         self._model_list = []
 
@@ -69,7 +69,7 @@ class FitModelBuilderWidget(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         # special cases: ExpressionModel and PolynomialModel
         # self.model_names = []
@@ -130,7 +130,7 @@ class FitModelBuilderWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = FitModelBuilderWidget()
     app.show()
     sys.exit(q_app.exec())

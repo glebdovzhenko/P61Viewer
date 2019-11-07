@@ -3,13 +3,13 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class FitPlotWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
@@ -24,8 +24,8 @@ class FitPlotWidget(QWidget):
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
 
-        # P61BApp.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
-        # P61BApp.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
+        # P61App.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
+        # P61App.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
 
     def on_plot_lim_changed(self):
         self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
@@ -64,7 +64,7 @@ class FitPlotWidget(QWidget):
 if __name__ == '__main__':
     from ListWidgets import EditableListWidget, ActiveListWidget
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = FitPlotWidget()
     app2 = EditableListWidget()
     app3 = ActiveListWidget()

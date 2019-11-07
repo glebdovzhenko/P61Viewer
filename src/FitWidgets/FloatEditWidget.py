@@ -3,7 +3,7 @@ from PyQt5.QtCore import pyqtSignal
 import re
 import numpy as np
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class FloatEditWidget(QWidget):
@@ -103,7 +103,7 @@ class FloatEditWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = FloatEditWidget()
     app.show()
     sys.exit(q_app.exec())

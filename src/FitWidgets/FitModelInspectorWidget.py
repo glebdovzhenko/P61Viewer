@@ -2,14 +2,14 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 import numpy as np
 from functools import reduce
 
-from P61BApp import P61BApp
+from P61App import P61App
 from FitWidgets.FitParamWidget import FitParamWidget
 
 
 class FitModelInspector(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         self.param_widgets = dict()
         self.layout = QVBoxLayout()
@@ -75,7 +75,7 @@ class LmFitInspectorWidget(QScrollArea):
 if __name__ == '__main__':
     import sys
 
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     fw = LmFitInspectorWidget()
     fw.show()
     sys.exit(q_app.exec())

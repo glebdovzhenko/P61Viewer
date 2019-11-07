@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
 
-from P61BApp import P61BApp
+from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.FitModelInspectorWidget import LmFitInspectorWidget
 from FitWidgets.FitModelBuilderWidget import FitModelBuilderWidget
@@ -9,7 +9,7 @@ from FitWidgets.FitModelBuilderWidget import FitModelBuilderWidget
 class FitWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         self.lmfit_builder = FitModelBuilderWidget()
         self.lmfit_inspector = LmFitInspectorWidget(parent=self)
@@ -32,7 +32,7 @@ class FitWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = FitWidget()
     app.show()
     sys.exit(q_app.exec())

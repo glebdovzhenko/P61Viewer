@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 import os
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class FileImportWidget(QWidget):
@@ -12,7 +12,7 @@ class FileImportWidget(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
     def open_files(self, f_names):
         # TODO: add check if the files are already open
@@ -57,14 +57,14 @@ class FileImportWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     wg = FileImportWidget()
     wg.open_files(
-        ['/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_09-10-30_.nxs',
-         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_09-27-11_.nxs',
-         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_09-43-51_.nxs',
-         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-00-32_.nxs',
-         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61BViewer/test_files/collected/Co57_2019-09-30_10-17-13_.nxs'])
+        ['/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_09-10-30_.nxs',
+         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_09-27-11_.nxs',
+         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_09-43-51_.nxs',
+         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_10-00-32_.nxs',
+         '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_10-17-13_.nxs'])
     print(q_app.data)
     print(q_app.data.loc[0])
     sys.exit(q_app.exec())

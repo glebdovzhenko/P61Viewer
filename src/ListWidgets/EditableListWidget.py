@@ -3,14 +3,14 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog
 import numpy as np
 
-from P61BApp import P61BApp
+from P61App import P61App
 from ImportWidgets import FileImportWidget
 
 
 class EditableListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
         self._data = self.q_app.data
 
         self.q_app.dataRowsAppended.connect(self.on_rows_appended)
@@ -62,7 +62,7 @@ class EditableListModel(QAbstractListModel):
 class EditableListWidget(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         # list
         self._model = EditableListModel()
@@ -133,7 +133,7 @@ class EditableListWidget(QWidget):
 if __name__ == '__main__':
     import sys
 
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = EditableListWidget()
     app.show()
     sys.exit(q_app.exec_())

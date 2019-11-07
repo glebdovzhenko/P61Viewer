@@ -1,6 +1,6 @@
 rmdir build
 rmdir dist
-del P61BViewerMain.spec
-del apps\P61BViewer.exe
-pyinstaller -i img\icon.ico src\P61BViewerMain.py --windowed --onefile
-xcopy dist\P61BViewerMain.exe apps\\P61BViewer.exe
+del P61ViewerMain.spec
+del apps\P61Viewer.exe
+pyinstaller -i img\icon.ico src\P61ViewerMain.py --windowed --onefile
+xcopy dist\P61ViewerMain.exe apps\\P61Viewer.exe

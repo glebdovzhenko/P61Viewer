@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['P61BViewerMain.py'],
+a = Analysis(['P61ViewerMain.py'],
              pathex=['/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/src'],
              binaries=[],
              datas=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='P61BViewerMain',
+          name='P61ViewerMain',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -37,10 +37,10 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='P61BViewerMain')
+               name='P61ViewerMain')
 
 app = BUNDLE(coll,
-             name='P61BViewer.app',
+             name='P61Viewer.app',
              icon='../img/icon.icns',
              info_plist={
                   'NSHighResolutionCapable': 'True'

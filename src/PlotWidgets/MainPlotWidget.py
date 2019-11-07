@@ -5,13 +5,13 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import copy
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class MainPlotWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax = line_canvas.figure.subplots()
@@ -73,7 +73,7 @@ class MainPlotWidget(QWidget):
 if __name__ == '__main__':
     from ListWidgets import EditableListWidget
     import sys
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = MainPlotWidget()
     app2 = EditableListWidget()
     app.show()

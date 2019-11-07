@@ -3,16 +3,16 @@ import sys
 from PlotWidgets import MainPlotWidget, FitPlotWidget
 from ListWidgets import EditableListWidget
 from FitWidgets import FitWidget
-from P61BApp import P61BApp
+from P61App import P61App
 
 
-class P61BViewer(QMainWindow):
+class P61Viewer(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
 
         # initiate self
         self.resize(1200, 800)
-        self.setWindowTitle('P61B Spectrum Viewer')
+        self.setWindowTitle('P61 Spectrum Viewer')
 
         # initiate widgets
         self.cw = QTabWidget(parent=self)
@@ -41,7 +41,7 @@ class P61BViewer(QMainWindow):
 
 
 if __name__ == '__main__':
-    q_app = P61BApp(sys.argv)
-    app = P61BViewer()
+    q_app = P61App(sys.argv)
+    app = P61Viewer()
     app.show()
     sys.exit(q_app.exec_())

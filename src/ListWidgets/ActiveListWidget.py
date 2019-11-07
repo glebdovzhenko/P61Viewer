@@ -2,13 +2,13 @@ from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QItemSel
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QGridLayout
 
-from P61BApp import P61BApp
+from P61App import P61App
 
 
 class ActiveListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
         self._data = self.q_app.data
         self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
@@ -52,7 +52,7 @@ class ActiveListModel(QAbstractListModel):
 class ActiveListWidget(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
-        self.q_app = P61BApp.instance()
+        self.q_app = P61App.instance()
 
         # list
         self._model = ActiveListModel()
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     import sys
     from ListWidgets.EditableListWidget import EditableListWidget
 
-    q_app = P61BApp(sys.argv)
+    q_app = P61App(sys.argv)
     app = EditableListWidget()
     app.show()
     app2 = ActiveListWidget()
