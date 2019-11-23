@@ -13,5 +13,5 @@ Alpha features:
 [lmfit models](https://lmfit.github.io/lmfit-py/builtin_models.html)
 * Export of fit results to .csv
 * Downloadable binaries for Windows 10, Mac OS X, and Linux \
-Screenshots:
+# Screenshots:
 ![](img/screenshots/app_main.png) ![](img/screenshots/app_fit.png)
