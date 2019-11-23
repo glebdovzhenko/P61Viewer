@@ -11,6 +11,7 @@ Alpha features:
 * Import / viewing of beamline-specific .nxs files 
 * Data fit with a function built from 
 [lmfit models](https://lmfit.github.io/lmfit-py/builtin_models.html)
+* Export of fit results to .csv
 * Downloadable binaries for Windows 10, Mac OS X, and Linux \
 Screenshots:
 ![](img/screenshots/app_main.png) ![](img/screenshots/app_fit.png)
