@@ -14,6 +14,11 @@ class FileImportWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
+    @staticmethod
+    def print_attrs(name, obj):
+        if isinstance(obj, h5py.Dataset):
+            print(name, np.array(obj))
+
     def open_files(self, f_names):
         # TODO: add check if the files are already open
         ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', \
@@ -26,6 +31,9 @@ class FileImportWidget(QWidget):
             for ii, channel in enumerate((ch0, ch1)):
                 try:
                     with h5py.File(ff, 'r') as f:
+                        # f.visititems(self.print_attrs)
+                        f.visititems(print)
+
                         frames = np.sum(f[channel], axis=0)
                         frames[:20] = 0.0
                         frames[-1] = 0.0
