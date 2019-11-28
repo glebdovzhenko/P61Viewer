@@ -14,7 +14,7 @@ class FitPlotWidget(QWidget):
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._line_ax, self._diff_ax = line_canvas.figure.subplots(nrows=2, ncols=1, sharex=True,
                                                                    gridspec_kw={'height_ratios': [4, 1]})
-        self._line_ax.set_xlabel('Energy, [keV]')
+        self._diff_ax.set_xlabel('Energy, [keV]')
         self._line_ax.set_ylabel('Intensity, [counts]')
 
         layout = QVBoxLayout()
@@ -22,7 +22,6 @@ class FitPlotWidget(QWidget):
         layout.addWidget(line_canvas)
 
         self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
-        self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
 
         # P61App.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
