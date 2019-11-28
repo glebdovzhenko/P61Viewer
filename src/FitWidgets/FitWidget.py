@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QProgressDialog
+from PyQt5.Qt import Qt
 from functools import reduce
 
 from P61App import P61App
@@ -56,8 +57,13 @@ class FitWidget(QWidget):
 
     def on_fit_all_btn(self):
         idxs = self.q_app.data[self.q_app.data['Active']].index
-        for idx in idxs:
+        progress = QProgressDialog("Sequential Fit", "Cancel", 0, len(idxs))
+        progress.setWindowModality(Qt.WindowModal)
+        # TODO: add cancel functionality
+        for ii, idx in enumerate(idxs):
+            progress.setValue(ii)
             self.on_fit_btn(idx=idx)
+        progress.setValue(len(idxs))
 
 
 if __name__ == '__main__':
