@@ -31,7 +31,7 @@ class FitModelInspector(QWidget):
         else:
             fit_results = self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']
 
-        if (model is None) and (fit_results is None):
+        if ((model is None) and (fit_results is None)) or (self.q_app.params['SelectedIndex'] == -1):
             self.setFixedHeight(20)
             self.setFixedWidth(100)
             return

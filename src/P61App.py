@@ -19,8 +19,8 @@ class P61App(QApplication):
         self.params = {
             'LmFitModel': None,
             'SelectedIndex': -1,
-            'ColorWheel': self._color_wheel('tab20b'),
-            'ColorWheel2': self._color_wheel('tab20c'),
+            'ColorWheel': self._color_wheel('def'),
+            'ColorWheel2': self._color_wheel('def_no_red'),
             'PlotXLim': (0, 1),
             'PlotYLim': (0, 1),
         }
@@ -30,6 +30,7 @@ class P61App(QApplication):
         ii = 0
         wheels = {
             'def': (0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd, 0x8c564b, 0xe377c2, 0x7f7f7f, 0xbcbd22, 0x17becf),
+            'def_no_red': (0x1f77b4, 0xff7f0e, 0x2ca02c, 0x9467bd, 0x8c564b, 0xe377c2, 0x7f7f7f, 0xbcbd22, 0x17becf),
             'tab20b': (0x393b79, 0x5254a3, 0x6b6ecf, 0x9c9ede, 0x637939, 0x8ca252, 0xb5cf6b, 0xcedb9c, 0x8c6d31,
                        0xbd9e39, 0xe7ba52, 0xe7cb94, 0x843c39, 0xad494a, 0xd6616b, 0xe7969c, 0x7b4173, 0xa55194,
                        0xce6dbd, 0xde9ed6),

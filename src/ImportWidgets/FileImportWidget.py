@@ -32,7 +32,7 @@ class FileImportWidget(QWidget):
                 try:
                     with h5py.File(ff, 'r') as f:
                         # f.visititems(self.print_attrs)
-                        f.visititems(print)
+                        # f.visititems(print)
 
                         frames = np.sum(f[channel], axis=0)
                         frames[:20] = 0.0

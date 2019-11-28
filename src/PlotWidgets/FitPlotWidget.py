@@ -12,7 +12,8 @@ class FitPlotWidget(QWidget):
         self.q_app = P61App.instance()
 
         line_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        self._line_ax = line_canvas.figure.subplots()
+        self._line_ax, self._diff_ax = line_canvas.figure.subplots(nrows=2, ncols=1, sharex=True,
+                                                                   gridspec_kw={'height_ratios': [4, 1]})
         self._line_ax.set_xlabel('Energy, [keV]')
         self._line_ax.set_ylabel('Intensity, [counts]')
 
@@ -33,19 +34,22 @@ class FitPlotWidget(QWidget):
         self._line_ax.figure.canvas.draw()
 
     def on_selected_active_changed(self, idx):
-        self.clear_line_axes()
+        self.clear_axes()
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
-            self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'),
-                               marker='', linestyle='-')
+            self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='')
             if data['FitResult'] is not None:
                 xx = data['DataX']
                 sel = (self.q_app.params['PlotXLim'][0] < xx) & (self.q_app.params['PlotXLim'][1] > xx)
                 xx = xx[sel]
+                yy = data['DataY'][sel]
 
                 self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
-                                   color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
-                                   marker='', linestyle='--')
+                                   color='#d62728', marker='', linestyle='--')
+                tmp = yy - data['FitResult'].eval(data['FitResult'].params, x=xx)
+                self._diff_ax.plot(xx, tmp, color='#d62728', marker='', linestyle='--')
+                self._diff_ax.set_ylim(min(tmp) - 0.1 * abs(max(tmp) - min(tmp)),
+                                       max(tmp) + 0.1 * abs(max(tmp) - min(tmp)))
                 cmps = data['FitResult'].eval_components(x=xx)
 
                 for cmp in cmps:
@@ -53,12 +57,14 @@ class FitPlotWidget(QWidget):
                                        color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
                                        marker='', linestyle='--')
         self._line_ax.figure.canvas.draw()
+        self._diff_ax.figure.canvas.draw()
 
-    def clear_line_axes(self):
+    def clear_axes(self):
         del self._line_ax.lines[:]
+        del self._diff_ax.lines[:]
 
-    def axes_add_line(self, line):
-        self._line_ax.add_line(line)
+    # def axes_add_line(self, line):
+    #     self._line_ax.add_line(line)
 
 
 if __name__ == '__main__':
