@@ -43,14 +43,14 @@ interpreter you will be using to launch the application. It is necessary for mos
 
     P61Viewer $ conda install -c anaconda python.app
 
-5. Change the directory to src and launch the application
+5. (Windows, Linux) Change the directory to src and launch the application
 
 .. code-block:: bash
 
     P61Viewer $ cd src
     src $ python P61ViewerMain.py
 
-5.a Or if on Mac OS X
+5.a (Mac OS X) Change the directory to src and launch the application
 
 .. code-block:: bash
 
