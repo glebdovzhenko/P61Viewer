@@ -1,3 +1,10 @@
+"""
+src/P61ViewerMain.py
+=============
+
+Executable script for the application.
+Launches the P61App (QApplication child class) and a P61Viewer (QMainWindow child class) instance.
+"""
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
 from PlotWidgets import MainPlotWidget, FitPlotWidget
@@ -7,6 +14,9 @@ from P61App import P61App
 
 
 class P61Viewer(QMainWindow):
+    """
+    QMainWindow child
+    """
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
 

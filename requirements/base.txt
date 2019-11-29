@@ -8,3 +8,4 @@ tornado
 pyinstaller
 py2app
 lmfit
+Sphinx
