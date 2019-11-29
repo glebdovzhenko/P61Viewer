@@ -1,2 +1,2 @@
-FitWidgets
-==========
+.. automodule:: FitWidgets
+   :members:

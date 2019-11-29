@@ -1,3 +1,9 @@
+"""
+ActiveList.py
+=============
+
+
+"""
 from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QItemSelectionModel
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QGridLayout
@@ -92,7 +98,7 @@ class ActiveListWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    from ListWidgets.EditableList import EditableListWidget
+    from ListWidgets.EditableListWidget import EditableListWidget
 
     q_app = P61App(sys.argv)
     app = EditableListWidget()

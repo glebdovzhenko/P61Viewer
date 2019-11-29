@@ -7,7 +7,9 @@ from P61App import P61App
 
 
 class FileImportWidget(QWidget):
-    """"""
+    """
+    Module responsible for importing files
+    """
     kev_per_bin = 5E-2
 
     def __init__(self, parent=None):

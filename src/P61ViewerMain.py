@@ -24,10 +24,11 @@ class P61Viewer(QMainWindow):
 
     - :code:`EditableListWidget` List on the right of the 'View' tab. Allows to add, remove, activate (show on the
       plot and use for fit) and deactivate (stop showing on the plot and using for fit) datasets. All operations can be
-      done in groups using multiple selection.
-    - :code:`MainPlotWidget` shows all active datasets from the :code:`EditableListWidget`.
-    - :code:`FitWidget`
-    - :code:`FitPlotWidget`
+      done in groups using multiple selection;
+    - :code:`MainPlotWidget` shows all active datasets from the :code:`EditableListWidget`;
+    - :code:`FitWidget` shows the model builder, fit parameters, list of datasets to fit and controls;
+    - :code:`FitPlotWidget`: plots the fitted data together with the model function and its parts and a difference
+      plot;
     """
     def __init__(self, parent=None):
         """

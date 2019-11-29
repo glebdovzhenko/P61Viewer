@@ -1,3 +1,9 @@
+"""
+EditableList.py
+===============
+
+
+"""
 from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog

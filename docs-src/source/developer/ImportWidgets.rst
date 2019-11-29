@@ -1,2 +1,2 @@
-ImportWidgets
-=============
+.. automodule:: ImportWidgets
+   :members:

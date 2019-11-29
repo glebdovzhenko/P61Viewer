@@ -1,2 +1,2 @@
-PlotWidgets
-===========
+.. automodule:: PlotWidgets
+   :members:

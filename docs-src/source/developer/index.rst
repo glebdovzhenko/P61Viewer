@@ -3,11 +3,21 @@ Developer documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Launch script:
+
+   P61ViewerMain
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Application:
 
    P61App
-   P61ViewerMain
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Submodules:
+
    ListWidgets
-   FitWidgets
    ImportWidgets
    PlotWidgets
+   FitWidgets
