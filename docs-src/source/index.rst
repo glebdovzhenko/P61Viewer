@@ -1,18 +1,10 @@
 Welcome to P61 Viewer's documentation!
 ======================================
 
-.. automodule:: P61ViewerMain
-   :members:
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   installation/index
+   developer/index
+   userguide/index

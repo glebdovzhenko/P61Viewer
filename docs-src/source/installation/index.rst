@@ -3,6 +3,7 @@ Installation
 
 .. _Anaconda: https://www.anaconda.com/distribution/
 .. _pyinstaller: https://pypi.org/project/PyInstaller/
+.. _git: https://git-scm.com
 
 Download binaries
 -----------------
@@ -14,7 +15,12 @@ From source code
 These instructions have been tested for Anaconda_ python. You can use any python distribution you like at risk of more
 complications.
 
-1. Clone or download the source code from https://github.com/glebdovzhenko/P61Viewer .
+1. Clone the source code from https://github.com/glebdovzhenko/P61Viewer . You can install git_ for free and keep the
+project up to date, or just download the source code form github and unpack the archive.
+
+.. code-block:: bash
+
+    anyfolder $ git clone https://github.com/glebdovzhenko/P61Viewer.git
 
 2. Set up a virtual environment (python version should be 3.5 since pyinstaller_ does not support newer versions yet)
 

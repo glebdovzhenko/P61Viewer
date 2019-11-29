@@ -7,6 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
+GITHUBDIR     = ../docs
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -21,4 +22,8 @@ help:
 
 github:
 	@make html
-	@cp -a build/html/. ../docs
+	@cp -a build/html/. $(GITHUBDIR)
+
+clean:
+	@rm -rf $(BUILDDIR)/* $(GITHUBDIR)/*
+	@echo Removing everything under 'build' and 'github' ...
