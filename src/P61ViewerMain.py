@@ -1,9 +1,12 @@
 """
 src/P61ViewerMain.py
 ====================
+.. _QApplication: https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html
+.. _QMainWindow: https://doc.qt.io/qtforpython/PySide2/QtWidgets/QMainWindow.html
 
 Executable script for the application.
-Launches the P61App (QApplication child class) and a P61Viewer (QMainWindow child class) instance.
+
+Launches the P61App (QApplication_ child class) and a P61Viewer (QMainWindow_ child class) instance.
 """
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys

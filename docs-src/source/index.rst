@@ -8,7 +8,7 @@ Welcome to P61 Viewer's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   installation
 
 Indices and tables
 ==================
