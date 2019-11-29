@@ -2,7 +2,6 @@
 src/P61App.py
 ====================
 
-Support.
 """
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import pyqtSignal
@@ -10,7 +9,63 @@ import pandas as pd
 
 
 class P61App(QApplication):
+    """
+    .. _QApplication: https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html
+    .. _generator: https://wiki.python.org/moin/Generators
 
+    **General:**
+
+    QApplication_ child class that is used for managing the application data.
+
+    This class is a singleton accessible to all application widgets. By convention all widgets store a reference to the
+    :code:`P61App` instance as
+
+    .. code-block:: python3
+
+        self.q_app = P61App.instance()
+
+
+    The widgets use the instance to store and sync data, such as nexus file variables, fit results, etc. Synchronization
+    between widgets is done by pyqtSignals. *Important:* it is the widget's responsibility to emit the appropriate
+    signal after changing anything in the :code:`P61App.instance()`.
+
+    :code:`P61App.instance().data` **columns and their meaning:**
+
+    :code:`P61App.instance().data` is a :code:`pandas.DataFrame`
+    (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html). Each row of the dataframe
+    represents a dataset read from a .nxs file. At the moment .nxs files hold two datasets at
+    :code:`'entry/instrument/xspress3/channel00/histogram'` and :code:`'entry/instrument/xspress3/channel01/histogram'`.
+
+    - :code:`'DataX'`: numpy array representing x values on the spectra;
+    - :code:`'DataY'`: numpy array representing y values on the spectra;
+    - :code:`'DataID'`: unique ID of the dataset built from .nxs file name and field (channel00 / channel01);
+    - :code:`'ScreenName'`: name of the dataset shown by the list widgets
+    - :code:`'Active'`: boolean status. False means the dataset is not shown on the plot and in the list for fitting.
+    - :code:`'Color'`: color of the plot line and screen name on the list
+    - :code:`'FitResult'`: :code:`lmfit.ModelResult` object (https://lmfit.github.io/lmfit-py/model.html#lmfit.model.ModelResult)
+
+    :code:`P61App.instance().params` **and their meaning:**
+
+    - :code:`'LmFitModel'`: :code:`lmfit.Model` (https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model) to fit
+      the data in FitWidget;
+    - :code:`'SelectedIndex'`: currently selected item's index in ActiveWidget;
+    - :code:`'ColorWheel'`: a python generator_ holding the list of colors for plotting;
+    - :code:`'ColorWheel2'`: same thing, we just need two of them;
+
+    **Signals and their meaning:**
+
+    - :code:`dataRowsAppended`: when new histograms (rows) are added to the :code:`P61App.instance().data` Dataframe;
+    - :code:`dataRowsRemoved`: when histograms (rows) are deleted from the :code:`P61App.instance().data` Dataframe;
+    - :code:`dataActiveChanged`: when the :code:`'Active'` status of the rows is changed;
+
+    Three signals above do not just notify the receivers, but also hold the lists of indices of the rows that were
+    changed, added or deleted.
+
+    - :code:`selectedIndexChanged`: when the :code:`ActiveListWidget` selection changes (also sends the new
+      selected index);
+    - :code:`lmFitModelUpdated`: when the :code:`self.params['LmFitModel']` is updated;
+
+    """
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)

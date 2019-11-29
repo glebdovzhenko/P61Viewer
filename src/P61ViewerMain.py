@@ -4,9 +4,9 @@ src/P61ViewerMain.py
 .. _QApplication: https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html
 .. _QMainWindow: https://doc.qt.io/qtforpython/PySide2/QtWidgets/QMainWindow.html
 
-Executable script for the application.
+This python file serves as the executable script for the application.
 
-Launches the P61App (QApplication_ child class) and a P61Viewer (QMainWindow_ child class) instance.
+Launches the :code:`P61App` (QApplication_ child class) and a :code:`P61Viewer` (QMainWindow_ child class) instances.
 """
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
 import sys
@@ -18,9 +18,22 @@ from P61App import P61App
 
 class P61Viewer(QMainWindow):
     """
-    QMainWindow child
+    Main window class for the application. Collects all widgets in the same layout and instantiates them.
+
+    List of widgets:
+
+    - :code:`EditableListWidget` List on the right of the 'View' tab. Allows to add, remove, activate (show on the
+      plot and use for fit) and deactivate (stop showing on the plot and using for fit) datasets. All operations can be
+      done in groups using multiple selection.
+    - :code:`MainPlotWidget` shows all active datasets from the :code:`EditableListWidget`.
+    - :code:`FitWidget`
+    - :code:`FitPlotWidget`
     """
     def __init__(self, parent=None):
+        """
+        Initiates all widgets and defines the main window layout.
+        :param parent:
+        """
         QMainWindow.__init__(self, parent=parent)
 
         # initiate self

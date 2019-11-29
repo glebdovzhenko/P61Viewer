@@ -14,8 +14,8 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ListWidgets" href="ListWidgets.html" />
-    <link rel="prev" title="src/P61ViewerMain.py" href="P61ViewerMain.html" />
+    <link rel="next" title="src/P61ViewerMain.py" href="P61ViewerMain.html" />
+    <link rel="prev" title="Developer documentation" href="index.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -34,11 +34,55 @@
             
   <span class="target" id="module-P61App"></span><div class="section" id="src-p61app-py">
 <h1>src/P61App.py<a class="headerlink" href="#src-p61app-py" title="Permalink to this headline">¶</a></h1>
-<p>Support.</p>
 <dl class="class">
 <dt id="P61App.P61App">
 <em class="property">class </em><code class="sig-prename descclassname">P61App.</code><code class="sig-name descname">P61App</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#P61App.P61App" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p><strong>General:</strong></p>
+<p><a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html">QApplication</a> child class that is used for managing the application data.</p>
+<p>This class is a singleton accessible to all application widgets. By convention all widgets store a reference to the
+<code class="code docutils literal notranslate"><span class="pre">P61App</span></code> instance as</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">q_app</span> <span class="o">=</span> <span class="n">P61App</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The widgets use the instance to store and sync data, such as nexus file variables, fit results, etc. Synchronization
+between widgets is done by pyqtSignals. <em>Important:</em> it is the widget’s responsibility to emit the appropriate
+signal after changing anything in the <code class="code docutils literal notranslate"><span class="pre">P61App.instance()</span></code>.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> <strong>columns and their meaning:</strong></p>
+<p><code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> is a <code class="code docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>
+(<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html">https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html</a>). Each row of the dataframe
+represents a dataset read from a .nxs file. At the moment .nxs files hold two datasets at
+<code class="code docutils literal notranslate"><span class="pre">'entry/instrument/xspress3/channel00/histogram'</span></code> and <code class="code docutils literal notranslate"><span class="pre">'entry/instrument/xspress3/channel01/histogram'</span></code>.</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">'DataX'</span></code>: numpy array representing x values on the spectra;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'DataY'</span></code>: numpy array representing y values on the spectra;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'DataID'</span></code>: unique ID of the dataset built from .nxs file name and field (channel00 / channel01);</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'ScreenName'</span></code>: name of the dataset shown by the list widgets</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'Active'</span></code>: boolean status. False means the dataset is not shown on the plot and in the list for fitting.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'Color'</span></code>: color of the plot line and screen name on the list</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'FitResult'</span></code>: <code class="code docutils literal notranslate"><span class="pre">lmfit.ModelResult</span></code> object (<a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.ModelResult">https://lmfit.github.io/lmfit-py/model.html#lmfit.model.ModelResult</a>)</p></li>
+</ul>
+<p><code class="code docutils literal notranslate"><span class="pre">P61App.instance().params</span></code> <strong>and their meaning:</strong></p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">'LmFitModel'</span></code>: <code class="code docutils literal notranslate"><span class="pre">lmfit.Model</span></code> (<a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model">https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model</a>) to fit
+the data in FitWidget;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'SelectedIndex'</span></code>: currently selected item’s index in ActiveWidget;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'ColorWheel'</span></code>: a python <a class="reference external" href="https://wiki.python.org/moin/Generators">generator</a> holding the list of colors for plotting;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'ColorWheel2'</span></code>: same thing, we just need two of them;</p></li>
+</ul>
+<p><strong>Signals and their meaning:</strong></p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">dataRowsAppended</span></code>: when new histograms (rows) are added to the <code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> Dataframe;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">dataRowsRemoved</span></code>: when histograms (rows) are deleted from the <code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> Dataframe;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">dataActiveChanged</span></code>: when the <code class="code docutils literal notranslate"><span class="pre">'Active'</span></code> status of the rows is changed;</p></li>
+</ul>
+<p>Three signals above do not just notify the receivers, but also hold the lists of indices of the rows that were
+changed, added or deleted.</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">selectedIndexChanged</span></code>: when the <code class="code docutils literal notranslate"><span class="pre">ActiveListWidget</span></code> selection changes (also sends the new
+selected index);</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">lmFitModelUpdated</span></code>: when the <code class="code docutils literal notranslate"><span class="pre">self.params['LmFitModel']</span></code> is updated;</p></li>
+</ul>
+</dd></dl>
 
 </div>
 
@@ -64,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="P61ViewerMain.html">src/P61ViewerMain.py</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">src/P61App.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="P61ViewerMain.html">src/P61ViewerMain.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ListWidgets.html">ListWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FitWidgets.html">FitWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ImportWidgets.html">ImportWidgets</a></li>
@@ -79,8 +123,8 @@
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">Developer documentation</a><ul>
-      <li>Previous: <a href="P61ViewerMain.html" title="previous chapter">src/P61ViewerMain.py</a></li>
-      <li>Next: <a href="ListWidgets.html" title="next chapter">ListWidgets</a></li>
+      <li>Previous: <a href="index.html" title="previous chapter">Developer documentation</a></li>
+      <li>Next: <a href="P61ViewerMain.html" title="next chapter">src/P61ViewerMain.py</a></li>
   </ul></li>
   </ul></li>
 </ul>

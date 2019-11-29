@@ -5,8 +5,8 @@ Developer documentation
    :maxdepth: 2
    :caption: Contents:
 
-   P61ViewerMain
    P61App
+   P61ViewerMain
    ListWidgets
    FitWidgets
    ImportWidgets

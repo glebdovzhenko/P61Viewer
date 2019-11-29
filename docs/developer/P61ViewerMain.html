@@ -14,8 +14,8 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="src/P61App.py" href="P61App.html" />
-    <link rel="prev" title="Developer documentation" href="index.html" />
+    <link rel="next" title="ListWidgets" href="ListWidgets.html" />
+    <link rel="prev" title="src/P61App.py" href="P61App.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -34,12 +34,21 @@
             
   <span class="target" id="module-P61ViewerMain"></span><div class="section" id="src-p61viewermain-py">
 <h1>src/P61ViewerMain.py<a class="headerlink" href="#src-p61viewermain-py" title="Permalink to this headline">¶</a></h1>
-<p>Executable script for the application.</p>
-<p>Launches the P61App (<a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html">QApplication</a> child class) and a P61Viewer (<a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QMainWindow.html">QMainWindow</a> child class) instance.</p>
+<p>This python file serves as the executable script for the application.</p>
+<p>Launches the <code class="code docutils literal notranslate"><span class="pre">P61App</span></code> (<a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html">QApplication</a> child class) and a <code class="code docutils literal notranslate"><span class="pre">P61Viewer</span></code> (<a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QMainWindow.html">QMainWindow</a> child class) instances.</p>
 <dl class="class">
 <dt id="P61ViewerMain.P61Viewer">
 <em class="property">class </em><code class="sig-prename descclassname">P61ViewerMain.</code><code class="sig-name descname">P61Viewer</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#P61ViewerMain.P61Viewer" title="Permalink to this definition">¶</a></dt>
-<dd><p>QMainWindow child</p>
+<dd><p>Main window class for the application. Collects all widgets in the same layout and instantiates them.</p>
+<p>List of widgets:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">EditableListWidget</span></code> List on the right of the ‘View’ tab. Allows to add, remove, activate (show on the
+plot and use for fit) and deactivate (stop showing on the plot and using for fit) datasets. All operations can be
+done in groups using multiple selection.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">MainPlotWidget</span></code> shows all active datasets from the <code class="code docutils literal notranslate"><span class="pre">EditableListWidget</span></code>.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">FitWidget</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">FitPlotWidget</span></code></p></li>
+</ul>
 </dd></dl>
 
 </div>
@@ -66,8 +75,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer documentation</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">src/P61ViewerMain.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="P61App.html">src/P61App.py</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">src/P61ViewerMain.py</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ListWidgets.html">ListWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FitWidgets.html">FitWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ImportWidgets.html">ImportWidgets</a></li>
@@ -81,8 +90,8 @@
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">Developer documentation</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Developer documentation</a></li>
-      <li>Next: <a href="P61App.html" title="next chapter">src/P61App.py</a></li>
+      <li>Previous: <a href="P61App.html" title="previous chapter">src/P61App.py</a></li>
+      <li>Next: <a href="ListWidgets.html" title="next chapter">ListWidgets</a></li>
   </ul></li>
   </ul></li>
 </ul>
