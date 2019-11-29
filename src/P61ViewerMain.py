@@ -1,6 +1,6 @@
 """
 src/P61ViewerMain.py
-=============
+====================
 
 Executable script for the application.
 Launches the P61App (QApplication child class) and a P61Viewer (QMainWindow child class) instance.
