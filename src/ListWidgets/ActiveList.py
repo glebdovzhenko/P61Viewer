@@ -92,7 +92,7 @@ class ActiveListWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    from ListWidgets.EditableListWidget import EditableListWidget
+    from ListWidgets.EditableList import EditableListWidget
 
     q_app = P61App(sys.argv)
     app = EditableListWidget()

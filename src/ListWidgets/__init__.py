@@ -1,2 +1,2 @@
-from .ActiveListWidget import ActiveListWidget
-from .EditableListWidget import EditableListWidget
+from .ActiveList import ActiveListWidget
+from .EditableList import EditableListWidget

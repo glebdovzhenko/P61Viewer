@@ -24,9 +24,6 @@ class FitPlotWidget(QWidget):
         self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
 
-        # P61App.instance().project.selectedHistChanged.connect(self.on_selected_h_change)
-        # P61App.instance().project.plotLimUpdated.connect(self.on_plot_lim_upd)
-
     def on_plot_lim_changed(self):
         self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
         self._line_ax.set_ylim(*self.q_app.params['PlotYLim'])
@@ -61,9 +58,6 @@ class FitPlotWidget(QWidget):
     def clear_axes(self):
         del self._line_ax.lines[:]
         del self._diff_ax.lines[:]
-
-    # def axes_add_line(self, line):
-    #     self._line_ax.add_line(line)
 
 
 if __name__ == '__main__':

@@ -1,2 +1,8 @@
 ListWidgets
 ===========
+
+.. automodule:: ListWidgets.EditableListWidget
+   :members:
+
+.. automodule:: ListWidgets.ActiveListWidget
+   :members:
