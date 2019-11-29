@@ -16,7 +16,7 @@ These instructions have been tested for Anaconda_ python. You can use any python
 complications.
 
 1. Clone the source code from https://github.com/glebdovzhenko/P61Viewer . You can install git_ for free and keep the
-project up to date, or just download the source code form github and unpack the archive.
+  project up to date, or just download the source code form github and unpack the archive.
 
 .. code-block:: bash
 
