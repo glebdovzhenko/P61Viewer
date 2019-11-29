@@ -6,5 +6,5 @@ Welcome to P61 Viewer's documentation!
    :caption: Contents:
 
    installation/index
-   developer/index
    userguide/index
+   developer/index
