@@ -5,6 +5,7 @@ from functools import reduce
 from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
+from FitWidgets.LmfitInspectorWidget2 import LmfitInspectorWidget2
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
 
 
@@ -14,10 +15,11 @@ class FitWidget(QWidget):
         self.q_app = P61App.instance()
 
         self.lmfit_builder = LmfitBuilderWidget()
-        self.lmfit_inspector = LmfitInspectorWidget()
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(self.lmfit_inspector)
+        # self.lmfit_inspector = LmfitInspectorWidget()
+        # self.scroll = QScrollArea()
+        # self.scroll.setWidgetResizable(True)
+        # self.scroll.setWidget(self.lmfit_inspector)
+        self.scroll = LmfitInspectorWidget2()
 
         self.active_list = ActiveListWidget()
 
