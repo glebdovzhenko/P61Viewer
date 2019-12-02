@@ -45,20 +45,10 @@ class FitModelInspector(QWidget):
         self.setFixedWidth(1.1 * max(map(lambda x: x.width(), self.param_widgets.values())))
 
 
-class LmFitInspectorWidget(QScrollArea):
-    def __init__(self, parent=None):
-        QScrollArea.__init__(self, parent=parent)
-        self.inspector = FitModelInspector()
-        self.setWidget(self.inspector)
-
-    def update_repr(self):
-        self.inspector.update_repr()
-
-
 if __name__ == '__main__':
     import sys
 
     q_app = P61App(sys.argv)
-    fw = LmFitInspectorWidget()
+    fw = FitModelInspector()
     fw.show()
     sys.exit(q_app.exec())
