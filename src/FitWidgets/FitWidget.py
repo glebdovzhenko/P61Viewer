@@ -54,8 +54,7 @@ class FitWidget(QWidget):
             params = self.q_app.data.loc[idx, 'FitResult'].params
 
         self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
-        # TODO: this is a temporary hack. should be another signal.
-        self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
+        self.q_app.dataFitChanged.emit(idx)
 
     def on_fit_all_btn(self):
         idxs = self.q_app.data[self.q_app.data['Active']].index

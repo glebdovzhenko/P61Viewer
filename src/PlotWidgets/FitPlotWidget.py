@@ -23,6 +23,11 @@ class FitPlotWidget(QWidget):
 
         self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
+        self.q_app.dataFitChanged.connect(self.on_fit_changed)
+
+    def on_fit_changed(self, idx):
+        if idx == self.q_app.params['SelectedIndex']:
+            self.on_selected_active_changed(idx)
 
     def on_plot_lim_changed(self):
         self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])

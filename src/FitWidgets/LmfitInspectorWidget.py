@@ -20,6 +20,11 @@ class LmfitInspectorWidget(QWidget):
         self.update_repr()
         self.q_app.lmFitModelUpdated.connect(self.update_repr)
         self.q_app.selectedIndexChanged.connect(self.update_repr)
+        self.q_app.dataFitChanged.connect(self.on_fit_changed)
+
+    def on_fit_changed(self, idx):
+        if idx == self.q_app.params['SelectedIndex']:
+            self.update_repr()
 
     def update_repr(self):
         for wd in (self.checkboxes, self.labels, self.edits, self.err_labels):
@@ -42,8 +47,8 @@ class LmfitInspectorWidget(QWidget):
             print(fit_results.params[k])
             self.checkboxes[k] = QCheckBox(parent=self)  # fit_results.params[k].vary
             self.labels[k] = QLabel(fit_results.params[k].name, parent=self)
-            self.edits[k] = QLineEdit(str(fit_results.params[k].value), parent=self)
-            self.err_labels[k] = QLabel(str(fit_results.params[k].stderr), parent=self)
+            self.edits[k] = QLineEdit('%.03E' % fit_results.params[k].value, parent=self)
+            self.err_labels[k] = QLabel('± %.03E' % fit_results.params[k].stderr, parent=self)
 
             self.grid.addWidget(self.checkboxes[k], row + 1, 1, 1, 1)
             self.grid.addWidget(self.labels[k], row + 1, 2, 1, 1)
