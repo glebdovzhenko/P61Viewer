@@ -49,7 +49,7 @@ class LmfitBuilderWidget(QWidget):
         models = []
         for name in names:
             name, prefix = name.split(':')
-            models.append(getattr(lmfit_models, name)(**{'name': name, 'prefix': prefix}))
+            models.append(getattr(lmfit_models, name)(**{'name': name, 'prefix': prefix + '_'}))
 
         if models:
             self.q_app.params['LmFitModel'] = reduce(lambda a, b: a + b, models)

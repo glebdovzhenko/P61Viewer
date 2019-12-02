@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QCheckBox, QLabel, QLineEdit
+from PyQt5.QtWidgets import QWidget, QGridLayout, QCheckBox, QLabel, QLineEdit, QDoubleSpinBox
+from functools import partialmethod
 
 from P61App import P61App
+from FitWidgets.FloatEditWidget import FloatEditWidget
 
 
 class LmfitInspectorWidget(QWidget):
@@ -13,6 +15,7 @@ class LmfitInspectorWidget(QWidget):
         self.labels = dict()
         self.edits = dict()
         self.err_labels = dict()
+        self.edit_slots = dict()
 
         self.grid = QGridLayout()
         self.setLayout(self.grid)
@@ -21,6 +24,11 @@ class LmfitInspectorWidget(QWidget):
         self.q_app.lmFitModelUpdated.connect(self.update_repr)
         self.q_app.selectedIndexChanged.connect(self.update_repr)
         self.q_app.dataFitChanged.connect(self.on_fit_changed)
+
+    def on_value_upd(self, val, param_name):
+        fr = self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']
+        fr.params[param_name].set(value=val)
+        self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult'] = fr
 
     def on_fit_changed(self, idx):
         if idx == self.q_app.params['SelectedIndex']:
@@ -44,18 +52,21 @@ class LmfitInspectorWidget(QWidget):
             return
 
         for row, k in enumerate(fit_results.params):
-            print(fit_results.params[k])
-            self.checkboxes[k] = QCheckBox(parent=self)  # fit_results.params[k].vary
+            self.checkboxes[k] = QCheckBox(parent=self)
+            self.checkboxes[k].setChecked(fit_results.params[k].vary)
+
             self.labels[k] = QLabel(fit_results.params[k].name, parent=self)
-            self.edits[k] = QLineEdit('%.03E' % fit_results.params[k].value, parent=self)
-            self.err_labels[k] = QLabel('± %.03E' % fit_results.params[k].stderr, parent=self)
+            if fit_results.params[k].stderr is not None:
+                self.err_labels[k] = QLabel('± %.03E' % fit_results.params[k].stderr, parent=self)
+            else:
+                self.err_labels[k] = QLabel('', parent=self)
+
+            self.edits[k] = FloatEditWidget(fit_results.params[k].value)
 
             self.grid.addWidget(self.checkboxes[k], row + 1, 1, 1, 1)
             self.grid.addWidget(self.labels[k], row + 1, 2, 1, 1)
             self.grid.addWidget(self.edits[k], row + 1, 3, 1, 1)
             self.grid.addWidget(self.err_labels[k], row + 1, 4, 1, 1)
-
-        self.setLayout(self.grid)
 
 
 if __name__ == '__main__':

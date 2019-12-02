@@ -75,24 +75,24 @@ class FloatEditWidget(QWidget):
         if emit:
             self.valueUserUpd.emit(val)
 
-    def on_text_changed(self):
+    def on_text_changed(self, *args):
         if not self.float_regexp.match(self.edit.text()):
             self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
         else:
             self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 255, 255);}')
 
-    def on_text_submitted(self):
+    def on_text_submitted(self, *args):
         value = self.get_value()
         if value is not None:
             self.set_value(value)
 
-    def _on_increase(self):
+    def _on_increase(self, *args):
         value = self.get_value()
         if value is not None:
             dv = abs(0.1 * value)
             self.set_value(value + dv)
 
-    def _on_decrease(self):
+    def _on_decrease(self, *args):
         value = self.get_value()
         if value is not None:
             dv = abs(0.1 * value)

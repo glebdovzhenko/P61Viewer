@@ -54,6 +54,7 @@ class FitWidget(QWidget):
             params = self.q_app.data.loc[idx, 'FitResult'].params
 
         self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
+        print(self.q_app.data.loc[idx, 'FitResult'].fit_report())
         self.q_app.dataFitChanged.emit(idx)
 
     def on_fit_all_btn(self):
