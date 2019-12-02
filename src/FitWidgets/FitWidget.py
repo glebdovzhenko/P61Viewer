@@ -4,8 +4,7 @@ from functools import reduce
 
 from P61App import P61App
 from ListWidgets import ActiveListWidget
-from FitWidgets.FitModelInspectorWidget import FitModelInspector
-from FitWidgets.FitModelBuilderWidget import FitModelBuilderWidget
+from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
 
 
@@ -14,11 +13,11 @@ class FitWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
-        # self.lmfit_builder = FitModelBuilderWidget()
         self.lmfit_builder = LmfitBuilderWidget()
-        self.lmfit_ins_scroll = QScrollArea(parent=self)
-        self.lmfit_inspector = FitModelInspector(parent=self.lmfit_ins_scroll)
-        self.lmfit_ins_scroll.setWidget(self.lmfit_inspector)
+        self.lmfit_inspector = LmfitInspectorWidget()
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.lmfit_inspector)
 
         self.active_list = ActiveListWidget()
 
@@ -29,7 +28,7 @@ class FitWidget(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
-        layout.addWidget(self.lmfit_ins_scroll, 2, 1, 1, 3)
+        layout.addWidget(self.scroll, 2, 1, 1, 3)
         layout.addWidget(self.active_list, 3, 2, 3, 2)
         layout.addWidget(self.fit_btn, 3, 1, 1, 1)
         layout.addWidget(self.fit_all_btn, 4, 1, 1, 1)
@@ -55,7 +54,6 @@ class FitWidget(QWidget):
             params = self.q_app.data.loc[idx, 'FitResult'].params
 
         self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
-        self.lmfit_inspector.update_repr()
         # TODO: this is a temporary hack. should be another signal.
         self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
 

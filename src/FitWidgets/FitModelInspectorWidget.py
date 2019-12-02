@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 import numpy as np
-
 
 from P61App import P61App
 from FitWidgets.FitParamWidget import FitParamWidget
