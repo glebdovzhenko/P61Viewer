@@ -75,6 +75,9 @@ class FloatEditWidget(QWidget):
         if emit:
             self.valueUserUpd.emit(val)
 
+    def setValue(self, val):
+        self.set_value(val, emit=False)
+
     def on_text_changed(self, *args):
         if not self.float_regexp.match(self.edit.text()):
             self.edit.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
