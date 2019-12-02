@@ -5,7 +5,6 @@ from functools import reduce
 from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
-from FitWidgets.LmfitInspectorWidget2 import LmfitInspectorWidget2
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
 
 
@@ -15,11 +14,7 @@ class FitWidget(QWidget):
         self.q_app = P61App.instance()
 
         self.lmfit_builder = LmfitBuilderWidget()
-        # self.lmfit_inspector = LmfitInspectorWidget()
-        # self.scroll = QScrollArea()
-        # self.scroll.setWidgetResizable(True)
-        # self.scroll.setWidget(self.lmfit_inspector)
-        self.scroll = LmfitInspectorWidget2()
+        self.lmfit_inspector = LmfitInspectorWidget()
 
         self.active_list = ActiveListWidget()
 
@@ -30,7 +25,7 @@ class FitWidget(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
-        layout.addWidget(self.scroll, 2, 1, 1, 3)
+        layout.addWidget(self.lmfit_inspector, 2, 1, 1, 3)
         layout.addWidget(self.active_list, 3, 2, 3, 2)
         layout.addWidget(self.fit_btn, 3, 1, 1, 1)
         layout.addWidget(self.fit_all_btn, 4, 1, 1, 1)
