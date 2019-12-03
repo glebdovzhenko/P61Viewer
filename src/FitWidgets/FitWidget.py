@@ -38,8 +38,9 @@ class FitWidget(QWidget):
         self.copy_btn.clicked.connect(self.on_copy_btn)
 
     def on_copy_btn(self, *args):
-        self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']] * \
-                                              self.q_app.data.shape[0]
+        if self.q_app.params['SelectedIndex'] != -1:
+            self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
+                                                                       'FitResult']] * self.q_app.data.shape[0]
 
     def on_fit_btn(self, *args, idx=None):
         if self.q_app.params['SelectedIndex'] == -1:
