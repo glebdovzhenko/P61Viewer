@@ -23,9 +23,14 @@ class LmfitBuilderWidget(QWidget):
         self.q_app = P61App.instance()
 
         self.model_names = [
+            'VoigtModel',
             'PseudoVoigtModel',
             'SkewedVoigtModel',
-            'ConstantModel',
+            'GaussianModel',
+            'SkewedGaussianModel',
+            'LorentzianModel',
+            'SplitLorentzianModel',
+            'Pearson7Model',
             'LinearModel',
             'PolynomialModel'
         ]

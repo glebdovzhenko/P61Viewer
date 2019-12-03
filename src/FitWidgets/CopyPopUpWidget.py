@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QListWidget, QAbstractItemView, QGridLayout, QPushButton, QLabel
-from PyQt5.QtCore import QItemSelectionModel
+from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel
 
 from P61App import P61App
 from ListWidgets import ActiveListWidget

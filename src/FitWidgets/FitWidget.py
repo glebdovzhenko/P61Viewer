@@ -7,6 +7,7 @@ from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
 from FitWidgets.CopyPopUpWidget import CopyPopUpWidget
+from FitWidgets.SeqFitPopupWidget import SeqFitPopUpWidget
 
 
 class FitWidget(QWidget):
@@ -20,7 +21,7 @@ class FitWidget(QWidget):
         self.active_list = ActiveListWidget()
 
         self.fit_btn = QPushButton('Fit this')
-        self.fit_all_btn = QPushButton('Fit all')
+        self.fit_all_btn = QPushButton('Fit multiple')
         self.copy_btn = QPushButton('Copy params')
         self.export_btn = QPushButton('Export')
 
@@ -39,12 +40,8 @@ class FitWidget(QWidget):
         self.copy_btn.clicked.connect(self.on_copy_btn)
 
     def on_copy_btn(self, *args):
-        w = CopyPopUpWidget()
+        w = CopyPopUpWidget(parent=self)
         w.exec_()
-        self.active_list.set_selection()
-        # if self.q_app.params['SelectedIndex'] != -1:
-        #     self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
-        #                                                                'FitResult']] * self.q_app.data.shape[0]
 
     def on_fit_btn(self, *args, idx=None):
         if self.q_app.params['SelectedIndex'] == -1:
@@ -67,14 +64,8 @@ class FitWidget(QWidget):
         self.q_app.dataFitChanged.emit(idx)
 
     def on_fit_all_btn(self):
-        idxs = self.q_app.data[self.q_app.data['Active']].index
-        progress = QProgressDialog("Sequential Fit", "Cancel", 0, len(idxs))
-        progress.setWindowModality(Qt.WindowModal)
-        # TODO: add cancel functionality
-        for ii, idx in enumerate(idxs):
-            progress.setValue(ii)
-            self.on_fit_btn(idx=idx)
-        progress.setValue(len(idxs))
+        w = SeqFitPopUpWidget(parent=self)
+        w.exec_()
 
 
 if __name__ == '__main__':
