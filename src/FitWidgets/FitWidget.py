@@ -20,19 +20,26 @@ class FitWidget(QWidget):
 
         self.fit_btn = QPushButton('Fit this')
         self.fit_all_btn = QPushButton('Fit all')
+        self.copy_btn = QPushButton('Copy fit')
         self.export_btn = QPushButton('Export')
 
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
         layout.addWidget(self.lmfit_inspector, 2, 1, 1, 3)
-        layout.addWidget(self.active_list, 3, 2, 3, 2)
+        layout.addWidget(self.active_list, 3, 2, 4, 2)
         layout.addWidget(self.fit_btn, 3, 1, 1, 1)
-        layout.addWidget(self.fit_all_btn, 4, 1, 1, 1)
-        layout.addWidget(self.export_btn, 5, 1, 1, 1)
+        layout.addWidget(self.copy_btn, 4, 1, 1, 1)
+        layout.addWidget(self.fit_all_btn, 5, 1, 1, 1)
+        layout.addWidget(self.export_btn, 6, 1, 1, 1)
 
         self.fit_btn.clicked.connect(self.on_fit_btn)
         self.fit_all_btn.clicked.connect(self.on_fit_all_btn)
+        self.copy_btn.clicked.connect(self.on_copy_btn)
+
+    def on_copy_btn(self, *args):
+        self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']] * \
+                                              self.q_app.data.shape[0]
 
     def on_fit_btn(self, *args, idx=None):
         if self.q_app.params['SelectedIndex'] == -1:

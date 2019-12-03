@@ -27,3 +27,17 @@ if __name__ == '__main__':
             else:
                 tmp = f['entry/instrument/xspress3/channel%02d/histogram' % (ii % 2)]
                 tmp[...] = data_y
+
+    for ii in range(50):
+        data_y = np.zeros(n_bins)
+        data_y += 10 * np.random.random(n_bins)
+        data_y += p_voigt(a=100, x0=2000 + ii, n=0.95, s=10, g=10)
+        data_y += p_voigt(a=150, x0=2050 - ii, n=0.95, s=10, g=10)
+        data_y = data_y.reshape((1, n_bins))
+
+        with h5py.File(os.path.join(dd, 'double_peak%05d.nxs' % (ii / 2)), 'a') as f:
+            if 'entry/instrument/xspress3/channel%02d/histogram' % (ii % 2) not in f.keys():
+                dset = f.create_dataset('entry/instrument/xspress3/channel%02d/histogram' % (ii % 2), data=data_y)
+            else:
+                tmp = f['entry/instrument/xspress3/channel%02d/histogram' % (ii % 2)]
+                tmp[...] = data_y
