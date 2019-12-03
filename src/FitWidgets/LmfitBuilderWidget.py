@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QListWidget, QPushButton, QGridLayout
 from lmfit import models as lmfit_models
+import lmfit
 from functools import reduce
 
 from P61App import P61App
@@ -55,8 +56,31 @@ class LmfitBuilderWidget(QWidget):
             self.q_app.params['LmFitModel'] = reduce(lambda a, b: a + b, models)
         else:
             self.q_app.params['LmFitModel'] = None
+            self.q_app.data.loc[self.q_app.data[self.q_app.data['Active']].index, 'FitResult'] = None
 
-        self.q_app.data.loc[:, 'FitResult'] = None
+        for idx in self.q_app.data[self.q_app.data['Active']].index:
+            if self.q_app.data.loc[idx, 'FitResult'] is None:
+                if self.q_app.params['LmFitModel'] is None:
+                    continue
+                else:
+                    self.q_app.data.loc[idx, 'FitResult'] = lmfit.model.ModelResult(
+                        self.q_app.params['LmFitModel'], self.q_app.params['LmFitModel'].make_params())
+
+            new_params = self.q_app.params['LmFitModel'].make_params()
+            params = self.q_app.data.loc[idx, 'FitResult'].params
+            ks1, ks2 = params.keys() & new_params.keys(), params.keys() - new_params.keys()
+
+            for k in ks1:
+                new_params.pop(k, None)
+
+            for k in ks2:
+                params.pop(k, None)
+
+            params.update(new_params)
+
+            self.q_app.data.loc[idx, 'FitResult'] = lmfit.model.ModelResult(
+                self.q_app.params['LmFitModel'], params)
+
         self.q_app.lmFitModelUpdated.emit()
 
     def on_btn_add(self):
