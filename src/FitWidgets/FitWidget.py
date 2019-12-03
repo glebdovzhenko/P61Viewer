@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QProgressDialog, QScrollArea
+from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QProgressDialog
 from PyQt5.Qt import Qt
 from functools import reduce
 
@@ -6,6 +6,7 @@ from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
+from FitWidgets.CopyPopUpWidget import CopyPopUpWidget
 
 
 class FitWidget(QWidget):
@@ -20,7 +21,7 @@ class FitWidget(QWidget):
 
         self.fit_btn = QPushButton('Fit this')
         self.fit_all_btn = QPushButton('Fit all')
-        self.copy_btn = QPushButton('Copy fit')
+        self.copy_btn = QPushButton('Copy params')
         self.export_btn = QPushButton('Export')
 
         layout = QGridLayout()
@@ -38,9 +39,12 @@ class FitWidget(QWidget):
         self.copy_btn.clicked.connect(self.on_copy_btn)
 
     def on_copy_btn(self, *args):
-        if self.q_app.params['SelectedIndex'] != -1:
-            self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
-                                                                       'FitResult']] * self.q_app.data.shape[0]
+        w = CopyPopUpWidget()
+        w.exec_()
+        self.active_list.set_selection()
+        # if self.q_app.params['SelectedIndex'] != -1:
+        #     self.q_app.data.loc[:, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
+        #                                                                'FitResult']] * self.q_app.data.shape[0]
 
     def on_fit_btn(self, *args, idx=None):
         if self.q_app.params['SelectedIndex'] == -1:

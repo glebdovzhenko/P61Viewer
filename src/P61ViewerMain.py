@@ -61,7 +61,7 @@ class P61Viewer(QMainWindow):
         fit_layout = QHBoxLayout()
         fit_tab.setLayout(fit_layout)
         fit_layout.addWidget(self.fit_w, 1)
-        fit_layout.addWidget(self.fit_plot_w, 3)
+        fit_layout.addWidget(self.fit_plot_w, 2)
 
         self.cw.addTab(view_tab, 'View')
         self.cw.addTab(fit_tab, 'Fit')

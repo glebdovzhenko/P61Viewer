@@ -56,7 +56,7 @@ class ActiveListModel(QAbstractListModel):
 
 
 class ActiveListWidget(QWidget):
-    def __init__(self, parent=None, *args):
+    def __init__(self, parent=None, selection_mode=QAbstractItemView.SingleSelection, *args):
         QWidget.__init__(self, parent, *args)
         self.q_app = P61App.instance()
 
@@ -64,7 +64,7 @@ class ActiveListWidget(QWidget):
         self._model = ActiveListModel()
         self.list = QListView()
         self.list.setModel(self._model)
-        self.list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.list.setSelectionMode(selection_mode)
 
         # layouts
         layout = QGridLayout()
@@ -72,7 +72,8 @@ class ActiveListWidget(QWidget):
         layout.addWidget(self.list, 2, 1, 1, 4)
 
         # signals
-        self.list.selectionModel().selectionChanged.connect(self.on_selection_changed)
+        if selection_mode == QAbstractItemView.SingleSelection:
+            self.list.selectionModel().selectionChanged.connect(self.on_selection_changed)
         self.q_app.dataRowsAppended.connect(self.update_selection)
         self.q_app.dataRowsRemoved.connect(self.update_selection)
         self.q_app.dataActiveChanged.connect(self.update_selection)
@@ -94,6 +95,15 @@ class ActiveListWidget(QWidget):
             self.q_app.params['SelectedIndex'] = active_idx[0]
             self.q_app.selectedIndexChanged.emit(active_idx[0])
             self.list.selectionModel().select(self._model.index(0), QItemSelectionModel.Select)
+
+    def set_selection(self):
+        if self.q_app.params['SelectedIndex'] != -1:
+            self.list.selectionModel().select(
+                self._model.index(self.q_app.params['SelectedIndex']), QItemSelectionModel.Select)
+
+    def get_selection(self):
+        ids = self.list.selectedIndexes()
+        return [self.q_app.data[self.q_app.data['Active']].index[idx.row()] for idx in ids]
 
 
 if __name__ == '__main__':
