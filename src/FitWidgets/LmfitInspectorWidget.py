@@ -120,7 +120,7 @@ class SpinBoxDelegate(QStyledItemDelegate):
         return editor
 
     def setEditorData(self, w: QWidget, ii: QModelIndex):
-        w.set_value(float(ii.model().data(ii, Qt.EditRole)), emit=False)
+        w.value = float(ii.model().data(ii, Qt.EditRole))
 
     def setModelData(self, w: QWidget, model: QAbstractTableModel, ii: QModelIndex):
         model.setData(ii, w.value, Qt.EditRole)
