@@ -32,7 +32,6 @@ class LmfitBuilderWidget(QWidget):
             'SplitLorentzianModel',
             'Pearson7Model',
             'LinearModel',
-            'PolynomialModel'
         ]
 
         self.model_selector = QListWidget(parent=self)
