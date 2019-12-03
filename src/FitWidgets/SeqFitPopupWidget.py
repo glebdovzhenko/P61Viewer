@@ -12,6 +12,7 @@ class SeqFitPopUpWidget(QDialog):
         QDialog.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
+        self.current_name = QLabel(parent=self)
         self.combo = QComboBox(parent=self)
         self.combo.addItems(['Do not init', 'Init all from current', 'Sequential from current'])
         self.btn_ok = QPushButton('Fit', parent=self)
@@ -22,10 +23,20 @@ class SeqFitPopUpWidget(QDialog):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.combo, 1, 1, 1, 1)
-        layout.addWidget(self.btn_ok, 2, 1, 1, 1)
-        layout.addWidget(self.selection_list, 1, 2, 2, 1)
+        layout.addWidget(self.current_name, 2, 1, 1, 1)
+        layout.addWidget(self.btn_ok, 3, 1, 1, 1)
+        layout.addWidget(self.selection_list, 1, 2, 3, 1)
 
         self.btn_ok.clicked.connect(self.on_btn_ok)
+        self.combo.currentIndexChanged.connect(self.on_combo_index_change)
+
+    def on_combo_index_change(self):
+        if self.q_app.params['SelectedIndex'] == -1:
+            return
+        if self.combo.currentIndex() in (1, 2):
+            self.current_name.setText(self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'ScreenName'])
+        else:
+            self.current_name.setText('')
 
     def on_btn_ok(self):
         if self.q_app.params['SelectedIndex'] == -1:
