@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QProgressDialog
+from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage
 from PyQt5.Qt import Qt
 from functools import reduce
 
@@ -58,8 +58,12 @@ class FitWidget(QWidget):
             params = reduce(lambda a, b: a + b, (cmp.guess(yy, x=xx) for cmp in model.components))
         else:
             params = self.q_app.data.loc[idx, 'FitResult'].params
-
-        self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
+        try:
+            self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
+        except Exception as e:
+            msg = QErrorMessage()
+            msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
+            msg.exec_()
         print(self.q_app.data.loc[idx, 'FitResult'].fit_report())
         self.q_app.dataFitChanged.emit(idx)
 
