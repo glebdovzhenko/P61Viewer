@@ -6,8 +6,8 @@ from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
-from FitWidgets.CopyPopUpWidget import CopyPopUpWidget
-from FitWidgets.SeqFitPopupWidget import SeqFitPopUpWidget
+from FitWidgets.PopUpCopyWidget import PopUpCopyWidget
+from FitWidgets.PopUpSeqFitWidget import PopUpSeqFitWidget
 from PlotWidgets import FitPlotWidget
 
 
@@ -48,7 +48,7 @@ class FitWidget(QWidget):
         self.export_btn.clicked.connect(self.on_export_button)
 
     def on_copy_btn(self, *args):
-        w = CopyPopUpWidget(parent=self)
+        w = PopUpCopyWidget(parent=self)
         w.exec_()
 
     def on_fit_btn(self, *args, idx=None):
@@ -77,7 +77,7 @@ class FitWidget(QWidget):
         self.q_app.dataFitChanged.emit(idx)
 
     def on_fit_all_btn(self):
-        w = SeqFitPopUpWidget(parent=self)
+        w = PopUpSeqFitWidget(parent=self)
         w.exec_()
 
     def on_export_button(self):

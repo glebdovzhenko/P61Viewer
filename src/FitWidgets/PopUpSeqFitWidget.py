@@ -6,7 +6,7 @@ from P61App import P61App
 from ListWidgets import ActiveListWidget
 
 
-class SeqFitPopUpWidget(QDialog):
+class PopUpSeqFitWidget(QDialog):
     """"""
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)

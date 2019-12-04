@@ -4,7 +4,7 @@ from P61App import P61App
 from ListWidgets import ActiveListWidget
 
 
-class CopyPopUpWidget(QDialog):
+class PopUpCopyWidget(QDialog):
     """"""
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)
@@ -45,6 +45,6 @@ class CopyPopUpWidget(QDialog):
 if __name__ == '__main__':
     import sys
     q_app = P61App(sys.argv)
-    app = CopyPopUpWidget()
+    app = PopUpCopyWidget()
     app.show()
     sys.exit(q_app.exec())
