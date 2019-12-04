@@ -27,9 +27,6 @@ class MainPlotWidget(QWidget):
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
 
-        self._line_ax.set_xlim = self.set_lim_wrapper(self._line_ax.set_xlim, 'PlotXLim')
-        self._line_ax.set_ylim = self.set_lim_wrapper(self._line_ax.set_ylim, 'PlotYLim')
-
     def on_data_rows_appended(self, n_rows):
         for ii in range(self.q_app.data.shape[0] - n_rows, self.q_app.data.shape[0]):
             data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
@@ -48,20 +45,6 @@ class MainPlotWidget(QWidget):
             else:
                 self._line_ax.lines[ii].set_linestyle('')
         self.update_line_axes(autoscale=False)
-
-    def set_lim_wrapper(self, set_lim, param):
-        set_lim_copy = copy.copy(set_lim)
-
-        def my_set_lim(*args, **kwargs):
-            if isinstance(args[0], tuple):
-                self.q_app.params[param] = args[0]
-            else:
-                self.q_app.params[param] = args[:2]
-
-            self.q_app.plotXYLimChanged.emit()
-            return set_lim_copy(*args, **kwargs)
-
-        return my_set_lim
 
     def update_line_axes(self, autoscale=True):
         if autoscale:

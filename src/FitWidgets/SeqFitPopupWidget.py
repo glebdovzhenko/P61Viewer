@@ -41,6 +41,7 @@ class SeqFitPopUpWidget(QDialog):
     def on_btn_ok(self):
         if self.q_app.params['SelectedIndex'] == -1:
             self.close()
+            return
 
         fit_ids = list(self.selection_list.get_selection())
         fit_type = self.combo.currentIndex()
@@ -58,4 +59,5 @@ class SeqFitPopUpWidget(QDialog):
                 self.q_app.data.loc[idx, 'FitResult'] = copy.copy(self.q_app.data.loc[prev_idx, 'FitResult'])
             self.parent().on_fit_btn(idx=idx)
         progress.setValue(len(fit_ids))
+
         self.close()

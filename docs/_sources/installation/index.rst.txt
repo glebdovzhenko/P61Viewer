@@ -7,8 +7,7 @@ Installation
 
 Download binaries
 -----------------
-Once the project reaches its first release, downloadable (no installation needed) binaries for Windows, Mac OS X, and
-Linux will become available. For the moment please follow the installation from source code instructions.
+You can find the latest release with the downloadable binaries `here <https://github.com/glebdovzhenko/P61Viewer/releases>`_.
 
 From source code
 ----------------

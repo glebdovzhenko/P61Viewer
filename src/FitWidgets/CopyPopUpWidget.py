@@ -32,9 +32,13 @@ class CopyPopUpWidget(QDialog):
         self.button_ok.clicked.connect(self.on_button_ok)
 
     def on_button_ok(self):
-        idx_to = self.list_to.get_selection()
-        self.q_app.data.loc[idx_to, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
-                                                                   'FitResult']] * len(idx_to)
+        if self.q_app.params['SelectedIndex'] == -1:
+            pass
+        else:
+            idx_to = self.list_to.get_selection()
+            self.q_app.data.loc[idx_to, 'FitResult'] = [self.q_app.data.loc[
+                                                            self.q_app.params['SelectedIndex'],
+                                                            'FitResult']] * len(idx_to)
         self.close()
 
 

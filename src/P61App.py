@@ -66,6 +66,9 @@ class P61App(QApplication):
     - :code:`lmFitModelUpdated`: when the :code:`self.params['LmFitModel']` is updated;
 
     """
+    name = 'P61 Viewer'
+    version = '0.0.2'
+
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
@@ -83,8 +86,8 @@ class P61App(QApplication):
             'SelectedIndex': -1,
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),
-            'PlotXLim': (0, 1),
-            'PlotYLim': (0, 1),
+            # 'PlotXLim': (0, 1),
+            # 'PlotYLim': (0, 1),
         }
 
     @staticmethod

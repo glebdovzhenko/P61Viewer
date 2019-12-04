@@ -39,7 +39,7 @@ class P61Viewer(QMainWindow):
 
         # initiate self
         self.resize(1200, 800)
-        self.setWindowTitle('P61 Spectrum Viewer')
+        self.setWindowTitle(P61App.name + ' ' + P61App.version)
 
         # initiate widgets
         self.cw = QTabWidget(parent=self)
@@ -49,7 +49,7 @@ class P61Viewer(QMainWindow):
         self.file_w = EditableListWidget(parent=self)
         self.fit_w = FitWidget(parent=self)
         self.view_plot_w = MainPlotWidget(parent=self)
-        self.fit_plot_w = FitPlotWidget(parent=self)
+        # self.fit_plot_w = FitPlotWidget(parent=self)
 
         # set up layouts
         view_layout = QHBoxLayout()
@@ -60,8 +60,8 @@ class P61Viewer(QMainWindow):
         fit_tab = QWidget()
         fit_layout = QHBoxLayout()
         fit_tab.setLayout(fit_layout)
-        fit_layout.addWidget(self.fit_w, 1)
-        fit_layout.addWidget(self.fit_plot_w, 2)
+        fit_layout.addWidget(self.fit_w)
+        # fit_layout.addWidget(self.fit_plot_w, 2)
 
         self.cw.addTab(view_tab, 'View')
         self.cw.addTab(fit_tab, 'Fit')

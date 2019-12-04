@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 from P61App import P61App
@@ -20,8 +21,9 @@ class FitPlotWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(line_canvas)
+        layout.addWidget(NavigationToolbar(line_canvas, self))
 
-        self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
+        # self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.dataFitChanged.connect(self.on_fit_changed)
         self.q_app.lmFitModelUpdated.connect(self.on_model_changed)
@@ -33,10 +35,10 @@ class FitPlotWidget(QWidget):
         if idx == self.q_app.params['SelectedIndex']:
             self.on_selected_active_changed(idx)
 
-    def on_plot_lim_changed(self):
-        self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
-        self._line_ax.set_ylim(*self.q_app.params['PlotYLim'])
-        self._line_ax.figure.canvas.draw()
+    # def on_plot_lim_changed(self):
+    #     self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
+    #     self._line_ax.set_ylim(*self.q_app.params['PlotYLim'])
+    #     self._line_ax.figure.canvas.draw()
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()
@@ -45,7 +47,8 @@ class FitPlotWidget(QWidget):
             self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='')
             if data['FitResult'] is not None:
                 xx = data['DataX']
-                sel = (self.q_app.params['PlotXLim'][0] < xx) & (self.q_app.params['PlotXLim'][1] > xx)
+                x_lim = self.get_axes_xlim()
+                sel = (x_lim[0] < xx) & (x_lim[1] > xx)
                 xx = xx[sel]
                 yy = data['DataY'][sel]
 
@@ -67,6 +70,9 @@ class FitPlotWidget(QWidget):
     def clear_axes(self):
         del self._line_ax.lines[:]
         del self._diff_ax.lines[:]
+
+    def get_axes_xlim(self):
+        return self._line_ax.get_xlim()
 
 
 if __name__ == '__main__':
