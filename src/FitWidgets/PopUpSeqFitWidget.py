@@ -51,7 +51,7 @@ class PopUpSeqFitWidget(QDialog):
                                                                              'FitResult']] * len(fit_ids)
 
         # TODO: add cancel functionality
-        progress = QProgressDialog("Sequential Fit", "Cancel", 0, len(fit_ids))
+        progress = QProgressDialog("Batch Fit", "Cancel", 0, len(fit_ids))
         progress.setWindowModality(Qt.WindowModal)
         for ii, (prev_idx, idx) in enumerate(zip([self.q_app.params['SelectedIndex']] + fit_ids[:-1], fit_ids)):
             progress.setValue(ii)
