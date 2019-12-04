@@ -4,8 +4,8 @@ User guide (updated for version 0.0.2)
 Test files
 ----------
 
-You can get the test files if you pull or download the repository. The files are in the
-:code:`P61Viewer/test_files/generated` folder.
+You can get the test files if you clone or download the `repository <https://github.com/glebdovzhenko/P61Viewer>`_.
+The files are in the :code:`P61Viewer/test_files/generated` folder.
 
 Open and view .nxs spectra
 --------------------------
@@ -37,6 +37,9 @@ have to first click the appropriate buttons below:
 Sequential fit with an arbitrary model
 --------------------------------------
 
+Preparation
+~~~~~~~~~~~
+
 First make sure that all of the datasets you would like to fit have checked boxes next to them.
 Then you need to switch to the "Fit" tab by clicking it:
 
@@ -46,6 +49,9 @@ Now you need to select the fit area by scaling the plot, since only data within 
 In this case we want to focus on the two peaks in the middle of the spectrum.
 
 .. image:: 06-area.jpg
+
+Model builder
+~~~~~~~~~~~~~
 
 Now let us have a look at the interface. First we have the fit model builder:
 
@@ -68,6 +74,9 @@ For instance, parameter name :code:`pv0_amplitude` is the amplitude of the pseud
 A description of all models, their parameters and their meaning can be found
 `here <https://lmfit.github.io/lmfit-py/builtin_models.html>`_.
 
+Model inspector
+~~~~~~~~~~~~~~~
+
 Now that we have defined our model, let us look at the model inspector:
 
 .. image:: 09-inspector.jpg
@@ -86,4 +95,11 @@ And now you are ready for the first fit. Click "Fit this" button, and if everyth
 like this:
 
 .. image:: 11-fit-this.jpg
+
+Sequential fit
+~~~~~~~~~~~~~~
+
+
+Export
+~~~~~~
 
