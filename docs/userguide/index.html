@@ -94,19 +94,42 @@ A description of all models, their parameters and their meaning can be found
 the parameter will be varied during the next optimization. Columns “Name”, “Value”, and “STD” are self-explanatory,
 amd the columns “Min” and “Max” (scroll the table right to see them) show the limits within which the parameters will
 be varied. Columns “Value”, “Min”, and “Max” are editable by double-clicking the cells and accept floating point
-numbes in any format, including <code class="code docutils literal notranslate"><span class="pre">INF</span></code> and <code class="code docutils literal notranslate"><span class="pre">-INF</span></code> for the limits. So the next step is to edit the parameter
-values until you have a reasonable starting point for the fit. If you like, you can edit the limits too.
-The result may look like this:</p>
+numbes in any format, including <code class="code docutils literal notranslate"><span class="pre">INF</span></code> and <code class="code docutils literal notranslate"><span class="pre">-INF</span></code> for the limits.</p>
+<p>The next step is to edit the parameter values until you have a reasonable starting point for the fit.
+If you like, you can edit the limits too. The result may look like this:</p>
 <img alt="../_images/10-params.jpg" src="../_images/10-params.jpg" />
 <p>And now you are ready for the first fit. Click “Fit this” button, and if everything goes right, the result will look
 like this:</p>
 <img alt="../_images/11-fit-this.jpg" src="../_images/11-fit-this.jpg" />
 </div>
-<div class="section" id="sequential-fit">
-<h3>Sequential fit<a class="headerlink" href="#sequential-fit" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="batch-fit">
+<h3>Batch fit<a class="headerlink" href="#batch-fit" title="Permalink to this headline">¶</a></h3>
+<p>Now that the first file is fitted sufficiently well, we can proceed to fitting in batches.
+Right now only one dataset is fitted. If select any other dataset on the list at the bottom, you will see that for them
+the fit parameters still have the initial values.</p>
+<p>To set up the batch fit, select the first dataset again, where we have the parameters estimated, and click the
+“Fit multiple” button. You will see a menu like this:</p>
+<img alt="../_images/12-fit-multiple.jpg" src="../_images/12-fit-multiple.jpg" />
+<p>The drop-down list on the right has options “Do not init”, “Init all from current”, and “Sequential from current”.
+If you select the first one, then for each dataset the fit will start with its current parameters.
+This might be a good option for later. The second option “Init all from current” will copy the parameters of the
+currently selected dataset to each one in the sequence before its fit. The third option “Sequential from current”
+will use the results of each dataset’s fit as a starting point for the next dataset.</p>
+<p>For the datasets shown here, the second option “Init all from current” is the best one, since in the middle of the
+dataset list, where the peaks completely overlap, the results become unstable, and the “Sequential from current”
+option would carry this instability to the end, where the peaks are clearly separated again.
+So with “Init all from current” option selected select all the files (or as many as you want to have fitted)
+on the list, and click the “Fit” button:</p>
+<img alt="../_images/13-fit-btn.jpg" src="../_images/13-fit-btn.jpg" />
+<p>After this, depending on whether you set the parameter limits and how, the results should look reasonably good
+for all datasets except ones where the peaks overlap completely. It is possible to get to good results there as well
+with the tools presented in this guide, but for now we will move on to the last topic.</p>
 </div>
 <div class="section" id="export">
 <h3>Export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h3>
+<p>After you are satisfied with the results you have, you can export them to a <code class="code docutils literal notranslate"><span class="pre">.csv</span></code> file readable by Excel, Origin,
+and other programs. Just click the “Export” button at the bottom, choose a file name, and it is done.
+And this concludes the user guide.</p>
 </div>
 </div>
 </div>

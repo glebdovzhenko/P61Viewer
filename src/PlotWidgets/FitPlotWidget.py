@@ -58,13 +58,14 @@ class FitPlotWidget(QWidget):
                 self._diff_ax.plot(xx, tmp, color='#d62728', marker='', linestyle='--')
                 self._diff_ax.set_ylim(min(tmp) - 0.1 * abs(max(tmp) - min(tmp)),
                                        max(tmp) + 0.1 * abs(max(tmp) - min(tmp)))
+                self._line_ax.set_ylim(min(yy) - 0.1 * abs(max(yy) - min(yy)),
+                                       max(yy) + 0.1 * abs(max(yy) - min(yy)))
                 cmps = data['FitResult'].eval_components(x=xx)
 
                 for cmp in cmps:
                     self._line_ax.plot(xx, cmps[cmp],
                                        color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
                                        marker='', linestyle='--')
-        self._line_ax.autoscale(axis='y')
         self._line_ax.figure.canvas.draw()
         self._diff_ax.figure.canvas.draw()
 
