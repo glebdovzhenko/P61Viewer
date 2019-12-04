@@ -62,7 +62,7 @@ have to first click the appropriate buttons below:</p>
 <p>First make sure that all of the datasets you would like to fit have checked boxes next to them.
 Then you need to switch to the “Fit” tab by clicking it:</p>
 <img alt="../_images/05-fit.jpg" src="../_images/05-fit.jpg" />
-<p>Now you need to select the fit area by scaling the plot (only data within the plot x range will be taken for the fit).
+<p>Now you need to select the fit area by scaling the plot, since only data within the plot x range will be taken for the fit.
 In this case we want to focus on the two peaks in the middle of the spectrum.</p>
 <img alt="../_images/06-area.jpg" src="../_images/06-area.jpg" />
 <p>Now let us have a look at the interface. First we have the fit model builder:</p>
@@ -74,12 +74,25 @@ To remove a model from the list on the right, select it in the right list and cl
 <p>For this dataset we are going to use two pseudo-Voigt functions and a linear function. After adding them to the model
 the result should look like this:</p>
 <img alt="../_images/08-composite.jpg" src="../_images/08-composite.jpg" />
-<p>Note that all models have a shortened unique name after a colon: <code class="code docutils literal notranslate"><span class="pre">PseudoVoigtModel:pv0</span></code>,
+<p>Note that on the right list all models have a shortened unique name after a colon: <code class="code docutils literal notranslate"><span class="pre">PseudoVoigtModel:pv0</span></code>,
 <code class="code docutils literal notranslate"><span class="pre">PseudoVoigtModel:pv1</span></code>, <code class="code docutils literal notranslate"><span class="pre">LinearModel:lin0</span></code>. This short name is used as a prefix in model parameter names,
 so that all parameter names in the fit are unique.
 For instance, parameter name <code class="code docutils literal notranslate"><span class="pre">pv0_amplitude</span></code> is the amplitude of the pseudo-Voigt model <code class="code docutils literal notranslate"><span class="pre">pv0</span></code>.
 A description of all models, their parameters and their meaning can be found
 <a class="reference external" href="https://lmfit.github.io/lmfit-py/builtin_models.html">here</a>.</p>
+<p>Now that we have defined our model, let us look at the model inspector:</p>
+<img alt="../_images/09-inspector.jpg" src="../_images/09-inspector.jpg" />
+<p>It shows the parameter values, errors and limits specific to the selected dataset. The first column, “Fit”, marks if
+the parameter will be varied during the next optimization. Columns “Name”, “Value”, and “STD” are self-explanatory,
+amd the columns “Min” and “Max” (scroll the table right to see them) show the limits within which the parameters will
+be varied. Columns “Value”, “Min”, and “Max” are editable by double-clicking the cells and accept floating point
+numbes in any format, including <code class="code docutils literal notranslate"><span class="pre">INF</span></code> and <code class="code docutils literal notranslate"><span class="pre">-INF</span></code> for the limits. So the next step is to edit the parameter
+values until you have a reasonable starting point for the fit. If you like, you can edit the limits too.
+The result may look like this:</p>
+<img alt="../_images/10-params.jpg" src="../_images/10-params.jpg" />
+<p>And now you are ready for the first fit. Click “Fit this” button, and if everything goes right, the result will look
+like this:</p>
+<img alt="../_images/11-fit-this.jpg" src="../_images/11-fit-this.jpg" />
 </div>
 </div>
 
