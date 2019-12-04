@@ -5,8 +5,8 @@ Installation
 .. _pyinstaller: https://pypi.org/project/PyInstaller/
 .. _git: https://git-scm.com
 
-Download binaries
------------------
+From binaries
+-------------
 You can find the latest release with the downloadable binaries `here <https://github.com/glebdovzhenko/P61Viewer/releases>`_.
 
 From source code
@@ -14,8 +14,9 @@ From source code
 These instructions have been tested for Anaconda_ python. You can use any python distribution you like at risk of more
 complications.
 
-1. Clone the source code from https://github.com/glebdovzhenko/P61Viewer . You can install git_ for free and keep the
-  project up to date, or just download the source code form github and unpack the archive.
+1. Clone the source code from the `repository <https://github.com/glebdovzhenko/P61Viewer>`_.
+You can install `git <https://git-scm.com>`_ for free and keep the project up to date,
+or just download the source code and unpack the archive.
 
 .. code-block:: bash
 
