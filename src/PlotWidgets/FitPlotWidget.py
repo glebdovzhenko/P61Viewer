@@ -64,6 +64,7 @@ class FitPlotWidget(QWidget):
                     self._line_ax.plot(xx, cmps[cmp],
                                        color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
                                        marker='', linestyle='--')
+        self._line_ax.autoscale(axis='y')
         self._line_ax.figure.canvas.draw()
         self._diff_ax.figure.canvas.draw()
 
