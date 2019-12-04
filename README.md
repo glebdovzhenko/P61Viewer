@@ -1,17 +1,8 @@
 # P61 Viewer
 This software is for viewing and basic analysis of the data from HZG 
-beamline P61A at PETRAIII located at DESY, Hamburg. \
-P61A is an energy-dispersive diffraction beamline intended mainly for residual
-stress analysis. The detectors produce files in 
-[NeXus format](https://www.nexusformat.org) which is a sub-standard of HDF5 
-developed for muon, X-ray, and neutron science. 
-# Release
-At the moment the project is in pre-alpha release state. Release is scheduled for December 1st 2019.
-Alpha features:
-* Import / viewing of beamline-specific .nxs files 
-* Data fit with a function built from 
-[lmfit models](https://lmfit.github.io/lmfit-py/builtin_models.html)
-* Export of fit results to .csv
-* Downloadable binaries for Windows 10, Mac OS X, and Linux \
-# Screenshots:
-![](img/screenshots/app_main.png) ![](img/screenshots/app_fit.png)
+beamline P61A at PETRAIII located at DESY, Hamburg. P61A is an energy-dispersive diffraction beamline intended mainly for residual
+stress analysis. \
+The P61 Viewer is currently in alpha release. 
+The installation instructions can be found [here](https://glebdovzhenko.github.io/P61Viewer/installation/index.html). 
+Also there is a [user guide](https://glebdovzhenko.github.io/P61Viewer/userguide/index.html) and the
+[developer documentation](https://glebdovzhenko.github.io/P61Viewer/developer/index.html) which is mostly under construction.
