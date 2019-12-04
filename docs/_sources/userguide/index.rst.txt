@@ -4,7 +4,8 @@ User guide (updated for version 0.0.2)
 Test files
 ----------
 
-You can get the test files if you clone or download the `repository <https://github.com/glebdovzhenko/P61Viewer>`_.
+You can get the test files if you download the archive with the source code from the
+`release page <https://github.com/glebdovzhenko/P61Viewer/releases>`_.
 The files are in the :code:`P61Viewer/test_files/generated` folder.
 
 Open and view .nxs spectra
