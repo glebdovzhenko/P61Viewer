@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>User guide &#8212; P61 Viewer  documentation</title>
+    <title>User guide (updated for version 0.0.2) &#8212; P61 Viewer  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -32,8 +32,39 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="user-guide">
-<h1>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="user-guide-updated-for-version-0-0-2">
+<h1>User guide (updated for version 0.0.2)<a class="headerlink" href="#user-guide-updated-for-version-0-0-2" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="test-files">
+<h2>Test files<a class="headerlink" href="#test-files" title="Permalink to this headline">¶</a></h2>
+<p>You can get the test files if you pull or download the repository. The files are in the
+<code class="code docutils literal notranslate"><span class="pre">P61Viewer/test_files/generated</span></code> folder.</p>
+</div>
+<div class="section" id="open-and-view-nxs-spectra">
+<h2>Open and view .nxs spectra<a class="headerlink" href="#open-and-view-nxs-spectra" title="Permalink to this headline">¶</a></h2>
+<p>In P61 Viewer you can view and compare multiple <code class="code docutils literal notranslate"><span class="pre">.nxs</span></code> files at once. To do that click the “+” button:</p>
+<img alt="../_images/01-open.jpg" src="../_images/01-open.jpg" />
+<p>Once the files are open, you can show or hide their data from the plot by clicking the checkboxes next to their names.
+To change visibility of multiple files at once, select them on the list and click the checkbox above.</p>
+<img alt="../_images/02-status.jpg" src="../_images/02-status.jpg" />
+<p>To close the files, select them on the list and click the “-” button.</p>
+<img alt="../_images/03-close.jpg" src="../_images/03-close.jpg" />
+<p>Note, that each <code class="code docutils literal notranslate"><span class="pre">.nxs</span></code> file contains two datasets coming from channels (detectors) 0 and 1.
+Also note, that if you try to open a dataset that is already open, the program will do nothing.</p>
+</div>
+<div class="section" id="plot-controls">
+<h2>Plot controls<a class="headerlink" href="#plot-controls" title="Permalink to this headline">¶</a></h2>
+<p>Plot controls are standard for <a class="reference external" href="https://matplotlib.org">matplotlib</a> library. To autoscale, move, or magnify the plot you
+have to first click the appropriate buttons below:</p>
+<img alt="../_images/04-mpl.jpg" src="../_images/04-mpl.jpg" />
+</div>
+<div class="section" id="sequential-fit-with-an-arbitrary-model">
+<h2>Sequential fit with an arbitrary model<a class="headerlink" href="#sequential-fit-with-an-arbitrary-model" title="Permalink to this headline">¶</a></h2>
+<p>First make sure that all of the datasets you would like to fit are “checked” and visible on the plot.
+Then you need to switch to the “Fit” tab by clicking it:</p>
+<img alt="../_images/05-fit.jpg" src="../_images/05-fit.jpg" />
+<p>Now you need to select the fit area by scaling the plot (only data from the plot x scale will be taken for the fit).
+In this case we focus on the two peaks in the middle of the spectrum</p>
+</div>
 </div>
 
 
@@ -56,7 +87,13 @@
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User guide (updated for version 0.0.2)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#test-files">Test files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#open-and-view-nxs-spectra">Open and view .nxs spectra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot-controls">Plot controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sequential-fit-with-an-arbitrary-model">Sequential fit with an arbitrary model</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer documentation</a></li>
 </ul>
 
