@@ -18,9 +18,9 @@ class ActiveListModel(QAbstractListModel):
         self._data = self.q_app.data
         self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
-        self.q_app.dataRowsAppended.connect(self.on_hists_added)
-        self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
-        self.q_app.dataActiveChanged.connect(self.on_hists_ac)
+        # self.q_app.dataRowsAppended.connect(self.on_hists_added)
+        # self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
+        # self.q_app.dataActiveChanged.connect(self.on_hists_ac)
 
     def rowCount(self, parent=None, *args, **kwargs):
         return self._active_idx.shape[0]
@@ -39,20 +39,20 @@ class ActiveListModel(QAbstractListModel):
         self._data = self.q_app.data
         self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
-    def on_hists_added(self, n_rows):
-        # TODO: redo
+    def on_hists_added(self, n_rows=0):
         self._upd()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
-    def on_hists_removed(self, rows):
-        # TODO: redo
+    def on_hists_removed(self, rows=0):
         self._upd()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
 
-    def on_hists_ac(self, rows):
-        # TODO: redo
+    def on_hists_ac(self, rows=0):
         self._upd()
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+
+    def get_indices(self):
+        return self._active_idx
 
 
 class ActiveListWidget(QWidget):
@@ -73,35 +73,64 @@ class ActiveListWidget(QWidget):
 
         # signals
         if selection_mode == QAbstractItemView.SingleSelection:
-            self.list.selectionModel().selectionChanged.connect(self.on_selection_changed)
-        self.q_app.dataRowsAppended.connect(self.update_selection)
-        self.q_app.dataRowsRemoved.connect(self.update_selection)
-        self.q_app.dataActiveChanged.connect(self.update_selection)
+            self.list.selectionModel().selectionChanged.connect(self.on_list_selection_changed)
+            self.q_app.selectedIndexChanged.connect(self.on_selected_index_changed)
+        self.q_app.dataRowsAppended.connect(self.on_hists_added)
+        self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
+        self.q_app.dataActiveChanged.connect(self.on_hists_ac)
 
-    def on_selection_changed(self):
+    def on_hists_added(self):
+        self._model.on_hists_added()
+
+        if (self.q_app.params['SelectedIndex'] == -1) and (self._model.rowCount() > 0):
+            self.q_app.params['SelectedIndex'] = 0
+            self.list.selectionModel().select(
+                self._model.index(0), QItemSelectionModel.ClearAndSelect)
+            self.q_app.selectedIndexChanged.emit(0)
+
+    def on_hists_removed(self):
+        self._model.on_hists_removed()
+        self._upd_selected_index()
+
+    def on_hists_ac(self):
+        self._model.on_hists_ac()
+        self._upd_selected_index()
+
+    def _upd_selected_index(self):
+        if self._model.rowCount() == 0:
+            self.q_app.params['SelectedIndex'] = -1
+            self.q_app.selectedIndexChanged.emit(-1)
+        elif self.q_app.params['SelectedIndex'] not in self._model.get_indices():
+            self.q_app.params['SelectedIndex'] = self._model.get_indices()[0]
+            self.list.selectionModel().select(
+                self._model.index(self.q_app.params['SelectedIndex']), QItemSelectionModel.ClearAndSelect)
+            self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
+        else:
+            pass
+
+    def on_list_selection_changed(self):
         ids = self.list.selectedIndexes()
         if not ids:
             return
 
-        self.q_app.params['SelectedIndex'] = self.q_app.data[self.q_app.data['Active']].index[ids[0].row()]
-        self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
-
-    def update_selection(self):
-        active_idx = self.q_app.data[self.q_app.data['Active']].index
-        if active_idx.shape[0] == 0:
-            self.q_app.params['SelectedIndex'] = -1
-            self.q_app.selectedIndexChanged.emit(-1)
-        elif self.q_app.params['SelectedIndex'] in active_idx:
+        if self.q_app.params['SelectedIndex'] != self._model.get_indices()[ids[0].row()]:
+            self.q_app.params['SelectedIndex'] = self._model.get_indices()[ids[0].row()]
             self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
-        else:
-            self.q_app.params['SelectedIndex'] = active_idx[0]
-            self.q_app.selectedIndexChanged.emit(active_idx[0])
-            self.list.selectionModel().select(self._model.index(0), QItemSelectionModel.Select)
 
-    def set_selection(self):
-        if self.q_app.params['SelectedIndex'] != -1:
+    def on_selected_index_changed(self, new_idx):
+        ids = self.list.selectedIndexes()
+        model_ids = self._model.get_indices()
+        if model_ids.shape[0] == 0:
+            return
+
+        if not ids:
             self.list.selectionModel().select(
-                self._model.index(self.q_app.params['SelectedIndex']), QItemSelectionModel.Select)
+                self._model.index(new_idx), QItemSelectionModel.ClearAndSelect)
+        elif new_idx != model_ids[ids[0].row()]:
+            self.list.selectionModel().select(
+                self._model.index(new_idx), QItemSelectionModel.ClearAndSelect)
+        else:
+            pass
 
     def get_selection(self):
         ids = self.list.selectedIndexes()

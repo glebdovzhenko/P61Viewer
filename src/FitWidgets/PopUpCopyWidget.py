@@ -19,7 +19,8 @@ class PopUpCopyWidget(QDialog):
         self.button_ok = QPushButton('Copy')
 
         self.setWindowTitle('Copy fit parameters')
-        self.list_from.set_selection()
+        # self.list_from.set_selection()
+        self.list_from.on_selected_index_changed(self.q_app.params['SelectedIndex'])
 
         layout = QGridLayout()
         self.setLayout(layout)
