@@ -23,7 +23,6 @@ class FitPlotWidget(QWidget):
         layout.addWidget(line_canvas)
         layout.addWidget(NavigationToolbar(line_canvas, self))
 
-        # self.q_app.plotXYLimChanged.connect(self.on_plot_lim_changed)
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.dataFitChanged.connect(self.on_fit_changed)
         self.q_app.lmFitModelUpdated.connect(self.on_model_changed)
@@ -34,11 +33,6 @@ class FitPlotWidget(QWidget):
     def on_fit_changed(self, idx):
         if idx == self.q_app.params['SelectedIndex']:
             self.on_selected_active_changed(idx)
-
-    # def on_plot_lim_changed(self):
-    #     self._line_ax.set_xlim(*self.q_app.params['PlotXLim'])
-    #     self._line_ax.set_ylim(*self.q_app.params['PlotYLim'])
-    #     self._line_ax.figure.canvas.draw()
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()
@@ -51,21 +45,19 @@ class FitPlotWidget(QWidget):
                 sel = (x_lim[0] < xx) & (x_lim[1] > xx)
                 xx = xx[sel]
                 yy = data['DataY'][sel]
+                diff = yy - data['FitResult'].eval(data['FitResult'].params, x=xx)
 
                 self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
                                    color='#d62728', marker='', linestyle='--')
-                tmp = yy - data['FitResult'].eval(data['FitResult'].params, x=xx)
-                self._diff_ax.plot(xx, tmp, color='#d62728', marker='', linestyle='--')
-                self._diff_ax.set_ylim(min(tmp) - 0.1 * abs(max(tmp) - min(tmp)),
-                                       max(tmp) + 0.1 * abs(max(tmp) - min(tmp)))
-                self._line_ax.set_ylim(min(yy) - 0.1 * abs(max(yy) - min(yy)),
-                                       max(yy) + 0.1 * abs(max(yy) - min(yy)))
-                cmps = data['FitResult'].eval_components(x=xx)
+                self._diff_ax.plot(xx, diff, color='#d62728', marker='', linestyle='--')
 
+                cmps = data['FitResult'].eval_components(x=xx)
                 for cmp in cmps:
                     self._line_ax.plot(xx, cmps[cmp],
                                        color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
                                        marker='', linestyle='--')
+
+        self.set_axes_ylim()
         self._line_ax.figure.canvas.draw()
         self._diff_ax.figure.canvas.draw()
 
@@ -75,6 +67,15 @@ class FitPlotWidget(QWidget):
 
     def get_axes_xlim(self):
         return self._line_ax.get_xlim()
+
+    def set_axes_ylim(self):
+        for ax in (self._line_ax, self._diff_ax):
+            ydata = sum([list(line.get_ydata()) for line in ax.lines], [])
+            if ydata:
+                mi_, ma_ = min(ydata), max(ydata)
+                ax.set_ylim(mi_ - 0.1 * abs(ma_ - mi_), ma_ + 0.1 * abs(ma_ - mi_))
+            else:
+                ax.set_ylim(0., 1.)
 
 
 if __name__ == '__main__':

@@ -72,9 +72,8 @@ class P61App(QApplication):
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
-    dataFitChanged = pyqtSignal(int)
     selectedIndexChanged = pyqtSignal(int)
-    plotXYLimChanged = pyqtSignal()
+    dataFitChanged = pyqtSignal(int)
     lmFitModelUpdated = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
@@ -86,8 +85,6 @@ class P61App(QApplication):
             'SelectedIndex': -1,
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),
-            # 'PlotXLim': (0, 1),
-            # 'PlotYLim': (0, 1),
         }
 
     @staticmethod

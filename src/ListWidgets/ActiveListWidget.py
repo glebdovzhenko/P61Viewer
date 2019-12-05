@@ -80,9 +80,11 @@ class ActiveListWidget(QWidget):
 
     def on_selection_changed(self):
         ids = self.list.selectedIndexes()
-        if ids:
-            self.q_app.params['SelectedIndex'] = self.q_app.data[self.q_app.data['Active']].index[ids[0].row()]
-            self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
+        if not ids:
+            return
+
+        self.q_app.params['SelectedIndex'] = self.q_app.data[self.q_app.data['Active']].index[ids[0].row()]
+        self.q_app.selectedIndexChanged.emit(self.q_app.params['SelectedIndex'])
 
     def update_selection(self):
         active_idx = self.q_app.data[self.q_app.data['Active']].index
