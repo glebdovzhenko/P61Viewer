@@ -30,7 +30,10 @@ class EditableListModel(QAbstractListModel):
         self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]), [])
 
     def on_data_active(self, rows):
-        self.dataChanged.emit(self.index(min(rows)), self.index(max(rows)), [Qt.CheckStateRole])
+        if rows:
+            self.dataChanged.emit(self.index(min(rows)), self.index(max(rows)), [Qt.CheckStateRole])
+        else:
+            self.dataChanged.emit(self.index(0), self.index(0), [Qt.CheckStateRole])
 
     def rowCount(self, parent=None, *args, **kwargs):
         return self._data.shape[0]
