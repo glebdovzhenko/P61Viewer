@@ -4,6 +4,7 @@ src/P61App.py
 
 """
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 import pandas as pd
 
@@ -80,6 +81,7 @@ class P61App(QApplication):
         QApplication.__init__(self, *args, **kwargs)
 
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResult'))
+        self.setWindowIcon(QIcon('../img/icon.png'))
         self.params = {
             'LmFitModel': None,
             'SelectedIndex': -1,

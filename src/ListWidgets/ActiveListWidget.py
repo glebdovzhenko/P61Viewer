@@ -18,10 +18,6 @@ class ActiveListModel(QAbstractListModel):
         self._data = self.q_app.data
         self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
-        # self.q_app.dataRowsAppended.connect(self.on_hists_added)
-        # self.q_app.dataRowsRemoved.connect(self.on_hists_removed)
-        # self.q_app.dataActiveChanged.connect(self.on_hists_ac)
-
     def rowCount(self, parent=None, *args, **kwargs):
         return self._active_idx.shape[0]
 

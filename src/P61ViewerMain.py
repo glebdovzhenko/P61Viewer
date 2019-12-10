@@ -8,9 +8,10 @@ This python file serves as the executable script for the application.
 
 Launches the :code:`P61App` (QApplication_ child class) and a :code:`P61Viewer` (QMainWindow_ child class) instances.
 """
-from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget
+from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget, QSystemTrayIcon
+from PyQt5.QtGui import QIcon
 import sys
-from PlotWidgets import MainPlotWidget, FitPlotWidget
+from PlotWidgets import MainPlotWidget
 from ListWidgets import EditableListWidget
 from FitWidgets import FitWidget
 from P61App import P61App
@@ -41,6 +42,7 @@ class P61Viewer(QMainWindow):
         self.resize(1200, 800)
         self.setWindowTitle(P61App.name + ' ' + P61App.version)
 
+
         # initiate widgets
         self.cw = QTabWidget(parent=self)
         self.setCentralWidget(self.cw)
@@ -67,6 +69,10 @@ class P61Viewer(QMainWindow):
 
 if __name__ == '__main__':
     q_app = P61App(sys.argv)
+
+    trayIcon = QSystemTrayIcon(QIcon("../img/icon.png"), q_app)
+    trayIcon.show()
+
     app = P61Viewer()
     app.show()
     sys.exit(q_app.exec_())
