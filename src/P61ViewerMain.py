@@ -42,7 +42,6 @@ class P61Viewer(QMainWindow):
         self.resize(1200, 800)
         self.setWindowTitle(P61App.name + ' ' + P61App.version)
 
-
         # initiate widgets
         self.cw = QTabWidget(parent=self)
         self.setCentralWidget(self.cw)

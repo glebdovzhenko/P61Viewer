@@ -68,7 +68,7 @@ class P61App(QApplication):
 
     """
     name = 'P61 Viewer'
-    version = '0.0.2'
+    version = '0.0.3'
 
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
@@ -81,7 +81,7 @@ class P61App(QApplication):
         QApplication.__init__(self, *args, **kwargs)
 
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResult'))
-        self.setWindowIcon(QIcon('../img/icon.png'))
+        # self.setWindowIcon(QIcon('../img/icon.png'))
         self.params = {
             'LmFitModel': None,
             'SelectedIndex': -1,
