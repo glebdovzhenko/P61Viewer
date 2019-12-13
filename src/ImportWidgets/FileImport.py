@@ -53,16 +53,15 @@ class FileImportWidget(QWidget):
                 print(e)
                 failed.append(f_name + '::' + channel)
 
-        return failed
+        return 2 - len(failed), failed
 
     def open_raw_file(self, f_name):
+        """
+        """
         int_size = 4  # bytes
-
         columns = list(self.q_app.data.columns)
-        edep = []
-
-        bins = 2**14
         kev_per_bin = 1E-3
+        failed = []
 
         try:
             with open(f_name, 'rb') as f:
@@ -71,28 +70,42 @@ class FileImportWidget(QWidget):
 
             with open(f_name, 'rb') as f:
                 event = f.read(event_size)
-
+                channels = dict()
                 while event != b'':
-                    edep.append(struct.unpack('H' * 2 * 8 * nos, event)[4])
+                    edep = int.from_bytes(event[8:10], byteorder='little')
+                    channel = event[1]
+                    if channel not in channels:
+                        channels[channel] = [edep]
+                    else:
+                        channels[channel].append(edep)
                     event = f.read(event_size)
+        except Exception as e:
+            print(e)
+            return 0, [f_name + ':00', f_name + ':01']
 
-                values, bins = np.histogram(edep, bins=bins)
+        for ch in channels:
+            try:
+                values, bins = np.histogram(channels[ch], bins=2**16)
+                bins = bins[:-1]
+                bins = bins[values != 0]
+                values = values[values != 0]
 
                 row = {c: None for c in columns}
                 row.update({
-                    'DataX': kev_per_bin * bins[:-1],
+                    'DataX': kev_per_bin * bins,
                     'DataY': values,
-                    'DataID': f_name,
-                    'ScreenName': os.path.basename(f_name),
+                    'DataID': f_name + ':%02d' % ch,
+                    'ScreenName': os.path.basename(f_name) + ':%02d' % ch,
                     'Active': True,
                     'Color': next(self.q_app.params['ColorWheel'])
                 })
 
                 self.q_app.data.loc[len(self.q_app.data.index)] = row
-                return []
-        except Exception as e:
-            print(e)
-            return [f_name]
+            except Exception as e:
+                print(e)
+                failed.append(f_name + ':%02d' % ch)
+
+        return 2 - len(failed), failed
 
     def open_csv_file(self, f_name):
         columns = list(self.q_app.data.columns)
@@ -101,7 +114,7 @@ class FileImportWidget(QWidget):
             dd = pd.read_csv(f_name, skiprows=6, skipfooter=1, header=None, names=['keV', '00', '01'])
         except Exception as e:
             print(e)
-            return [f_name + ':channel0', f_name + ':channel1']
+            return 0, [f_name + ':00', f_name + ':01']
 
         for ch in ('00', '01'):
             row = {c: None for c in columns}
@@ -115,7 +128,7 @@ class FileImportWidget(QWidget):
             })
 
             self.q_app.data.loc[len(self.q_app.data.index)] = row
-        return []
+        return 2, []
 
     def open_files(self, f_names):
         # TODO: add check if the files are already open
@@ -123,17 +136,16 @@ class FileImportWidget(QWidget):
         opened = 0
         for ff in f_names:
             if '.nxs' in ff:
-                fld = self.open_nxs_file(ff)
-                opened += 2 - len(fld)
-                failed.extend(fld)
+                opn, fld = self.open_nxs_file(ff)
             elif '.raw' in ff:
-                fld = self.open_raw_file(ff)
-                opened += 1 - len(fld)
-                failed.extend(fld)
+                opn, fld = self.open_raw_file(ff)
             elif '.csv' in ff:
-                fld = self.open_csv_file(ff)
-                opened += 2 - len(fld)
-                failed.extend(fld)
+                opn, fld = self.open_csv_file(ff)
+            else:
+                opn, fld = 0, ff
+
+            opened += opn
+            failed.extend(fld)
 
         self.q_app.dataRowsAppended.emit(opened)
 
