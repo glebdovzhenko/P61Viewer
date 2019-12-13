@@ -28,11 +28,11 @@ class FitPlotWidget(QWidget):
         self.q_app.lmFitModelUpdated.connect(self.on_model_changed)
 
     def on_model_changed(self):
-        self.on_fit_changed(self.q_app.params['SelectedIndex'])
+        self.on_fit_changed([self.q_app.params['SelectedIndex']])
 
-    def on_fit_changed(self, idx):
-        if idx == self.q_app.params['SelectedIndex']:
-            self.on_selected_active_changed(idx)
+    def on_fit_changed(self, idxs):
+        if self.q_app.params['SelectedIndex'] in idxs:
+            self.on_selected_active_changed(self.q_app.params['SelectedIndex'])
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()

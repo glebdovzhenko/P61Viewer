@@ -74,7 +74,7 @@ class P61App(QApplication):
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
-    dataFitChanged = pyqtSignal(int)
+    dataFitChanged = pyqtSignal(list)
     lmFitModelUpdated = pyqtSignal()
 
     def __init__(self, *args, **kwargs):

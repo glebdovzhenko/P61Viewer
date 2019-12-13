@@ -84,7 +84,7 @@ class LmfitInspectorModel(QAbstractTableModel):
         if role == Qt.EditRole and ii.column() == 2:
             self.fit_results.params[self.param_names[ii.row()][0]].set(value=value)
             self.dataChanged.emit(ii, ii)
-            self.q_app.dataFitChanged.emit(self.q_app.params['SelectedIndex'])
+            self.q_app.dataFitChanged.emit([self.q_app.params['SelectedIndex']])
             return True
 
         if role == Qt.EditRole and ii.column() == 4:

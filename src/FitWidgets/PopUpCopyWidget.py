@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel
+import copy
 
 from P61App import P61App
 from ListWidgets import ActiveListWidget
@@ -37,9 +38,9 @@ class PopUpCopyWidget(QDialog):
             pass
         else:
             idx_to = self.list_to.get_selection()
-            self.q_app.data.loc[idx_to, 'FitResult'] = [self.q_app.data.loc[
-                                                            self.q_app.params['SelectedIndex'],
-                                                            'FitResult']] * len(idx_to)
+            self.q_app.data.loc[idx_to, 'FitResult'] = [copy.deepcopy(
+                self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']) for _ in range(len(idx_to))]
+            self.q_app.dataFitChanged.emit(idx_to)
         self.close()
 
 

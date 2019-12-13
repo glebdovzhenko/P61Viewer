@@ -74,7 +74,7 @@ class FitWidget(QWidget):
             msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
             msg.exec_()
         print(self.q_app.data.loc[idx, 'FitResult'].fit_report())
-        self.q_app.dataFitChanged.emit(idx)
+        self.q_app.dataFitChanged.emit([idx])
 
     def on_fit_all_btn(self):
         w = PopUpSeqFitWidget(parent=self)
