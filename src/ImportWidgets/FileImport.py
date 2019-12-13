@@ -86,7 +86,7 @@ class FileImportWidget(QWidget):
         for ch in channels:
             try:
                 values, bins = np.histogram(channels[ch], bins=2**16)
-                bins = bins[:-1]
+                bins = bins[:-1] + 0.5
                 bins = bins[values != 0]
                 values = values[values != 0]
 
