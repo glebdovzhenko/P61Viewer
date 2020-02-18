@@ -4,7 +4,6 @@ src/P61App.py
 
 """
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
 import pandas as pd
 

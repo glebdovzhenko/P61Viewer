@@ -4,6 +4,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
+import numpy as np
+
 from P61App import P61App
 
 
@@ -70,9 +72,11 @@ class FitPlotWidget(QWidget):
 
     def set_axes_ylim(self):
         for ax in (self._line_ax, self._diff_ax):
-            ydata = sum([list(line.get_ydata()) for line in ax.lines], [])
-            if ydata:
-                mi_, ma_ = min(ydata), max(ydata)
+            ydata = np.array(sum([list(line.get_ydata()) for line in ax.lines], []))
+            ydata = ydata[~np.isnan(ydata)]
+            ydata = ydata[~np.isinf(ydata)]
+            if len(ydata):
+                mi_, ma_ = np.min(ydata), np.max(ydata)
                 ax.set_ylim(mi_ - 0.1 * abs(ma_ - mi_), ma_ + 0.1 * abs(ma_ - mi_))
             else:
                 ax.set_ylim(0., 1.)

@@ -9,8 +9,8 @@ class FloatEditWidget(QLineEdit):
         QLineEdit.__init__(self, parent=parent)
 
         self.float_regexp = re.compile(
-            r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[+-]*[0-9]+))?)?|'
-            r'(?P<inf>\s*INF|inf|-INF|-inf\s*)'
+            r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[+-]{0,1}[0-9]+))?)?$|'
+            r'^(?P<inf>\s*INF|inf|-INF|-inf\s*)$'
         )
         self._value = 0.
 
@@ -20,6 +20,7 @@ class FloatEditWidget(QLineEdit):
 
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())
+        print(match)
         if not match:
             self.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
             return None
