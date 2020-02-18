@@ -67,7 +67,7 @@ class P61App(QApplication):
 
     """
     name = 'P61 Viewer'
-    version = '0.0.3'
+    version = '0.1.0'
 
     dataRowsAppended = pyqtSignal(int)
     dataRowsRemoved = pyqtSignal(list)
@@ -83,6 +83,7 @@ class P61App(QApplication):
         # self.setWindowIcon(QIcon('../img/icon.png'))
         self.params = {
             'LmFitModel': None,
+            'LmFitModelColors': dict(),
             'SelectedIndex': -1,
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),

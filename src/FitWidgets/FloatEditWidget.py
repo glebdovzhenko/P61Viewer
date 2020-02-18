@@ -20,7 +20,6 @@ class FloatEditWidget(QLineEdit):
 
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())
-        print(match)
         if not match:
             self.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
             return None

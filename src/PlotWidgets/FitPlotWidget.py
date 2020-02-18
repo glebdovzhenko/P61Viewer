@@ -18,6 +18,7 @@ class FitPlotWidget(QWidget):
         self._line_ax, self._diff_ax = line_canvas.figure.subplots(nrows=2, ncols=1, sharex=True,
                                                                    gridspec_kw={'height_ratios': [4, 1]})
         self._diff_ax.set_xlabel('Energy, [keV]')
+        self._diff_ax.set_ylabel('Difference [counts]')
         self._line_ax.set_ylabel('Intensity, [counts]')
 
         layout = QVBoxLayout()
@@ -40,7 +41,7 @@ class FitPlotWidget(QWidget):
         self.clear_axes()
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
-            self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='')
+            self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='', label='Data')
             if data['FitResult'] is not None:
                 xx = data['DataX']
                 x_lim = self.get_axes_xlim()
@@ -49,15 +50,19 @@ class FitPlotWidget(QWidget):
                 yy = data['DataY'][sel]
                 diff = yy - data['FitResult'].eval(data['FitResult'].params, x=xx)
 
-                self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
-                                   color='#d62728', marker='', linestyle='--')
-                self._diff_ax.plot(xx, diff, color='#d62728', marker='', linestyle='--')
-
                 cmps = data['FitResult'].eval_components(x=xx)
                 for cmp in cmps:
+                    if cmp not in self.q_app.params['LmFitModelColors'].keys():
+                        self.q_app.params['LmFitModelColors'][cmp] = next(self.q_app.params['ColorWheel2'])
                     self._line_ax.plot(xx, cmps[cmp],
-                                       color=str(hex(next(self.q_app.params['ColorWheel2']))).replace('0x', '#'),
-                                       marker='', linestyle='--')
+                                       color=str(hex(self.q_app.params['LmFitModelColors'][cmp])).replace('0x', '#'),
+                                       marker='', linestyle='--', label=cmp)
+
+                self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
+                                   color='#d62728', marker='', linestyle='--', label='Fit')
+                self._diff_ax.plot(xx, diff, color='#d62728', marker='', linestyle='--')
+
+            self._line_ax.legend()
 
         self.set_axes_ylim()
         self._line_ax.figure.canvas.draw()
