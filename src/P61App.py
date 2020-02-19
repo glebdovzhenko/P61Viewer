@@ -131,3 +131,11 @@ class P61App(QApplication):
             return self.data.loc[self.data['Active'], 'Color']
         else:
             return self.data['Color']
+
+    def get_active_status(self):
+        return self.data['Active']
+
+    def set_active_status(self, idx, status, emit=True):
+        self.data.loc[idx, 'Active'] = bool(status)
+        if emit:
+            self.dataActiveChanged.emit([idx])

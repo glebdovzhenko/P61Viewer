@@ -46,12 +46,12 @@ class ActiveListModel(QAbstractListModel):
         self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
     @pyqtSlot()
-    def on_hists_removed(self, rows=0):
+    def on_hists_removed(self, rows=[]):
         self._upd()
         self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
     @pyqtSlot()
-    def on_hists_ac(self, rows=0):
+    def on_hists_ac(self, rows=[]):
         self._upd()
         self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
