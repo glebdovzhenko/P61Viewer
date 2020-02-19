@@ -16,43 +16,53 @@ class ActiveListModel(QAbstractListModel):
         QAbstractListModel.__init__(self, parent)
         self.q_app = P61App.instance()
 
-        self._data, self._active_idx = None, None
+        # self._data, self._active_idx = None, None
+        self._names, self._colors = None, None
         self._upd()
 
         # self._data = self.q_app.data
         # self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return self._active_idx.shape[0]
+        # return self._active_idx.shape[0]
+        return self._names.shape[0]
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
 
-        a_row = self._active_idx[ii.row()]
+        # a_row = self._active_idx[ii.row()]
         if role == Qt.DisplayRole:
-            return self._data.loc[a_row, 'ScreenName']
+            # return self._data.loc[a_row, 'ScreenName']
+            return self._names.iloc[ii.row()]
         elif role == Qt.ForegroundRole:
-            return QColor(self._data.loc[a_row, 'Color'])
+            # return QColor(self._data.loc[a_row, 'Color'])
+            return QColor(self._colors.iloc[ii.row()])
 
     def _upd(self):
-        self._data = self.q_app.data
-        self._active_idx = self.q_app.data[self.q_app.data['Active']].index
+        # self._data = self.q_app.data
+        # self._active_idx = self.q_app.data[self.q_app.data['Active']].index
+        self._names = self.q_app.get_screen_names(only_active=True)
+        self._colors = self.q_app.get_screen_colors(only_active=True)
 
     def on_hists_added(self, n_rows=0):
         self._upd()
-        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        # self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
     def on_hists_removed(self, rows=0):
         self._upd()
-        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        # self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
     def on_hists_ac(self, rows=0):
         self._upd()
-        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        # self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]))
+        self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]))
 
     def get_indices(self):
-        return self._active_idx
+        # return self._active_idx
+        return self._names.index
 
 
 class ActiveListWidget(QWidget):
