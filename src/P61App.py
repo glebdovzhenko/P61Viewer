@@ -130,14 +130,14 @@ class P61App(QApplication):
     def get_screen_names(cls, only_active=False):
         inst = cls.instance()
         if only_active:
-            return inst.data[inst.data['Active']]['ScreenName']
+            return inst.data.loc[inst.data['Active'], 'ScreenName']
         else:
             return inst.data['ScreenName']
 
     @classmethod
-    def get_name_colors(cls, only_active=False):
+    def get_screen_colors(cls, only_active=False):
         inst = cls.instance()
         if only_active:
-            return inst.data[inst.data['Active']]['Color']
+            return inst.data.loc[inst.data['Active'], 'Color']
         else:
             return inst.data['Color']
