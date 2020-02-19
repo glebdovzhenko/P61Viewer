@@ -125,3 +125,19 @@ class P61App(QApplication):
         inst.params['SelectedIndex'] = val
         if emit:
             cls.selectedIndexChanged.emit(val)
+
+    @classmethod
+    def get_screen_names(cls, only_active=False):
+        inst = cls.instance()
+        if only_active:
+            return inst.data[inst.data['Active']]['ScreenName']
+        else:
+            return inst.data['ScreenName']
+
+    @classmethod
+    def get_name_colors(cls, only_active=False):
+        inst = cls.instance()
+        if only_active:
+            return inst.data[inst.data['Active']]['Color']
+        else:
+            return inst.data['Color']
