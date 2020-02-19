@@ -109,35 +109,25 @@ class P61App(QApplication):
             yield wheel[ii % len(wheel)]
             ii += 1
 
-    @classmethod
-    def get_active_idx(cls):
-        inst = cls.instance()
-        return inst.data[inst.data['Active']].index
+    def get_active_idx(self):
+        return self.data[self.data['Active']].index
 
-    @classmethod
-    def get_selected_idx(cls):
-        inst = cls.instance()
-        return inst.params['SelectedIndex']
+    def get_selected_idx(self):
+        return self.params['SelectedIndex']
 
-    @classmethod
-    def set_selected_idx(cls, val, emit=True):
-        inst = cls.instance()
-        inst.params['SelectedIndex'] = val
+    def set_selected_idx(self, val, emit=True):
+        self.params['SelectedIndex'] = val
         if emit:
-            cls.selectedIndexChanged.emit(val)
+            self.selectedIndexChanged.emit(val)
 
-    @classmethod
-    def get_screen_names(cls, only_active=False):
-        inst = cls.instance()
+    def get_screen_names(self, only_active=False):
         if only_active:
-            return inst.data.loc[inst.data['Active'], 'ScreenName']
+            return self.data.loc[self.data['Active'], 'ScreenName']
         else:
-            return inst.data['ScreenName']
+            return self.data['ScreenName']
 
-    @classmethod
-    def get_screen_colors(cls, only_active=False):
-        inst = cls.instance()
+    def get_screen_colors(self, only_active=False):
         if only_active:
-            return inst.data.loc[inst.data['Active'], 'Color']
+            return self.data.loc[self.data['Active'], 'Color']
         else:
-            return inst.data['Color']
+            return self.data['Color']
