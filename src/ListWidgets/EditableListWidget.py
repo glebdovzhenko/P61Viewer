@@ -4,7 +4,7 @@ EditableList.py
 
 
 """
-from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QSize
+from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QSize, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog
 import numpy as np
@@ -17,50 +17,61 @@ class EditableListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
         self.q_app = P61App.instance()
-        self._data = self.q_app.data
+        self._names, self._colors, self._status = None, None, None
+        self._upd()
 
         self.q_app.dataRowsAppended.connect(self.on_rows_appended)
         self.q_app.dataRowsRemoved.connect(self.on_rows_removed)
         self.q_app.dataActiveChanged.connect(self.on_data_active)
 
-    def on_rows_appended(self, n_rows):
-        self.dataChanged.emit(self.index(self._data.shape[0] - n_rows), self.index(self._data.shape[0]), [])
+    def _upd(self):
+        self._names = self.q_app.get_screen_names()
+        self._colors = self.q_app.get_screen_colors()
+        self._status = self.q_app.get_active_status()
 
-    def on_rows_removed(self, rows):
-        self.dataChanged.emit(self.index(0), self.index(self._data.shape[0]), [])
+    @pyqtSlot()
+    def on_rows_appended(self, n_rows=0):
+        self._upd()
+        self.dataChanged.emit(self.index(self._names.shape[0] - n_rows), self.index(self._names.shape[0]), [])
 
-    def on_data_active(self, rows):
+    @pyqtSlot()
+    def on_rows_removed(self, rows=[]):
+        self._upd()
+        self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]), [])
+
+    @pyqtSlot()
+    def on_data_active(self, rows=[]):
+        self._upd()
         if rows:
             self.dataChanged.emit(self.index(min(rows)), self.index(max(rows)), [Qt.CheckStateRole])
         else:
             self.dataChanged.emit(self.index(0), self.index(0), [Qt.CheckStateRole])
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return self._data.shape[0]
+        return self._names.shape[0]
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
-        if not 0 <= ii.row() < self._data.shape[0]:
+        if not 0 <= ii.row() < self._names.shape[0]:
             return QVariant
 
         if role == Qt.DisplayRole:
-            return self._data.loc[ii.row(), 'ScreenName']
+            return self._names.loc[ii.row()]
         elif role == Qt.ForegroundRole:
-            if self._data.loc[ii.row(), 'Active']:
-                return QColor(self._data.loc[ii.row(), 'Color'])
+            if self._status.loc[ii.row()]:
+                return QColor(self._colors.loc[ii.row()])
             else:
                 return QColor(0, 0, 0, 255)
         elif role == Qt.CheckStateRole:
-            return Qt.Checked if self._data.loc[ii.row(), 'Active'] else Qt.Unchecked
+            return Qt.Checked if self._status.loc[ii.row()] else Qt.Unchecked
 
     def setData(self, ii: QModelIndex, value, role=None):
         if not ii.isValid():
             return False
 
         if role == Qt.CheckStateRole:
-            self._data.loc[ii.row(), 'Active'] = bool(value)
-            self.q_app.dataActiveChanged.emit([ii.row()])
+            self.q_app.set_active_status(ii.row(), bool(value))
             return True
         return False
 
@@ -124,12 +135,14 @@ class EditableListWidget(QWidget):
     def check_box_on_click(self):
         self.check_box.setTristate(False)
         rows = [idx.row() for idx in self.list.selectedIndexes()]
-        self.q_app.data.loc[rows, 'Active'] = bool(self.check_box.checkState())
+        for row in rows:
+            self.q_app.set_active_status(row, bool(self.check_box.checkState()), emit=False)
         self.q_app.dataActiveChanged.emit(rows)
 
     def check_box_update(self):
         rows = [idx.row() for idx in self.list.selectedIndexes()]
-        status = self.q_app.data.loc[rows, 'Active']
+        status = self.q_app.get_active_status()
+        status = status[rows]
 
         if all(status):
             self.check_box.setCheckState(Qt.Checked)
