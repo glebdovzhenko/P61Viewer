@@ -15,8 +15,12 @@ class ActiveListModel(QAbstractListModel):
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
         self.q_app = P61App.instance()
-        self._data = self.q_app.data
-        self._active_idx = self.q_app.data[self.q_app.data['Active']].index
+
+        self._data, self._active_idx = None, None
+        self._upd()
+
+        # self._data = self.q_app.data
+        # self._active_idx = self.q_app.data[self.q_app.data['Active']].index
 
     def rowCount(self, parent=None, *args, **kwargs):
         return self._active_idx.shape[0]
