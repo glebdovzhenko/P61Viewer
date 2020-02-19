@@ -109,7 +109,7 @@ class P61App(QApplication):
             yield wheel[ii % len(wheel)]
             ii += 1
 
-    def get_active_idx(self):
+    def get_active_ids(self):
         return self.data[self.data['Active']].index
 
     def get_selected_idx(self):
