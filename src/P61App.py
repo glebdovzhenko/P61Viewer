@@ -108,3 +108,20 @@ class P61App(QApplication):
         while True:
             yield wheel[ii % len(wheel)]
             ii += 1
+
+    @classmethod
+    def get_active_idx(cls):
+        inst = cls.instance()
+        return inst.data[inst.data['Active']].index
+
+    @classmethod
+    def get_selected_idx(cls):
+        inst = cls.instance()
+        return inst.params['SelectedIndex']
+
+    @classmethod
+    def set_selected_idx(cls, val, emit=True):
+        inst = cls.instance()
+        inst.params['SelectedIndex'] = val
+        if emit:
+            cls.selectedIndexChanged.emit(val)
