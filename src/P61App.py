@@ -84,6 +84,7 @@ class P61App(QApplication):
         # data storage for one-per application items
         self.params = {
             'LmFitModel': None,
+            'FunctionFitModel': dict(),
             'LmFitModelColors': dict(),
             'SelectedIndex': -1,
             'ColorWheel': self._color_wheel('def'),

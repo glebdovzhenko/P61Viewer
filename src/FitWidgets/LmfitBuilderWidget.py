@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QListWidget, QPushButton, QGridLayout
-from lmfit import models as lmfit_models
+from PyQt5.QtWidgets import QWidget, QListWidget, QPushButton, QGridLayout, QInputDialog
+import lmfit_wrappers as lmfit_models
 import lmfit
 from functools import reduce
 
@@ -51,21 +51,12 @@ class LmfitBuilderWidget(QWidget):
         layout.addWidget(self.btn_add, 2, 2, 1, 1)
         layout.addWidget(self.btn_rm, 3, 2, 1, 1)
 
-    def update_composite_model(self, names):
+    def update_composite_model(self):
 
-        models = []
-        for name in names:
-            name, prefix = name.split(':')
-            kwargs = {'name': name, 'prefix': prefix + '_'}
-            if name == 'PolynomialModel':
-                kwargs['degree'] = 5
-            models.append(getattr(lmfit_models, name)(**kwargs))
-
-        if models:
-            self.q_app.set_function_fit_model(reduce(lambda a, b: a + b, models))
+        if self.q_app.params['FunctionFitModel']:
+            model = reduce(lambda a, b: a + b, self.q_app.params['FunctionFitModel'].values())
         else:
             self.q_app.clear_function_fit_results()
-            self.q_app.set_function_fit_model(None)
             self.q_app.dataFitChanged.emit(self.q_app.get_all_ids().tolist())
             return
 
@@ -74,11 +65,12 @@ class LmfitBuilderWidget(QWidget):
                 self.q_app.set_function_fit_result(
                     idx,
                     lmfit.model.ModelResult(
-                        self.q_app.get_function_fit_model(),
-                        self.q_app.get_function_fit_model().make_params()),
+                        model,
+                        model.make_params()),
                     emit=False)
             else:
-                new_params = self.q_app.get_function_fit_model().make_params()
+                # new_params = model.make_params()
+                new_params = reduce(lambda a, b: a + b, (cmp.make_params() for cmp in model.components))
                 params = self.q_app.get_function_fit_result(idx).params
                 ks1, ks2 = params.keys() & new_params.keys(), params.keys() - new_params.keys()
 
@@ -92,7 +84,7 @@ class LmfitBuilderWidget(QWidget):
 
                 self.q_app.set_function_fit_result(
                     idx,
-                    lmfit.model.ModelResult(self.q_app.get_function_fit_model(), params),
+                    lmfit.model.ModelResult(model, params),
                     emit=False)
 
         self.q_app.dataFitChanged.emit(self.q_app.get_all_ids().tolist())
@@ -104,21 +96,29 @@ class LmfitBuilderWidget(QWidget):
 
             for ii in range(10):
                 if (name + ':' + self.prefixes[name] + str(ii)) not in names:
-                    name += ':' + self.prefixes[name] + str(ii)
-                    names.append(name)
+                    prefix = self.prefixes[name] + str(ii)
                     break
             else:
                 return
 
-            self.update_composite_model(names)
-            self.model_builder.addItem(name)
+            kwargs = {'name': name, 'prefix': prefix + '_'}
+            if name == 'PolynomialModel':
+                ii, ok = QInputDialog.getInt(self, 'Polynomial degree', '', 3, 2, 7, 1)
+                if ok:
+                    kwargs['degree'] = ii
+                else:
+                    continue
+            self.q_app.params['FunctionFitModel'][name + ':' + prefix] = getattr(lmfit_models, name)(**kwargs)
+
+            self.model_builder.addItem(name + ':' + prefix)
+            self.update_composite_model()
 
     def on_btn_rm(self):
         for item in self.model_builder.selectedItems():
             self.model_builder.takeItem(self.model_builder.row(item))
 
-        names = [self.model_builder.item(i).text() for i in range(self.model_builder.count())]
-        self.update_composite_model(names)
+            self.q_app.params['FunctionFitModel'].pop(item.text())
+            self.update_composite_model()
 
 
 if __name__ == '__main__':

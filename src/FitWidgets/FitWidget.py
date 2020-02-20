@@ -57,7 +57,7 @@ class FitWidget(QWidget):
         elif idx is None:
             idx = self.q_app.get_selected_idx()
 
-        model = self.q_app.params['LmFitModel']
+        model = reduce(lambda a, b: a + b, self.q_app.params['FunctionFitModel'].values())
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
         x_lim = self.plot_w.get_axes_xlim()
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)

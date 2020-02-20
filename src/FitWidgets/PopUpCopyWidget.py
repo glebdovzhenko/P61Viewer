@@ -13,15 +13,11 @@ class PopUpCopyWidget(QDialog):
 
         self.label_from = QLabel('From:')
         self.label_to = QLabel('To:')
-        # self.list_from = QListWidget(parent=self)
         self.list_from = ActiveListWidget(parent=self)
-        # self.list_to = QListWidget(parent=self)
         self.list_to = ActiveListWidget(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
         self.button_ok = QPushButton('Copy')
 
         self.setWindowTitle('Copy fit parameters')
-        # self.list_from.set_selection()
-        self.list_from.on_selected_index_changed(self.q_app.get_selected_idx())
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -39,7 +35,7 @@ class PopUpCopyWidget(QDialog):
         else:
             idx_to = self.list_to.get_selection()
             self.q_app.data.loc[idx_to, 'FitResult'] = [copy.deepcopy(
-                self.q_app.data.get_function_fit_result(self.q_app.get_selected_idx())) for _ in range(len(idx_to))]
+                self.q_app.get_function_fit_result(self.q_app.get_selected_idx())) for _ in range(len(idx_to))]
             self.q_app.dataFitChanged.emit(idx_to)
         self.close()
 
