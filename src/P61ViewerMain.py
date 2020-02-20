@@ -14,6 +14,7 @@ import sys
 from PlotWidgets import MainPlotWidget
 from ListWidgets import EditableListWidget
 from FitWidgets import FitWidget
+from PeakAnalysisWidgets import PeakAnalysisWidget
 from P61App import P61App
 
 
@@ -50,6 +51,7 @@ class P61Viewer(QMainWindow):
         self.file_w = EditableListWidget(parent=self)
         self.fit_w = FitWidget(parent=self)
         self.view_plot_w = MainPlotWidget(parent=self)
+        self.pa_w = PeakAnalysisWidget(parent=self)
 
         # set up layouts
         view_layout = QHBoxLayout()
@@ -62,8 +64,9 @@ class P61Viewer(QMainWindow):
         self.fit_tab.setLayout(fit_layout)
         fit_layout.addWidget(self.fit_w)
 
-        self.cw.addTab(self.view_tab, 'View')
-        self.cw.addTab(self.fit_tab, 'Fit')
+        self.cw.addTab(self.view_tab, 'Data view')
+        self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
+        self.cw.addTab(self.pa_w, 'Peak analysis')
 
 
 if __name__ == '__main__':
