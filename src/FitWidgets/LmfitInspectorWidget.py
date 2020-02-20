@@ -24,11 +24,12 @@ class LmfitInspectorModel(QAbstractTableModel):
 
     def upd_fit_results(self):
         self.beginResetModel()
-        if self.q_app.params['SelectedIndex'] == -1:
+        if self.q_app.get_selected_idx() == -1:
             self.fit_results = None
             self.param_names = None
         else:
-            self.fit_results = self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']
+            # self.fit_results = self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']
+            self.fit_results = self.q_app.get_function_fit_result(self.q_app.get_selected_idx())
         if self.fit_results is not None:
             self.param_names = list(self.fit_results.params.items())
         self.endResetModel()
@@ -83,7 +84,7 @@ class LmfitInspectorModel(QAbstractTableModel):
         if role == Qt.EditRole and ii.column() == 2:
             self.fit_results.params[self.param_names[ii.row()][0]].set(value=value)
             self.dataChanged.emit(ii, ii)
-            self.q_app.dataFitChanged.emit([self.q_app.params['SelectedIndex']])
+            self.q_app.dataFitChanged.emit([self.q_app.get_selected_idx()])
             return True
 
         if role == Qt.EditRole and ii.column() == 4:

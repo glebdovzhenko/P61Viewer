@@ -30,14 +30,16 @@ class FitPlotWidget(QWidget):
         self.q_app.dataFitChanged.connect(self.on_fit_changed)
 
     def on_fit_changed(self, idxs):
-        if self.q_app.params['SelectedIndex'] in idxs:
-            self.on_selected_active_changed(self.q_app.params['SelectedIndex'])
+        if self.q_app.get_selected_idx() in idxs:
+            self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
+
             self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='', label='Data')
+
             if data['FitResult'] is not None:
                 xx = data['DataX']
                 x_lim = self.get_axes_xlim()

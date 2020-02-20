@@ -154,3 +154,6 @@ class P61App(QApplication):
         self.data.loc[idx, 'FitResult'] = result
         if emit:
             self.dataFitChanged.emit([idx])
+
+    def get_selected_screen_name(self):
+        return self.data.loc[self.params['SelectedIndex'], 'ScreenName']

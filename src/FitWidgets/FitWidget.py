@@ -52,10 +52,10 @@ class FitWidget(QWidget):
         w.exec_()
 
     def on_fit_btn(self, *args, idx=None):
-        if self.q_app.params['SelectedIndex'] == -1:
+        if self.q_app.get_selected_idx() == -1:
             return
         elif idx is None:
-            idx = self.q_app.params['SelectedIndex']
+            idx = self.q_app.get_selected_idx()
 
         model = self.q_app.params['LmFitModel']
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']

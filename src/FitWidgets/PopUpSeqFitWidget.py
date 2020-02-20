@@ -31,15 +31,15 @@ class PopUpSeqFitWidget(QDialog):
         self.combo.currentIndexChanged.connect(self.on_combo_index_change)
 
     def on_combo_index_change(self):
-        if self.q_app.params['SelectedIndex'] == -1:
+        if self.q_app.get_selected_idx() == -1:
             return
         if self.combo.currentIndex() in (1, 2):
-            self.current_name.setText(self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'ScreenName'])
+            self.current_name.setText(self.q_app.get_selected_screen_name())
         else:
             self.current_name.setText('')
 
     def on_btn_ok(self):
-        if self.q_app.params['SelectedIndex'] == -1:
+        if self.q_app.get_selected_idx() == -1:
             self.close()
             return
 
@@ -47,13 +47,13 @@ class PopUpSeqFitWidget(QDialog):
         fit_type = self.combo.currentIndex()
 
         if fit_type == 1:
-            self.q_app.data.loc[fit_ids, 'FitResult'] = [self.q_app.data.loc[self.q_app.params['SelectedIndex'],
-                                                                             'FitResult']] * len(fit_ids)
+            self.q_app.data.loc[fit_ids, 'FitResult'] = [self.q_app.get_function_fit_result(
+                self.q_app.get_selected_idx())] * len(fit_ids)
 
         # TODO: add cancel functionality
         progress = QProgressDialog("Batch Fit", "Cancel", 0, len(fit_ids))
         progress.setWindowModality(Qt.WindowModal)
-        for ii, (prev_idx, idx) in enumerate(zip([self.q_app.params['SelectedIndex']] + fit_ids[:-1], fit_ids)):
+        for ii, (prev_idx, idx) in enumerate(zip([self.q_app.get_selected_idx()] + fit_ids[:-1], fit_ids)):
             progress.setValue(ii)
             if fit_type == 2:
                 self.q_app.data.loc[idx, 'FitResult'] = copy.copy(self.q_app.data.loc[prev_idx, 'FitResult'])
