@@ -62,10 +62,11 @@ class LmfitBuilderWidget(QWidget):
             models.append(getattr(lmfit_models, name)(**kwargs))
 
         if models:
-            self.q_app.set_function_fit_model(reduce(lambda a, b: a + b, models), emit=False)
+            self.q_app.set_function_fit_model(reduce(lambda a, b: a + b, models))
         else:
             self.q_app.clear_function_fit_results()
             self.q_app.set_function_fit_model(None)
+            self.q_app.dataFitChanged.emit(self.q_app.get_all_ids().tolist())
             return
 
         for idx in self.q_app.get_active_ids():
@@ -94,7 +95,7 @@ class LmfitBuilderWidget(QWidget):
                     lmfit.model.ModelResult(self.q_app.get_function_fit_model(), params),
                     emit=False)
 
-        self.q_app.lmFitModelUpdated.emit()
+        self.q_app.dataFitChanged.emit(self.q_app.get_all_ids().tolist())
 
     def on_btn_add(self):
         for item in self.model_selector.selectedItems():

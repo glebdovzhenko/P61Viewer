@@ -19,7 +19,6 @@ class LmfitInspectorModel(QAbstractTableModel):
 
         self.upd_fit_results()
 
-        self.q_app.lmFitModelUpdated.connect(self.upd_fit_results)
         self.q_app.selectedIndexChanged.connect(self.upd_fit_results)
         self.q_app.dataFitChanged.connect(self.upd_fit_results)
 

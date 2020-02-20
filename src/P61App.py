@@ -74,7 +74,6 @@ class P61App(QApplication):
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
     dataFitChanged = pyqtSignal(list)
-    lmFitModelUpdated = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -108,6 +107,9 @@ class P61App(QApplication):
     def get_active_ids(self):
         return self.data[self.data['Active']].index
 
+    def get_all_ids(self):
+        return self.data.index
+
     def get_selected_idx(self):
         return self.params['SelectedIndex']
 
@@ -139,10 +141,8 @@ class P61App(QApplication):
     def get_function_fit_model(self):
         return self.params['LmFitModel']
 
-    def set_function_fit_model(self, val, emit=True):
+    def set_function_fit_model(self, val):
         self.params['LmFitModel'] = val
-        if emit:
-            self.lmFitModelUpdated.emit()
 
     def clear_function_fit_results(self):
         self.data['FitResult'] = None
