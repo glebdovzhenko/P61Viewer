@@ -106,6 +106,10 @@ class ActiveListWidget(QWidget):
         self.setLayout(layout)
         layout.addWidget(self.list, 1, 1, 1, 1)
 
+    def get_selection(self):
+        ids = self.list.selectedIndexes()
+        return [self.q_app.data[self.q_app.data['Active']].index[idx.row()] for idx in ids]
+
 
 if __name__ == '__main__':
     import sys
