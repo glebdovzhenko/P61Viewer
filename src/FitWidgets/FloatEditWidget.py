@@ -9,7 +9,7 @@ class FloatEditWidget(QLineEdit):
         QLineEdit.__init__(self, parent=parent)
 
         self.float_regexp = re.compile(
-            r'^(?P<main>-?[0-9]+\.?)((?P<decimal>[0-9]+)([Ee](?P<exp>[+-]{0,1}[0-9]+))?)?$|'
+            r'^(?P<main>-?[0-9]+\.?)(?P<decimal>[0-9]+)?([Ee](?P<exp>[+-]{0,1}[0-9]+))?$|'
             r'^(?P<inf>\s*INF|inf|-INF|-inf\s*)$'
         )
         self._value = 0.
