@@ -108,7 +108,8 @@ class ActiveListWidget(QWidget):
 
     def get_selection(self):
         ids = self.list.selectedIndexes()
-        return [self.q_app.data[self.q_app.data['Active']].index[idx.row()] for idx in ids]
+        ai = self.q_app.get_active_ids()
+        return [ai[idx.row()] for idx in ids]
 
 
 if __name__ == '__main__':
