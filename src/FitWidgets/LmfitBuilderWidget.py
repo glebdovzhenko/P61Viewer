@@ -103,7 +103,7 @@ class LmfitBuilderWidget(QWidget):
 
             kwargs = {'name': name, 'prefix': prefix + '_'}
             if name == 'PolynomialModel':
-                ii, ok = QInputDialog.getInt(self, 'Polynomial degree', '', 3, 2, 7, 1)
+                ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
                 if ok:
                     kwargs['degree'] = ii
                 else:
