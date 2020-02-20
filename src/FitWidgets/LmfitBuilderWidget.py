@@ -32,6 +32,7 @@ class LmfitBuilderWidget(QWidget):
             'SplitLorentzianModel',
             'Pearson7Model',
             'LinearModel',
+            'PolynomialModel'
         ]
 
         self.model_selector = QListWidget(parent=self)
@@ -51,39 +52,47 @@ class LmfitBuilderWidget(QWidget):
         layout.addWidget(self.btn_rm, 3, 2, 1, 1)
 
     def update_composite_model(self, names):
+
         models = []
         for name in names:
             name, prefix = name.split(':')
-            models.append(getattr(lmfit_models, name)(**{'name': name, 'prefix': prefix + '_'}))
+            kwargs = {'name': name, 'prefix': prefix + '_'}
+            if name == 'PolynomialModel':
+                kwargs['degree'] = 5
+            models.append(getattr(lmfit_models, name)(**kwargs))
 
         if models:
-            self.q_app.params['LmFitModel'] = reduce(lambda a, b: a + b, models)
+            self.q_app.set_function_fit_model(reduce(lambda a, b: a + b, models), emit=False)
         else:
-            self.q_app.params['LmFitModel'] = None
-            self.q_app.data.loc[self.q_app.data[self.q_app.data['Active']].index, 'FitResult'] = None
+            self.q_app.clear_function_fit_results()
+            self.q_app.set_function_fit_model(None)
+            return
 
-        for idx in self.q_app.data[self.q_app.data['Active']].index:
-            if self.q_app.data.loc[idx, 'FitResult'] is None:
-                if self.q_app.params['LmFitModel'] is None:
-                    continue
-                else:
-                    self.q_app.data.loc[idx, 'FitResult'] = lmfit.model.ModelResult(
-                        self.q_app.params['LmFitModel'], self.q_app.params['LmFitModel'].make_params())
+        for idx in self.q_app.get_active_ids():
+            if self.q_app.get_function_fit_result(idx) is None:
+                self.q_app.set_function_fit_result(
+                    idx,
+                    lmfit.model.ModelResult(
+                        self.q_app.get_function_fit_model(),
+                        self.q_app.get_function_fit_model().make_params()),
+                    emit=False)
+            else:
+                new_params = self.q_app.get_function_fit_model().make_params()
+                params = self.q_app.get_function_fit_result(idx).params
+                ks1, ks2 = params.keys() & new_params.keys(), params.keys() - new_params.keys()
 
-            new_params = self.q_app.params['LmFitModel'].make_params()
-            params = self.q_app.data.loc[idx, 'FitResult'].params
-            ks1, ks2 = params.keys() & new_params.keys(), params.keys() - new_params.keys()
+                for k in ks1:
+                    new_params.pop(k, None)
 
-            for k in ks1:
-                new_params.pop(k, None)
+                for k in ks2:
+                    params.pop(k, None)
 
-            for k in ks2:
-                params.pop(k, None)
+                params.update(new_params)
 
-            params.update(new_params)
-
-            self.q_app.data.loc[idx, 'FitResult'] = lmfit.model.ModelResult(
-                self.q_app.params['LmFitModel'], params)
+                self.q_app.set_function_fit_result(
+                    idx,
+                    lmfit.model.ModelResult(self.q_app.get_function_fit_model(), params),
+                    emit=False)
 
         self.q_app.lmFitModelUpdated.emit()
 
