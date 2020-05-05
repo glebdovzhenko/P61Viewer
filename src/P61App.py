@@ -83,7 +83,6 @@ class P61App(QApplication):
 
         # data storage for one-per application items
         self.params = {
-            'LmFitModel': None,
             'FunctionFitModel': dict(),
             'LmFitModelColors': dict(),
             'SelectedIndex': -1,
@@ -138,12 +137,6 @@ class P61App(QApplication):
         self.data.loc[idx, 'Active'] = bool(status)
         if emit:
             self.dataActiveChanged.emit([idx])
-
-    def get_function_fit_model(self):
-        return self.params['LmFitModel']
-
-    def set_function_fit_model(self, val):
-        self.params['LmFitModel'] = val
 
     def clear_function_fit_results(self):
         self.data['FitResult'] = None
