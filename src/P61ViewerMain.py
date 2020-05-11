@@ -69,8 +69,8 @@ class P61Viewer(QMainWindow):
 
         self.cw.addTab(self.view_tab, 'Data view')
         self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
-        self.cw.addTab(self.corr_w, 'Correction')
         self.cw.addTab(self.pa_w, 'Peak Analysis')
+        self.cw.addTab(self.corr_w, 'Correction')
 
 
 if __name__ == '__main__':
