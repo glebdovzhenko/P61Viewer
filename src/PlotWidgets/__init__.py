@@ -16,4 +16,3 @@ Implementation
 """
 from .MainPlotWidget import MainPlotWidget
 from .FitPlotWidget import FitPlotWidget
-from .PAItemView import PAItemView

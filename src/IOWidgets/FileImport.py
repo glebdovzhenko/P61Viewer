@@ -116,7 +116,7 @@ class FileImportWidget(QWidget):
             print(e)
             return 0, [f_name + ':00', f_name + ':01']
 
-        #TODO: add support for import of exported .csv files
+        # TODO: add support for import of exported .csv files
 
         for ch in ('00', '01'):
             row = {c: None for c in columns}
