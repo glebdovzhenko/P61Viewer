@@ -2,15 +2,19 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 
 from P61App import P61App
 
+from PeakAnalysisWidgets.PAPlotWidget import PAPlotWidget
+
 
 class PeakAnalysisWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
+        self.plot = PAPlotWidget(parent=self)
+
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(QLabel('This widget is not implemented yet.'))
+        layout.addWidget(self.plot)
 
 
 if __name__ == '__main__':

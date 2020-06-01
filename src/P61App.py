@@ -79,7 +79,8 @@ class P61App(QApplication):
         QApplication.__init__(self, *args, **kwargs)
 
         # data storage for one-per-dataset items
-        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color', 'FitResult'))
+        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color',
+                                          'FitResult', 'PeakList'))
 
         # data storage for one-per application items
         self.params = {

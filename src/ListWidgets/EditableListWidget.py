@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QPushButton, 
 import numpy as np
 
 from P61App import P61App
-from ImportWidgets import FileImportWidget
+from IOWidgets import FileImportWidget, FileExportWidget
 
 
 class EditableListModel(QAbstractListModel):
@@ -94,11 +94,13 @@ class EditableListWidget(QWidget):
         self.bplus = QPushButton('+')
         self.bminus = QPushButton('-')
         self.check_box = QCheckBox(' ')
+        self.bexport = QPushButton('Export')
         self.check_box.setTristate(False)
         self.bplus.setFixedSize(QSize(51, 32))
         self.bminus.setFixedSize(QSize(51, 32))
         self.bplus.clicked.connect(self.bplus_onclick)
         self.bminus.clicked.connect(self.bminus_onclick)
+        self.bexport.clicked.connect(self.bexport_onclick)
         self.check_box.clicked.connect(self.check_box_on_click)
 
         # layouts
@@ -108,6 +110,7 @@ class EditableListWidget(QWidget):
         layout.addWidget(self.bplus, 1, 3, 1, 1)
         layout.addWidget(self.bminus, 1, 4, 1, 1)
         layout.addWidget(self.list, 2, 1, 1, 4)
+        layout.addWidget(self.bexport, 3, 3, 1, 2)
 
         # signal handlers
         self.list.selectionModel().selectionChanged.connect(self.check_box_update)
@@ -131,6 +134,14 @@ class EditableListWidget(QWidget):
         )
 
         FileImportWidget().open_files(files)
+
+    def bexport_onclick(self):
+        fd = QFileDialog()
+        fd.setOption(fd.ShowDirsOnly, True)
+        dd = fd.getExistingDirectory(self, caption='Export spectra to')
+
+        rows = [idx.row() for idx in self.list.selectedIndexes()]
+        FileExportWidget().to_csvs(dd, rows)
 
     def check_box_on_click(self):
         self.check_box.setTristate(False)

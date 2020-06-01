@@ -16,4 +16,4 @@ Implementation
 """
 from .MainPlotWidget import MainPlotWidget
 from .FitPlotWidget import FitPlotWidget
-from .PeakFitPlotWidget import PeakFitPlotWidget
+from .PAItemView import PAItemView
