@@ -17,10 +17,17 @@ class FloatEditWidget(QLineEdit):
 
         self.float_regexp = re.compile(rgx)
         self._value = init_val
+        self._upd()
 
         self.textChanged.connect(self.on_text_changed)
         self.returnPressed.connect(self.on_text_submitted)
         self.editingFinished.connect(self.on_text_submitted)
+
+    def _upd(self):
+        if self._value is not None:
+            self.setText('%.03E' % self._value)
+        else:
+            self.setText('None')
 
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())
@@ -47,10 +54,7 @@ class FloatEditWidget(QLineEdit):
                                     else -float(gd['decimal'])) * 10 ** (-len(gd['decimal']))
                 if gd['exp'] is not None:
                     self._value *= 10 ** (int(gd['exp']))
-            if self._value is not None:
-                self.setText('%.03E' % self._value)
-            else:
-                self.setText('None')
+            self._upd()
 
     def get_value(self):
         return self._value
@@ -60,10 +64,7 @@ class FloatEditWidget(QLineEdit):
             raise ValueError(val, 'is not any of the', (int, float, np.int, np.float, type(None)), 'types')
         else:
             self._value = val
-            if self._value is not None:
-                self.setText('%.03E' % self._value)
-            else:
-                self.setText('None')
+            self._upd()
 
     value = property(fget=get_value, fset=set_value)
 

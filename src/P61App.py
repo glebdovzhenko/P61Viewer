@@ -74,6 +74,7 @@ class P61App(QApplication):
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
     dataFitChanged = pyqtSignal(list)
+    peakListChanged = pyqtSignal(list)
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -152,3 +153,11 @@ class P61App(QApplication):
 
     def get_selected_screen_name(self):
         return self.data.loc[self.params['SelectedIndex'], 'ScreenName']
+
+    def get_peak_list(self, idx):
+        return self.data.loc[idx, 'PeakList']
+
+    def set_peak_list(self, idx, result, emit=True):
+        self.data.loc[idx, 'PeakList'] = result
+        if emit:
+            self.peakListChanged.emit([idx])
