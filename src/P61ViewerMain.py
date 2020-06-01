@@ -65,7 +65,7 @@ class P61Viewer(QMainWindow):
         self.fit_tab.setLayout(fit_layout)
         fit_layout.addWidget(self.fit_w)
 
-        self.cw.addTab(self.view_tab, 'Data view')
+        self.cw.addTab(self.view_tab, 'Import and view')
         self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
         self.cw.addTab(self.pa_w, 'Peak analysis')
 
