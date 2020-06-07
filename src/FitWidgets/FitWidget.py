@@ -6,6 +6,7 @@ from P61App import P61App
 from ListWidgets import ActiveListWidget
 from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
 from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
+from FitWidgets.LmfitQualityWidget import LmfitQualityWidget
 from FitWidgets.PopUpCopyWidget import PopUpCopyWidget
 from FitWidgets.PopUpSeqFitWidget import PopUpSeqFitWidget
 from PlotWidgets import FitPlotWidget
@@ -18,6 +19,7 @@ class FitWidget(QWidget):
 
         self.lmfit_builder = LmfitBuilderWidget()
         self.lmfit_inspector = LmfitInspectorWidget()
+        self.lmfit_quality = LmfitQualityWidget()
 
         self.active_list = ActiveListWidget()
 
@@ -30,12 +32,13 @@ class FitWidget(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
-        layout.addWidget(self.lmfit_inspector, 2, 1, 1, 3)
-        layout.addWidget(self.active_list, 3, 2, 4, 2)
-        layout.addWidget(self.fit_btn, 3, 1, 1, 1)
-        layout.addWidget(self.copy_btn, 4, 1, 1, 1)
-        layout.addWidget(self.fit_all_btn, 5, 1, 1, 1)
-        layout.addWidget(self.export_btn, 6, 1, 1, 1)
+        layout.addWidget(self.lmfit_inspector, 3, 1, 1, 3)
+        layout.addWidget(self.lmfit_quality, 2, 1, 1, 3)
+        layout.addWidget(self.active_list, 4, 2, 4, 2)
+        layout.addWidget(self.fit_btn, 4, 1, 1, 1)
+        layout.addWidget(self.copy_btn, 5, 1, 1, 1)
+        layout.addWidget(self.fit_all_btn, 6, 1, 1, 1)
+        layout.addWidget(self.export_btn, 7, 1, 1, 1)
         layout.addWidget(self.plot_w, 1, 4, 6, 1)
         layout.setColumnStretch(1, 1)
         layout.setColumnStretch(2, 1)
