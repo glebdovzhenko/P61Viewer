@@ -32,5 +32,5 @@ class FileExportWidget(QWidget):
             for ii in rows:
                 data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'ScreenName']]
                 f_name = data['ScreenName'].replace(':', '_').replace('.', '_') + '.csv'
-                data = pd.DataFrame(data={'keV': data['DataX'], 'counts': data['DataY']})
+                data = pd.DataFrame(data={'eV': 1E3 * data['DataX'], 'counts': data['DataY']})
                 data.to_csv(os.path.join(dirname, f_name), header=True, index=False)

@@ -111,26 +111,39 @@ class FileImportWidget(QWidget):
         columns = list(self.q_app.data.columns)
 
         try:
-            dd = pd.read_csv(f_name, skiprows=6, skipfooter=1, header=None, names=['keV', '00', '01'])
+            dd = pd.read_csv(f_name, skiprows=6, skipfooter=1, header=None, names=['eV', '00', '01'])
         except Exception as e:
             print(e)
             return 0, [f_name + ':00', f_name + ':01']
 
-        # TODO: add support for import of exported .csv files
+        print(dd)
+        if not np.all(dd['01'].isna()):
+            for ch in ('00', '01'):
+                row = {c: None for c in columns}
+                row.update({
+                    'DataX': 1E-3 * dd['eV'],
+                    'DataY': dd[ch],
+                    'DataID': f_name + ':' + ch,
+                    'ScreenName': os.path.basename(f_name) + ':' + ch,
+                    'Active': True,
+                    'Color': next(self.q_app.params['ColorWheel'])
+                })
 
-        for ch in ('00', '01'):
+                self.q_app.data.loc[len(self.q_app.data.index)] = row
+            return 2, []
+        else:
             row = {c: None for c in columns}
             row.update({
-                'DataX': 1E-3 * dd['keV'],
-                'DataY': dd[ch],
-                'DataID': f_name + ':' + ch,
-                'ScreenName': os.path.basename(f_name) + ':' + ch,
+                'DataX': 1E-3 * dd['eV'],
+                'DataY': dd['00'],
+                'DataID': f_name,
+                'ScreenName': os.path.basename(f_name),
                 'Active': True,
                 'Color': next(self.q_app.params['ColorWheel'])
             })
 
             self.q_app.data.loc[len(self.q_app.data.index)] = row
-        return 2, []
+            return 1, []
 
     def open_files(self, f_names):
         # TODO: add check if the files are already open
