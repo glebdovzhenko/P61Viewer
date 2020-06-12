@@ -81,7 +81,8 @@ class P61App(QApplication):
 
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color',
-                                          'FitResult', 'PeakList'))
+                                          'FitResult', 'PeakList',
+                                          'GeneralFitModel', 'GeneralFitResult', 'PeakFitModel', 'PeakFitResult'))
 
         # data storage for one-per application items
         self.params = {
