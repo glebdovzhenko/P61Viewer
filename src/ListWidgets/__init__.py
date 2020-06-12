@@ -20,5 +20,5 @@ Implementation
 .. automodule:: ListWidgets.EditableListWidget
    :members:
 """
-from .ActiveListWidget import ActiveListWidget
-from .EditableListWidget import EditableListWidget
+from .ActiveList import ActiveList
+from .MainFileList import MainFileList

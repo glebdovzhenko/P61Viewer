@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel
 from P61App import P61App
 
 
-class LmfitQualityWidget(QWidget):
+class LmfitQuality(QWidget):
     """
 
     """

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTableView, QAbstractItemView, QStyledItemDelegate, QWidget, QStyleOptionViewItem
 from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QVariant
 
-from FitWidgets.FloatEditWidget import FloatEditWidget
+from FitWidgets.FloatEdit import FloatEdit
 from P61App import P61App
 
 
@@ -116,7 +116,7 @@ class SpinBoxDelegate(QStyledItemDelegate):
         QStyledItemDelegate.__init__(self, parent)
 
     def createEditor(self, w: QWidget, s: QStyleOptionViewItem, ii: QModelIndex):
-        editor = FloatEditWidget(parent=w)
+        editor = FloatEdit(parent=w)
         return editor
 
     def setEditorData(self, w: QWidget, ii: QModelIndex):
@@ -129,7 +129,7 @@ class SpinBoxDelegate(QStyledItemDelegate):
         w.setGeometry(s.rect)
 
 
-class LmfitInspectorWidget(QTableView):
+class LmfitInspector(QTableView):
     """
 
     """

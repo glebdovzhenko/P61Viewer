@@ -88,7 +88,7 @@ class ActiveListView(QListView):
             self.q_app.set_selected_idx(self.model().get_indices()[ids[0].row()])
 
 
-class ActiveListWidget(QWidget):
+class ActiveList(QWidget):
     def __init__(self, parent=None, selection_mode=QAbstractItemView.SingleSelection, *args):
         QWidget.__init__(self, parent, *args)
         self.q_app = P61App.instance()
@@ -114,11 +114,11 @@ class ActiveListWidget(QWidget):
 
 if __name__ == '__main__':
     import sys
-    from ListWidgets.EditableListWidget import EditableListWidget
+    from ListWidgets.MainFileList import MainFileList
 
     q_app = P61App(sys.argv)
-    app = EditableListWidget()
+    app = MainFileList()
     app.show()
-    app2 = ActiveListWidget()
+    app2 = ActiveList()
     app2.show()
     sys.exit(q_app.exec())

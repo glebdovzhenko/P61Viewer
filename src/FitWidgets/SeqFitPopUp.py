@@ -3,10 +3,10 @@ from PyQt5.Qt import Qt
 import copy
 
 from P61App import P61App
-from ListWidgets import ActiveListWidget
+from ListWidgets import ActiveList
 
 
-class PopUpSeqFitWidget(QDialog):
+class SeqFitPopUp(QDialog):
     """"""
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)
@@ -16,7 +16,7 @@ class PopUpSeqFitWidget(QDialog):
         self.combo = QComboBox(parent=self)
         self.combo.addItems(['Do not init', 'Init all from current', 'Sequential from current'])
         self.btn_ok = QPushButton('Fit', parent=self)
-        self.selection_list = ActiveListWidget(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.selection_list = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
 
         self.setWindowTitle('Fit multiple spectra')
 

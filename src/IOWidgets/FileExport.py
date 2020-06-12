@@ -5,7 +5,7 @@ import os
 from P61App import P61App
 
 
-class FileExportWidget(QWidget):
+class FileExport(QWidget):
     """
     Module responsible for exporting data
     """

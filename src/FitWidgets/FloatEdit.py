@@ -4,7 +4,7 @@ import numpy as np
 from collections import defaultdict
 
 
-class FloatEditWidget(QLineEdit):
+class FloatEdit(QLineEdit):
     """"""
     def __init__(self, parent=None, inf_allowed=True, none_allowed=False, init_val=0.):
         QLineEdit.__init__(self, parent=parent)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     from P61App import P61App
     import sys
     q_app = P61App(sys.argv)
-    app = FloatEditWidget()
+    app = FloatEdit()
     app.value = 10
     app.show()
     sys.exit(q_app.exec())

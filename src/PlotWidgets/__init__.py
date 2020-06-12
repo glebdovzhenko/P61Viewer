@@ -14,6 +14,6 @@ Implementation
 .. automodule:: PlotWidgets.FitPlotWidget
    :members:
 """
-from .MainPlotWidget import MainPlotWidget
-from .FitPlotWidget import FitPlotWidget
-from .PAPlotWidget import PAPlotWidget
+from .MainPlot import MainPlot
+from .FitPlot import FitPlot
+from .PeakAnalysisPlot import PAPlot

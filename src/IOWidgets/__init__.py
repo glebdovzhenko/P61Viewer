@@ -14,5 +14,5 @@ Implementation
    :members:
 """
 
-from .FileImport import FileImportWidget
-from .FileExport import FileExportWidget
+from .FileImport import FileImport
+from .FileExport import FileExport

@@ -2,10 +2,10 @@ from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton
 import copy
 
 from P61App import P61App
-from ListWidgets import ActiveListWidget
+from ListWidgets import ActiveList
 
 
-class PopUpCopyWidget(QDialog):
+class CopyPopUp(QDialog):
     """"""
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)
@@ -13,8 +13,8 @@ class PopUpCopyWidget(QDialog):
 
         self.label_from = QLabel('From:')
         self.label_to = QLabel('To:')
-        self.list_from = ActiveListWidget(parent=self)
-        self.list_to = ActiveListWidget(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.list_from = ActiveList(parent=self)
+        self.list_to = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
         self.button_ok = QPushButton('Copy')
 
         self.setWindowTitle('Copy fit parameters')
@@ -43,6 +43,6 @@ class PopUpCopyWidget(QDialog):
 if __name__ == '__main__':
     import sys
     q_app = P61App(sys.argv)
-    app = PopUpCopyWidget()
+    app = CopyPopUp()
     app.show()
     sys.exit(q_app.exec())

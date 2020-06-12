@@ -8,7 +8,7 @@ import struct
 from P61App import P61App
 
 
-class FileImportWidget(QWidget):
+class FileImport(QWidget):
     """
     Module responsible for importing files
     """
@@ -173,7 +173,7 @@ class FileImportWidget(QWidget):
 if __name__ == '__main__':
     import sys
     q_app = P61App(sys.argv)
-    wg = FileImportWidget()
+    wg = FileImport()
     wg.open_files(
         ['/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_09-10-30_.nxs',
          '/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/collected/Co57_2019-09-30_09-27-11_.nxs',

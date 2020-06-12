@@ -13,4 +13,4 @@ Implementation
    :members:
 
 """
-from .FitWidget import FitWidget
+from .GeneralFitWidget import GeneralFitWidget

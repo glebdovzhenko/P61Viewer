@@ -3,31 +3,31 @@ from functools import reduce
 import pandas as pd
 
 from P61App import P61App
-from ListWidgets import ActiveListWidget
-from FitWidgets.LmfitInspectorWidget import LmfitInspectorWidget
-from FitWidgets.LmfitBuilderWidget import LmfitBuilderWidget
-from FitWidgets.LmfitQualityWidget import LmfitQualityWidget
-from FitWidgets.PopUpCopyWidget import PopUpCopyWidget
-from FitWidgets.PopUpSeqFitWidget import PopUpSeqFitWidget
-from PlotWidgets import FitPlotWidget
+from ListWidgets import ActiveList
+from FitWidgets.LmfitInspector import LmfitInspector
+from FitWidgets.LmfitBuilder import LmfitBuilder
+from FitWidgets.LmfitQuality import LmfitQuality
+from FitWidgets.CopyPopUp import CopyPopUp
+from FitWidgets.SeqFitPopUp import SeqFitPopUp
+from PlotWidgets import FitPlot
 
 
-class FitWidget(QWidget):
+class GeneralFitWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
-        self.lmfit_builder = LmfitBuilderWidget()
-        self.lmfit_inspector = LmfitInspectorWidget()
-        self.lmfit_quality = LmfitQualityWidget()
+        self.lmfit_builder = LmfitBuilder()
+        self.lmfit_inspector = LmfitInspector()
+        self.lmfit_quality = LmfitQuality()
 
-        self.active_list = ActiveListWidget()
+        self.active_list = ActiveList()
 
         self.fit_btn = QPushButton('Fit this')
         self.fit_all_btn = QPushButton('Fit multiple')
         self.copy_btn = QPushButton('Copy params')
         self.export_btn = QPushButton('Export')
-        self.plot_w = FitPlotWidget(parent=self)
+        self.plot_w = FitPlot(parent=self)
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -51,7 +51,7 @@ class FitWidget(QWidget):
         self.export_btn.clicked.connect(self.on_export_button)
 
     def on_copy_btn(self, *args):
-        w = PopUpCopyWidget(parent=self)
+        w = CopyPopUp(parent=self)
         w.exec_()
 
     def on_fit_btn(self, *args, idx=None):
@@ -80,7 +80,7 @@ class FitWidget(QWidget):
         self.q_app.dataFitChanged.emit([idx])
 
     def on_fit_all_btn(self):
-        w = PopUpSeqFitWidget(parent=self)
+        w = SeqFitPopUp(parent=self)
         w.exec_()
 
     def on_export_button(self):
@@ -103,6 +103,6 @@ class FitWidget(QWidget):
 if __name__ == '__main__':
     import sys
     q_app = P61App(sys.argv)
-    app = FitWidget()
+    app = GeneralFitWidget()
     app.show()
     sys.exit(q_app.exec())

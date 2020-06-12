@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 from P61App import P61App
 
 
-class MainPlotWidget(QWidget):
+class MainPlot(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
@@ -53,11 +53,11 @@ class MainPlotWidget(QWidget):
 
 
 if __name__ == '__main__':
-    from ListWidgets import EditableListWidget
+    from ListWidgets import MainFileList
     import sys
     q_app = P61App(sys.argv)
-    app = MainPlotWidget()
-    app2 = EditableListWidget()
+    app = MainPlot()
+    app2 = MainFileList()
     app.show()
     app2.show()
     sys.exit(q_app.exec_())

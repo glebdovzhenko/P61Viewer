@@ -11,9 +11,9 @@ Launches the :code:`P61App` (QApplication_ child class) and a :code:`P61Viewer` 
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget, QSystemTrayIcon
 from PyQt5.QtGui import QIcon
 import sys
-from PlotWidgets import MainPlotWidget
-from ListWidgets import EditableListWidget
-from FitWidgets import FitWidget
+from PlotWidgets import MainPlot
+from ListWidgets import MainFileList
+from FitWidgets import GeneralFitWidget
 from PeakAnalysisWidgets import PeakAnalysisWidget
 
 from P61App import P61App
@@ -49,9 +49,9 @@ class P61Viewer(QMainWindow):
         self.setCentralWidget(self.cw)
         self.view_tab = QWidget()
 
-        self.file_w = EditableListWidget(parent=self)
-        self.fit_w = FitWidget(parent=self)
-        self.view_plot_w = MainPlotWidget(parent=self)
+        self.file_w = MainFileList(parent=self)
+        self.fit_w = GeneralFitWidget(parent=self)
+        self.view_plot_w = MainPlot(parent=self)
         self.pa_w = PeakAnalysisWidget(parent=self)
 
         # set up layouts

@@ -4,8 +4,8 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from P61App import P61App
-from FitWidgets.FloatEditWidget import FloatEditWidget
-from ListWidgets import ActiveListWidget
+from FitWidgets.FloatEdit import FloatEdit
+from ListWidgets import ActiveList
 
 
 class AutoFindPopUp(QDialog):
@@ -16,7 +16,7 @@ class AutoFindPopUp(QDialog):
         self.q_app = P61App.instance()
 
         self.btn_ok = QPushButton('Search', parent=self)
-        self.selection_list = ActiveListWidget(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.selection_list = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
 
         self.setWindowTitle('Auto search for peaks')
 
@@ -53,15 +53,15 @@ class AutoFindWidget(QWidget):
         self.title_label = QLabel('Automatic Peak Search')
 
         self.height_label = QLabel('Height')
-        self.height_edit = FloatEditWidget(inf_allowed=False, none_allowed=True, init_val=None)
+        self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.thr_label = QLabel('Threshhold')
-        self.thr_edit = FloatEditWidget(inf_allowed=False, none_allowed=True, init_val=None)
+        self.thr_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.dist_label = QLabel('Distance')
-        self.dist_edit = FloatEditWidget(inf_allowed=False, none_allowed=True, init_val=None)
+        self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.prom_label = QLabel('Prominence')
-        self.prom_edit = FloatEditWidget(inf_allowed=False, none_allowed=True, init_val=10.)
+        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=10.)
         self.width_label = QLabel('Width')
-        self.width_edit = FloatEditWidget(inf_allowed=False, none_allowed=True, init_val=None)
+        self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.btn_this = QPushButton('Find')
         self.btn_all = QPushButton('Find in all')
 

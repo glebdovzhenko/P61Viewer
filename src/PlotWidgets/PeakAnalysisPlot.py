@@ -9,7 +9,7 @@ import numpy as np
 from P61App import P61App
 
 
-class FitPlotWidget(QWidget):
+class PAPlot(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
@@ -27,38 +27,23 @@ class FitPlotWidget(QWidget):
         layout.addWidget(NavigationToolbar(line_canvas, self))
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
-        self.q_app.dataFitChanged.connect(self.on_fit_changed)
+        self.q_app.peakListChanged.connect(self.on_pl_changed)
 
-    def on_fit_changed(self, idxs):
+    def on_pl_changed(self, idxs):
         if self.q_app.get_selected_idx() in idxs:
             self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()
         if idx != -1:
-            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'FitResult']]
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'PeakList']]
 
             self._line_ax.plot(data['DataX'], data['DataY'], color='black', marker='.', linestyle='', label='Data')
 
-            if data['FitResult'] is not None:
-                xx = data['DataX']
-                x_lim = self.get_axes_xlim()
-                sel = (x_lim[0] < xx) & (x_lim[1] > xx)
-                xx = xx[sel]
-                yy = data['DataY'][sel]
-                diff = yy - data['FitResult'].eval(data['FitResult'].params, x=xx)
-
-                cmps = data['FitResult'].eval_components(x=xx)
-                for cmp in cmps:
-                    if cmp not in self.q_app.params['LmFitModelColors'].keys():
-                        self.q_app.params['LmFitModelColors'][cmp] = next(self.q_app.params['ColorWheel2'])
-                    self._line_ax.plot(xx, cmps[cmp],
-                                       color=str(hex(self.q_app.params['LmFitModelColors'][cmp])).replace('0x', '#'),
-                                       marker='', linestyle='--', label=cmp)
-
-                self._line_ax.plot(xx, data['FitResult'].eval(data['FitResult'].params, x=xx),
-                                   color='#d62728', marker='', linestyle='--', label='Fit')
-                self._diff_ax.plot(xx, diff, color='#d62728', marker='', linestyle='--')
+            if data['PeakList'] is not None:
+                for ii in data['PeakList']:
+                    self._line_ax.plot(data['DataX'][ii], data['DataY'][ii],
+                                       color='#d62728', marker='x', linestyle='', label=None)
 
             self._line_ax.legend()
 
@@ -86,12 +71,12 @@ class FitPlotWidget(QWidget):
 
 
 if __name__ == '__main__':
-    from ListWidgets import EditableListWidget, ActiveListWidget
+    from ListWidgets import MainFileList, ActiveList
     import sys
     q_app = P61App(sys.argv)
-    app = FitPlotWidget()
-    app2 = EditableListWidget()
-    app3 = ActiveListWidget()
+    app = PAPlot()
+    app2 = MainFileList()
+    app3 = ActiveList()
     app.show()
     app2.show()
     app3.show()

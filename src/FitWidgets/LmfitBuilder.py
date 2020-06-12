@@ -6,7 +6,7 @@ from functools import reduce
 from P61App import P61App
 
 
-class LmfitBuilderWidget(QWidget):
+class LmfitBuilder(QWidget):
     """"""
 
     prefixes = {'BreitWignerModel': 'bw', 'ConstantModel': 'c', 'DampedHarmonicOscillatorModel': 'dho',
@@ -124,6 +124,6 @@ class LmfitBuilderWidget(QWidget):
 if __name__ == '__main__':
     import sys
     q_app = P61App(sys.argv)
-    app = LmfitBuilderWidget()
+    app = LmfitBuilder()
     app.show()
     sys.exit(q_app.exec())

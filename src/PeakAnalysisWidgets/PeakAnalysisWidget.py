@@ -2,9 +2,9 @@ from PyQt5.QtWidgets import QWidget, QGridLayout
 
 from P61App import P61App
 
-from PeakAnalysisWidgets.AutoFindWidget import AutoFindWidget
-from PlotWidgets import PAPlotWidget
-from ListWidgets import ActiveListWidget
+from PeakAnalysisWidgets.AutoFind import AutoFindWidget
+from PlotWidgets import PAPlot
+from ListWidgets import ActiveList
 
 
 class PeakAnalysisWidget(QWidget):
@@ -13,8 +13,8 @@ class PeakAnalysisWidget(QWidget):
         self.q_app = P61App.instance()
 
         self.afw = AutoFindWidget(parent=self)
-        self.plw = PAPlotWidget(parent=self)
-        self.list = ActiveListWidget(parent=self)
+        self.plw = PAPlot(parent=self)
+        self.list = ActiveList(parent=self)
 
         layout = QGridLayout()
         self.setLayout(layout)
