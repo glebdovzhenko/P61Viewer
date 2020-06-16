@@ -75,6 +75,7 @@ class P61App(QApplication):
     selectedIndexChanged = pyqtSignal(int)
     dataFitChanged = pyqtSignal(list)
     peakListChanged = pyqtSignal(list)
+    genFitResChanged = pyqtSignal(list)
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -82,7 +83,7 @@ class P61App(QApplication):
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color',
                                           'FitResult', 'PeakList',
-                                          'GeneralFitModel', 'GeneralFitResult', 'PeakFitModel', 'PeakFitResult'))
+                                          'GeneralFitResult', 'PeakFitModel', 'PeakFitResult'))
 
         # data storage for one-per application items
         self.params = {
@@ -162,3 +163,11 @@ class P61App(QApplication):
         self.data.loc[idx, 'PeakList'] = result
         if emit:
             self.peakListChanged.emit([idx])
+
+    def get_general_result(self, idx):
+        return self.data.loc[idx, 'GeneralFitResult']
+
+    def set_general_result(self, idx, result, emit=True):
+        self.data.loc[idx, 'GeneralFitResult'] = result
+        if emit:
+            self.genFitResChanged.emit([idx])

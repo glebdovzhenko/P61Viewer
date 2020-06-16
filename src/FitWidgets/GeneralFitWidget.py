@@ -7,6 +7,7 @@ from ListWidgets import ActiveList
 from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.LmfitBuilder import LmfitBuilder
 from FitWidgets.LmfitQuality import LmfitQuality
+from FitWidgets.LmfitInspector2 import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from PlotWidgets import FitPlot
@@ -17,9 +18,11 @@ class GeneralFitWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
-        self.lmfit_builder = LmfitBuilder()
+        # self.lmfit_builder = LmfitBuilder()
+        # self.lmfit_inspector = LmfitInspector()
+        # self.lmfit_quality = LmfitQuality()
+
         self.lmfit_inspector = LmfitInspector()
-        self.lmfit_quality = LmfitQuality()
 
         self.active_list = ActiveList()
 
@@ -31,9 +34,10 @@ class GeneralFitWidget(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
-        layout.addWidget(self.lmfit_inspector, 3, 1, 1, 3)
-        layout.addWidget(self.lmfit_quality, 2, 1, 1, 3)
+        # layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
+        # layout.addWidget(self.lmfit_inspector, 3, 1, 1, 3)
+        # layout.addWidget(self.lmfit_quality, 2, 1, 1, 3)
+        layout.addWidget(self.lmfit_inspector, 1, 1, 3, 3)
         layout.addWidget(self.active_list, 4, 2, 4, 2)
         layout.addWidget(self.fit_btn, 4, 1, 1, 1)
         layout.addWidget(self.copy_btn, 5, 1, 1, 1)
