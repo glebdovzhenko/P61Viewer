@@ -27,18 +27,15 @@ class MainFileListModel(QAbstractTableModel):
     def _upd(self):
         self._data = self.q_app.data[['ScreenName', 'Color', 'Active', 'DeadTime']]
 
-    @pyqtSlot()
-    def on_rows_appended(self, n_rows=0):
+    def on_rows_appended(self, n_rows):
+        self.beginInsertRows(QModelIndex(), self._data.shape[0], self._data.shape[0] + n_rows - 1)
         self._upd()
-        self.modelReset.emit()
-        # TODO: make work faster
+        self.endInsertRows()
 
-    @pyqtSlot()
     def on_rows_removed(self, rows=[]):
         self._upd()
         self.modelReset.emit()
 
-    @pyqtSlot()
     def on_data_active(self, rows=[]):
         self._upd()
         self.modelReset.emit()
@@ -129,9 +126,9 @@ class MainFileList(QWidget):
         self.q_app.dataActiveChanged.connect(self.check_box_update)
 
     def bminus_onclick(self):
-        rows = [idx.row() for idx in self.list.selectedIndexes()]
+        rows = list(set(idx.row() for idx in self.list.selectedIndexes()))
         self.list.clearSelection()
-        self.q_app.data.drop(rows, inplace=True)
+        self.q_app.data.drop(index=rows, inplace=True)
         self.q_app.data.set_index(np.arange(self.q_app.data.shape[0]), inplace=True)
         self.q_app.dataRowsRemoved.emit(rows)
 

@@ -83,6 +83,15 @@ class P61App(QApplication):
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'DataID', 'ScreenName', 'Active', 'Color',
                                           'PeakList', 'GeneralFitResult', 'PeakFitResult'))
 
+        self.debug = True
+        if self.debug:
+            self.dataRowsAppended.connect(self.debug_print('dataRowsAppended'))
+            self.dataRowsRemoved.connect(self.debug_print('dataRowsRemoved'))
+            self.dataActiveChanged.connect(self.debug_print('dataActiveChanged'))
+            self.selectedIndexChanged.connect(self.debug_print('selectedIndexChanged'))
+            self.peakListChanged.connect(self.debug_print('peakListChanged'))
+            self.genFitResChanged.connect(self.debug_print('genFitResChanged'))
+
         # data storage for one-per application items
         self.params = {
             'LmFitModelColors': dict(),
@@ -90,6 +99,12 @@ class P61App(QApplication):
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),
         }
+
+    @staticmethod
+    def debug_print(name):
+        def fn(*args, **kwargs):
+            print(name, args, kwargs)
+        return fn
 
     @staticmethod
     def _color_wheel(key):
