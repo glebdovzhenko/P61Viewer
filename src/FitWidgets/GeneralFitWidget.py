@@ -85,7 +85,7 @@ class GeneralFitWidget(QWidget):
             if row['GeneralFitResult'] is None:
                 return pd.Series({'ScreenName': row['ScreenName']})
             else:
-                n_row = {'ScreenName': row['ScreenName']}
+                n_row = {'ScreenName': row['ScreenName'], 'chisqr': row['GeneralFitResult'].chisqr}
                 for p in row['GeneralFitResult'].params:
                     n_row = {**n_row, p: row['GeneralFitResult'].params[p].value, p + '_std': row['GeneralFitResult'].params[p].stderr}
                 return pd.Series(n_row)
