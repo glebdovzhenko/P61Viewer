@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel
 import copy
+import numpy as np
 
 from P61App import P61App
 from ListWidgets import ActiveList
@@ -34,9 +35,10 @@ class CopyPopUp(QDialog):
             pass
         else:
             idx_to = self.list_to.get_selection()
-            self.q_app.data.loc[idx_to, 'GeneralFitResult'] = [copy.deepcopy(
-                self.q_app.get_general_result(self.q_app.get_selected_idx())) for _ in range(len(idx_to))]
-            self.q_app.dataFitChanged.emit(idx_to)
+            result = copy.deepcopy(self.q_app.get_general_result(self.q_app.get_selected_idx()))
+            result.chisqr = np.NaN
+            self.q_app.data.loc[idx_to, 'GeneralFitResult'] = [copy.deepcopy(result) for _ in range(len(idx_to))]
+            self.q_app.genFitResChanged.emit(idx_to)
         self.close()
 
 

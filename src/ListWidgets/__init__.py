@@ -22,3 +22,4 @@ Implementation
 """
 from .ActiveList import ActiveList
 from .MainFileList import MainFileList
+from .FitFileTable import FitFileTable
