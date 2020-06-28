@@ -4,20 +4,20 @@ EditableList.py
 
 
 """
-from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, QSize, pyqtSlot
+from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QVariant, QSize, pyqtSlot
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QListView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog
+from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog
 import numpy as np
 
 from P61App import P61App
 from IOWidgets import FileImport, FileExport
 
 
-class MainFileListModel(QAbstractListModel):
+class MainFileListModel(QAbstractTableModel):
     def __init__(self, parent=None):
-        QAbstractListModel.__init__(self, parent)
+        QAbstractTableModel.__init__(self, parent)
         self.q_app = P61App.instance()
-        self._names, self._colors, self._status = None, None, None
+        self._data = None
         self._upd()
 
         self.q_app.dataRowsAppended.connect(self.on_rows_appended)
@@ -25,58 +25,69 @@ class MainFileListModel(QAbstractListModel):
         self.q_app.dataActiveChanged.connect(self.on_data_active)
 
     def _upd(self):
-        self._names = self.q_app.get_screen_names()
-        self._colors = self.q_app.get_screen_colors()
-        self._status = self.q_app.get_active_status()
+        self._data = self.q_app.data[['ScreenName', 'Color', 'Active', 'DeadTime']]
 
     @pyqtSlot()
     def on_rows_appended(self, n_rows=0):
         self._upd()
-        self.dataChanged.emit(self.index(self._names.shape[0] - n_rows), self.index(self._names.shape[0]), [])
+        self.modelReset.emit()
+        # TODO: make work faster
 
     @pyqtSlot()
     def on_rows_removed(self, rows=[]):
         self._upd()
-        self.dataChanged.emit(self.index(0), self.index(self._names.shape[0]), [])
+        self.modelReset.emit()
 
     @pyqtSlot()
     def on_data_active(self, rows=[]):
         self._upd()
-        if rows:
-            self.dataChanged.emit(self.index(min(rows)), self.index(max(rows)), [Qt.CheckStateRole])
-        else:
-            self.dataChanged.emit(self.index(0), self.index(0), [Qt.CheckStateRole])
+        self.modelReset.emit()
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return self._names.shape[0]
+        return self._data.shape[0]
+
+    def columnCount(self, parent=None, *args, **kwargs):
+        return 2
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return ['File', u'💀⏱'][section]
+        return None
 
     def data(self, ii: QModelIndex, role=None):
         if not ii.isValid():
             return QVariant()
-        if not 0 <= ii.row() < self._names.shape[0]:
-            return QVariant
 
-        if role == Qt.DisplayRole:
-            return self._names.loc[ii.row()]
-        elif role == Qt.ForegroundRole:
-            if self._status.loc[ii.row()]:
-                return QColor(self._colors.loc[ii.row()])
-            else:
-                return QColor(0, 0, 0, 255)
-        elif role == Qt.CheckStateRole:
-            return Qt.Checked if self._status.loc[ii.row()] else Qt.Unchecked
+        if ii.column() == 0:
+            if role == Qt.DisplayRole:
+                return self._data['ScreenName'].loc[ii.row()]
+            elif role == Qt.ForegroundRole:
+                if self._data['Active'].loc[ii.row()]:
+                    return QColor(self._data['Color'].loc[ii.row()])
+                else:
+                    return QColor(0, 0, 0, 255)
+            elif role == Qt.CheckStateRole:
+                return Qt.Checked if self._data['Active'].loc[ii.row()] else Qt.Unchecked
+        elif ii.column() == 1:
+            if role == Qt.DisplayRole:
+                dt = self._data['DeadTime'].loc[ii.row()]
+                return '%.03f' % dt if dt is not None else ''
 
     def setData(self, ii: QModelIndex, value, role=None):
         if not ii.isValid():
             return False
 
-        if role == Qt.CheckStateRole:
+        if role == Qt.CheckStateRole and ii.column() == 0:
             self.q_app.set_active_status(ii.row(), bool(value))
             return True
+
         return False
 
     def flags(self, index: QModelIndex) -> QVariant:
-        return QAbstractListModel.flags(self, index) | Qt.ItemIsUserCheckable
+        if index.column() == 0:
+            return QAbstractTableModel.flags(self, index) | Qt.ItemIsUserCheckable
+        else:
+            return QAbstractTableModel.flags(self, index)
 
 
 class MainFileList(QWidget):
@@ -86,9 +97,10 @@ class MainFileList(QWidget):
 
         # list
         self._model = MainFileListModel()
-        self.list = QListView()
+        self.list = QTableView()
         self.list.setModel(self._model)
         self.list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.list.setSelectionBehavior(QTableView.SelectRows)
 
         # buttons and checkbox
         self.bplus = QPushButton('+')
