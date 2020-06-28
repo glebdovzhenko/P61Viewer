@@ -23,8 +23,8 @@ class FileImport(QWidget):
             print(name, np.array(obj))
 
     def open_nxs_file(self, f_name):
-        ch0, ch1 = 'entry/instrument/xspress3/channel00/histogram', \
-                   'entry/instrument/xspress3/channel01/histogram'
+        ch0, ch1 = 'entry/instrument/xspress3/channel00', \
+                   'entry/instrument/xspress3/channel01'
         columns = list(self.q_app.data.columns)
         failed = []
         kev_per_bin = 5E-2
@@ -32,12 +32,18 @@ class FileImport(QWidget):
         for ii, channel in enumerate((ch0, ch1)):
             try:
                 with h5py.File(f_name, 'r') as f:
-                    frames = np.sum(f[channel], axis=0)
+                    frames = np.sum(f[channel + '/histogram'], axis=0)
                     frames[:20] = 0.0
                     frames[-1] = 0.0
                     kev = (np.arange(frames.shape[0]) + 0.5) * kev_per_bin
 
                     row = {c: None for c in columns}
+
+                    if ((channel + '/scaler/allevent') in f) and ((channel + '/scaler/allgood') in f):
+                        allevent = np.sum(f[channel + '/scaler/allevent'], axis=0)
+                        allgood = np.sum(f[channel + '/scaler/allgood'], axis=0)
+                        row.update({'DeadTime': 1. - allgood / allevent})
+
                     row.update({
                         'DataX': kev,
                         'DataY': frames,
