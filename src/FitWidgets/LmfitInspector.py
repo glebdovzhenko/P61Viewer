@@ -1,111 +1,195 @@
-from PyQt5.QtWidgets import QTableView, QAbstractItemView, QStyledItemDelegate, QWidget, QStyleOptionViewItem
-from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QVariant
+import lmfit
+
+from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
+    QStyledItemDelegate, QStyleOptionViewItem
+from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
 from P61App import P61App
+import lmfit_wrappers as lmfit_models
+from functools import reduce
 
 
-class LmfitInspectorModel(QAbstractTableModel):
-    """
+class TreeNode(object):
+    """"""
+    def __init__(self, data, parent=None, lvl=0):
+        self.parentItem = parent
+        self.itemData = data
+        self.childItems = []
 
-    """
+    def appendChild(self, item):
+        self.childItems.append(item)
+
+    def child(self, row):
+        return self.childItems[row]
+
+    def childCount(self):
+        return len(self.childItems)
+
+    def columnCount(self):
+        return len(self.itemData)
+
+    def parent(self):
+        return self.parentItem
+
+    def row(self):
+        if self.parentItem:
+            return self.parentItem.childItems.index(self)
+
+        return 0
+
+
+class LmfitInspectorModel(QAbstractItemModel):
+    """"""
+
     def __init__(self, parent=None):
-        QAbstractTableModel.__init__(self, parent)
+        QAbstractItemModel.__init__(self, parent)
         self.q_app = P61App.instance()
 
-        self.header_labels = ['Fit', 'Name', 'Value', 'STD', 'Min', 'Max']
-        self.fit_results = None
-        self.param_names = None
+        self.rootItem = TreeNode(('Name', 'Value', 'STD', 'Min', 'Max'))
+        self._fit_res = None
+        self._upd()
 
-        self.upd_fit_results()
+        self.q_app.selectedIndexChanged.connect(self._upd)
+        self.q_app.genFitResChanged.connect(self._upd)
 
-        self.q_app.selectedIndexChanged.connect(self.upd_fit_results)
-        self.q_app.dataFitChanged.connect(self.upd_fit_results)
+    def _clear_tree(self):
+        for item in self.rootItem.childItems:
+            del item.childItems[:]
+        del self.rootItem.childItems[:]
 
-    def upd_fit_results(self):
-        self.beginResetModel()
-        if self.q_app.get_selected_idx() == -1:
-            self.fit_results = None
-            self.param_names = None
+    def _upd(self, *args, **kwargs):
+        idx = self.q_app.get_selected_idx()
+        if idx == -1:
+            self._fit_res = None
         else:
-            # self.fit_results = self.q_app.data.loc[self.q_app.params['SelectedIndex'], 'FitResult']
-            self.fit_results = self.q_app.get_function_fit_result(self.q_app.get_selected_idx())
-        if self.fit_results is not None:
-            self.param_names = list(self.fit_results.params.items())
+            self._fit_res = self.q_app.get_general_result(idx)
+
+        self.beginResetModel()
+        self._clear_tree()
+
+        if self._fit_res is not None:
+            for md in self._fit_res.model.components:
+                self.rootItem.appendChild(TreeNode(md, self.rootItem))
+
+                for par in self._fit_res.params:
+                    if md.prefix in par:
+                        self.rootItem.childItems[-1].appendChild(
+                            TreeNode(self._fit_res.params[par], self.rootItem.childItems[-1]))
+
         self.endResetModel()
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return self.header_labels[section]
-        return QAbstractTableModel.headerData(self, section, orientation, role)
+    def columnCount(self, parent):
+        return self.rootItem.columnCount()
 
-    def rowCount(self, parent=None, *args, **kwargs):
-        if self.fit_results is None:
-            return 0
-        else:
-            return len(self.fit_results.params)
-
-    def columnCount(self, parent=None, *args, **kwargs):
-        return 6
-
-    def data(self, ii: QModelIndex, role=None):
-        if not ii.isValid():
+    def data(self, index, role):
+        if not index.isValid():
             return QVariant()
 
-        if role == Qt.DisplayRole or role == Qt.EditRole:
-            if ii.column() == 1:
-                return self.param_names[ii.row()][0]
-            elif ii.column() == 2:
-                return '%.03E' % self.fit_results.params[self.param_names[ii.row()][0]].value
-            elif ii.column() == 3:
-                if self.fit_results.params[self.param_names[ii.row()][0]].stderr is not None:
-                    return '± %.03E' % self.fit_results.params[self.param_names[ii.row()][0]].stderr
-                else:
-                    return 'None'
-            elif ii.column() == 4:
-                return '%.03E' % self.fit_results.params[self.param_names[ii.row()][0]].min
-            elif ii.column() == 5:
-                return '%.03E' % self.fit_results.params[self.param_names[ii.row()][0]].max
+        item = index.internalPointer()
+        data = item.itemData
 
-        if role == Qt.CheckStateRole:
-            if ii.column() == 0:
-                return Qt.Checked if self.fit_results.params[self.param_names[ii.row()][0]].vary else Qt.Unchecked
+        if role == Qt.DisplayRole:
+            if isinstance(data, lmfit.Parameter):
+                data = (data.name, '%.03E' % data.value, '± %.03E' % data.stderr
+                        if data.stderr is not None else 'None', '%.03E' % data.min, '%.03E' % data.max)
+            elif isinstance(data, lmfit.Model):
+                data = (':'.join((data._name, data.prefix)), ) + ('', ) * 4
+            return data[index.column()]
+        elif role == Qt.CheckStateRole:
+            if index.column() == 0 and isinstance(data, lmfit.Parameter):
+                if data.expr is None:
+                    return Qt.Checked if data.vary else Qt.Unchecked
+        elif role == Qt.EditRole:
+            if isinstance(data, lmfit.Parameter):
+                data = (data.name, '%.03E' % data.value, '± %.03E' % data.stderr
+                        if data.stderr is not None else 'None', '%.03E' % data.min, '%.03E' % data.max)
+                return data[index.column()]
 
         return QVariant()
+
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlags
+
+        if index.column() == 0:
+            return QAbstractItemModel.flags(self, index) | Qt.ItemIsUserCheckable
+        elif index.column() in (1, 3, 4) and isinstance(index.internalPointer().itemData, lmfit.Parameter):
+            return QAbstractItemModel.flags(self, index) | Qt.ItemIsEditable
+        else:
+            return QAbstractItemModel.flags(self, index)
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.rootItem.itemData[section]
+
+        return None
+
+    def index(self, row, column, parent):
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        childItem = parentItem.child(row)
+        if childItem:
+            return self.createIndex(row, column, childItem)
+        else:
+            return QModelIndex()
+
+    def parent(self, index):
+        if not index.isValid():
+            return QModelIndex()
+
+        childItem = index.internalPointer()
+        parentItem = childItem.parent()
+
+        if parentItem == self.rootItem:
+            return QModelIndex()
+
+        return self.createIndex(parentItem.row(), 0, parentItem)
+
+    def rowCount(self, parent):
+        if parent.column() > 0:
+            return 0
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        return parentItem.childCount()
 
     def setData(self, ii: QModelIndex, value, role=None):
         if not ii.isValid():
             return False
 
+        item = ii.internalPointer()
+        data = item.itemData
+        result = self.q_app.get_general_result(self.q_app.get_selected_idx())
+
         if role == Qt.CheckStateRole and ii.column() == 0:
-            self.fit_results.params[self.param_names[ii.row()][0]].vary = bool(value)
+            result.params[data.name].set(vary=bool(value))
+            self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
             return True
-
-        if role == Qt.EditRole and ii.column() == 2:
-            self.fit_results.params[self.param_names[ii.row()][0]].set(value=value)
-            self.dataChanged.emit(ii, ii)
-            self.q_app.dataFitChanged.emit([self.q_app.get_selected_idx()])
-            return True
-
-        if role == Qt.EditRole and ii.column() == 4:
-            self.fit_results.params[self.param_names[ii.row()][0]].set(min=value)
-            self.dataChanged.emit(ii, ii)
-            return True
-
-        if role == Qt.EditRole and ii.column() == 5:
-            self.fit_results.params[self.param_names[ii.row()][0]].set(max=value)
-            self.dataChanged.emit(ii, ii)
-            return True
+        elif role == Qt.EditRole:
+            if ii.column() == 1:
+                result.params[data.name].set(value=value)
+                self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
+                return True
+            elif ii.column() == 3:
+                result.params[data.name].set(min=value)
+                self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
+                return True
+            elif ii.column() == 4:
+                result.params[data.name].set(max=value)
+                self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
+                return True
 
         return False
-
-    def flags(self, ii: QModelIndex):
-        if ii.column() == 0:
-            return QAbstractTableModel.flags(self, ii) | Qt.ItemIsUserCheckable
-        elif ii.column() in (2, 4, 5):
-            return QAbstractTableModel.flags(self, ii) | Qt.ItemIsEditable
-        else:
-            return QAbstractTableModel.flags(self, ii)
 
 
 class SpinBoxDelegate(QStyledItemDelegate):
@@ -122,23 +206,104 @@ class SpinBoxDelegate(QStyledItemDelegate):
     def setEditorData(self, w: QWidget, ii: QModelIndex):
         w.value = float(ii.model().data(ii, Qt.EditRole))
 
-    def setModelData(self, w: QWidget, model: QAbstractTableModel, ii: QModelIndex):
+    def setModelData(self, w: QWidget, model: QAbstractItemModel, ii: QModelIndex):
         model.setData(ii, w.value, Qt.EditRole)
 
     def updateEditorGeometry(self, w: QWidget, s: QStyleOptionViewItem, ii: QModelIndex):
         w.setGeometry(s.rect)
 
 
-class LmfitInspector(QTableView):
+class LmfitInspector(QWidget):
     """
 
     """
+    prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
+                'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
+                'SplitLorentzianModel': 'spl'}
+
     def __init__(self, parent=None):
-        QTableView.__init__(self, parent)
+        QWidget.__init__(self, parent)
         self.q_app = P61App.instance()
 
-        self._model = LmfitInspectorModel()
+        self.bplus = QPushButton('+')
+        self.bminus = QPushButton('-')
+        self.treeview_md = LmfitInspectorModel()
         self._delegate = SpinBoxDelegate()
-        self.setModel(self._model)
-        self.setItemDelegate(self._delegate)
-        self.setSelectionMode(QAbstractItemView.NoSelection)
+        self.treeview = QTreeView()
+        self.treeview.setModel(self.treeview_md)
+        self.treeview.setItemDelegate(self._delegate)
+        self.treeview.expandAll()
+
+        self.menu = QMenu()
+
+        for k in self.prefixes.keys():
+            self.menu.addAction(k)
+
+        layout = QGridLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.bplus, 1, 1, 1, 1)
+        layout.addWidget(self.bminus, 1, 3, 1, 1)
+        layout.addWidget(self.treeview, 2, 1, 1, 3)
+
+        self.bplus.clicked.connect(self.bplus_onclick)
+        self.bminus.clicked.connect(self.bminus_onclick)
+        self.treeview_md.modelReset.connect(self.expander)
+
+    def expander(self, *args, **kwargs):
+        self.treeview.expandAll()
+
+    def bplus_onclick(self):
+        name = self.menu.exec(self.mapToGlobal(self.bplus.pos()))
+        idx = self.q_app.get_selected_idx()
+
+        if not isinstance(name, QAction) or idx == -1:
+            return
+
+        name = name.text()
+        old_res = self.q_app.get_general_result(idx)
+
+        kwargs = {'name': name}
+        if name == 'PolynomialModel':
+            ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
+            if ok:
+                kwargs['degree'] = ii
+
+        if old_res is None:
+            kwargs['prefix'] = self.prefixes[name] + '0_'
+            new_md = getattr(lmfit_models, name)(**kwargs)
+            self.q_app.set_general_result(idx, lmfit.model.ModelResult(new_md, new_md.make_params()))
+        elif isinstance(old_res, lmfit.model.ModelResult):
+            prefixes = [md.prefix for md in old_res.model.components]
+            for ii in range(100):
+                if self.prefixes[name] + '%d_' % ii not in prefixes:
+                    kwargs['prefix'] = self.prefixes[name] + '%d_' % ii
+                    break
+
+            new_md = getattr(lmfit_models, name)(**kwargs)
+            params = old_res.params
+            params.update(new_md.make_params())
+            self.q_app.set_general_result(idx, lmfit.model.ModelResult(old_res.model + new_md, params))
+        # print(self.q_app.get_general_result(idx).params)
+
+    def bminus_onclick(self):
+        selected_obj = self.treeview.currentIndex().internalPointer()
+        if selected_obj is None:
+            return
+
+        if isinstance(selected_obj.itemData, lmfit.Model):
+            prefix = selected_obj.itemData.prefix
+            result = self.q_app.get_general_result(self.q_app.get_selected_idx())
+
+            if len(result.model.components) == 1:
+                self.q_app.set_general_result(self.q_app.get_selected_idx(), None)
+                return
+
+            new_md = reduce(lambda a, b: a + b, (cmp for cmp in result.model.components if cmp.prefix != prefix))
+            new_params = result.params.copy()
+            for par in result.params:
+                if prefix in result.params[par].name:
+                    new_params.pop(par)
+
+            result.model = new_md
+            result.params = new_params
+            self.q_app.set_general_result(self.q_app.get_selected_idx(), result)

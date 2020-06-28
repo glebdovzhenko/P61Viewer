@@ -1,13 +1,9 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage, QFileDialog
-from functools import reduce
 import pandas as pd
 
 from P61App import P61App
 from ListWidgets import ActiveList
 from FitWidgets.LmfitInspector import LmfitInspector
-from FitWidgets.LmfitBuilder import LmfitBuilder
-from FitWidgets.LmfitQuality import LmfitQuality
-from FitWidgets.LmfitInspector2 import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from PlotWidgets import FitPlot
@@ -17,10 +13,6 @@ class GeneralFitWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
-
-        # self.lmfit_builder = LmfitBuilder()
-        # self.lmfit_inspector = LmfitInspector()
-        # self.lmfit_quality = LmfitQuality()
 
         self.lmfit_inspector = LmfitInspector()
 
@@ -34,9 +26,6 @@ class GeneralFitWidget(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        # layout.addWidget(self.lmfit_builder, 1, 1, 1, 3)
-        # layout.addWidget(self.lmfit_inspector, 3, 1, 1, 3)
-        # layout.addWidget(self.lmfit_quality, 2, 1, 1, 3)
         layout.addWidget(self.lmfit_inspector, 1, 1, 3, 3)
         layout.addWidget(self.active_list, 4, 2, 4, 2)
         layout.addWidget(self.fit_btn, 4, 1, 1, 1)
@@ -64,24 +53,24 @@ class GeneralFitWidget(QWidget):
         elif idx is None:
             idx = self.q_app.get_selected_idx()
 
-        model = reduce(lambda a, b: a + b, self.q_app.params['FunctionFitModel'].values())
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
         x_lim = self.plot_w.get_axes_xlim()
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
 
-        if self.q_app.data.loc[idx, 'FitResult'] is None:
-            params = reduce(lambda a, b: a + b, (cmp.guess(yy, x=xx) for cmp in model.components))
-        else:
-            params = self.q_app.data.loc[idx, 'FitResult'].params
         try:
-            self.q_app.data.loc[idx, 'FitResult'] = model.fit(yy, x=xx, params=params)
+            result.fit(yy, x=xx)
         except Exception as e:
             msg = QErrorMessage()
             msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
             msg.exec_()
-        print(self.q_app.data.loc[idx, 'FitResult'].fit_report())
-        self.q_app.dataFitChanged.emit([idx])
+
+        self.q_app.set_general_result(idx, result)
+        print(result.fit_report())
 
     def on_fit_all_btn(self):
         w = SeqFitPopUp(parent=self)
@@ -92,15 +81,18 @@ class GeneralFitWidget(QWidget):
         if not f_name:
             return
 
-        if self.q_app.params['LmFitModel'] is None:
-            result = pd.DataFrame()
-        else:
-            result = pd.DataFrame(self.q_app.data.loc[self.q_app.data['Active'], ['ScreenName', 'FitResult']])
-            for name in self.q_app.params['LmFitModel'].param_names:
-                result[name] = result.apply(lambda x: x['FitResult'].params[name].value, axis=1)
-                result[name + '_err'] = result.apply(lambda x: x['FitResult'].params[name].stderr, axis=1)
-            result.drop('FitResult', axis=1, inplace=True)
+        def expand_result(row):
+            if row['GeneralFitResult'] is None:
+                return pd.Series({'ScreenName': row['ScreenName']})
+            else:
+                n_row = {'ScreenName': row['ScreenName']}
+                for p in row['GeneralFitResult'].params:
+                    n_row = {**n_row, p: row['GeneralFitResult'].params[p].value, p + '_std': row['GeneralFitResult'].params[p].stderr}
+                return pd.Series(n_row)
 
+        result = pd.DataFrame()
+        result = result.append(self.q_app.data.loc[self.q_app.data['Active'], ['ScreenName', 'GeneralFitResult']])
+        result = result.apply(expand_result, axis=1)
         result.to_csv(f_name)
 
 

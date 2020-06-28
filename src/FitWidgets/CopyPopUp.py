@@ -34,8 +34,8 @@ class CopyPopUp(QDialog):
             pass
         else:
             idx_to = self.list_to.get_selection()
-            self.q_app.data.loc[idx_to, 'FitResult'] = [copy.deepcopy(
-                self.q_app.get_function_fit_result(self.q_app.get_selected_idx())) for _ in range(len(idx_to))]
+            self.q_app.data.loc[idx_to, 'GeneralFitResult'] = [copy.deepcopy(
+                self.q_app.get_general_result(self.q_app.get_selected_idx())) for _ in range(len(idx_to))]
             self.q_app.dataFitChanged.emit(idx_to)
         self.close()
 

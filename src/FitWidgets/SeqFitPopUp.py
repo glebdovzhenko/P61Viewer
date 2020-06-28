@@ -47,7 +47,7 @@ class SeqFitPopUp(QDialog):
         fit_type = self.combo.currentIndex()
 
         if fit_type == 1:
-            self.q_app.data.loc[fit_ids, 'FitResult'] = [self.q_app.get_function_fit_result(
+            self.q_app.data.loc[fit_ids, 'GeneralFitResult'] = [self.q_app.get_general_result(
                 self.q_app.get_selected_idx())] * len(fit_ids)
 
         # TODO: add cancel functionality
@@ -56,7 +56,8 @@ class SeqFitPopUp(QDialog):
         for ii, (prev_idx, idx) in enumerate(zip([self.q_app.get_selected_idx()] + fit_ids[:-1], fit_ids)):
             progress.setValue(ii)
             if fit_type == 2:
-                self.q_app.data.loc[idx, 'FitResult'] = copy.copy(self.q_app.data.loc[prev_idx, 'FitResult'])
+                self.q_app.data.loc[idx, 'GeneralFitResult'] = \
+                    copy.copy(self.q_app.data.loc[prev_idx, 'GeneralFitResult'])
             self.parent().on_fit_btn(idx=idx)
         progress.setValue(len(fit_ids))
 

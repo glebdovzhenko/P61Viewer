@@ -73,7 +73,6 @@ class P61App(QApplication):
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
-    dataFitChanged = pyqtSignal(list)
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
 
@@ -82,12 +81,10 @@ class P61App(QApplication):
 
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DataID', 'ScreenName', 'Active', 'Color',
-                                          'FitResult', 'PeakList',
-                                          'GeneralFitResult', 'PeakFitModel', 'PeakFitResult'))
+                                          'PeakList', 'GeneralFitResult', 'PeakFitResult'))
 
         # data storage for one-per application items
         self.params = {
-            'FunctionFitModel': dict(),
             'LmFitModelColors': dict(),
             'SelectedIndex': -1,
             'ColorWheel': self._color_wheel('def'),
@@ -141,17 +138,6 @@ class P61App(QApplication):
         self.data.loc[idx, 'Active'] = bool(status)
         if emit:
             self.dataActiveChanged.emit([idx])
-
-    def clear_function_fit_results(self):
-        self.data['FitResult'] = None
-
-    def get_function_fit_result(self, idx):
-        return self.data.loc[idx, 'FitResult']
-
-    def set_function_fit_result(self, idx, result, emit=True):
-        self.data.loc[idx, 'FitResult'] = result
-        if emit:
-            self.dataFitChanged.emit([idx])
 
     def get_selected_screen_name(self):
         return self.data.loc[self.params['SelectedIndex'], 'ScreenName']
