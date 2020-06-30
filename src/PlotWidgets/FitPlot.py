@@ -86,11 +86,11 @@ class FitPlot(QWidget):
 
 
 if __name__ == '__main__':
-    from ListWidgets import MainFileList, ActiveList
+    from ListWidgets import DataSetManager, ActiveList
     import sys
     q_app = P61App(sys.argv)
     app = FitPlot()
-    app2 = MainFileList()
+    app2 = DataSetManager()
     app3 = ActiveList()
     app.show()
     app2.show()

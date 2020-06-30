@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage, QF
 import pandas as pd
 
 from P61App import P61App
-from ListWidgets import FitFileTable
+from DatasetManager import DatasetViewer
 from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
@@ -16,7 +16,7 @@ class GeneralFitWidget(QWidget):
 
         self.lmfit_inspector = LmfitInspector()
 
-        self.active_list = FitFileTable()
+        self.active_list = DatasetViewer()
 
         self.fit_btn = QPushButton('Fit this')
         self.fit_all_btn = QPushButton('Fit multiple')

@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget, QSyst
 from PyQt5.QtGui import QIcon
 import sys
 from PlotWidgets import MainPlot
-from ListWidgets import MainFileList
+from DatasetManager import DatasetManager
 from FitWidgets import GeneralFitWidget
 from PeakAnalysisWidgets import PeakAnalysisWidget
 
@@ -49,7 +49,7 @@ class P61Viewer(QMainWindow):
         self.setCentralWidget(self.cw)
         self.view_tab = QWidget()
 
-        self.file_w = MainFileList(parent=self)
+        self.file_w = DatasetManager(parent=self)
         self.fit_w = GeneralFitWidget(parent=self)
         self.view_plot_w = MainPlot(parent=self)
         self.pa_w = PeakAnalysisWidget(parent=self)

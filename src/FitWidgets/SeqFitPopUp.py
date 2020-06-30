@@ -3,7 +3,7 @@ from PyQt5.Qt import Qt
 import copy
 
 from P61App import P61App
-from ListWidgets import ActiveList
+from DatasetManager import DatasetSelector
 
 
 class SeqFitPopUp(QDialog):
@@ -16,7 +16,7 @@ class SeqFitPopUp(QDialog):
         self.combo = QComboBox(parent=self)
         self.combo.addItems(['Do not init', 'Init all from current', 'Sequential from current'])
         self.btn_ok = QPushButton('Fit', parent=self)
-        self.selection_list = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.selection_list = DatasetSelector(parent=self)
 
         self.setWindowTitle('Fit multiple spectra')
 
@@ -43,7 +43,7 @@ class SeqFitPopUp(QDialog):
             self.close()
             return
 
-        fit_ids = list(self.selection_list.get_selection())
+        fit_ids = [k for k in self.selection_list.proxy.selected if self.selection_list.proxy.selected[k]]
         fit_type = self.combo.currentIndex()
 
         if fit_type == 1:

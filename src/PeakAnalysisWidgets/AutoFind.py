@@ -5,7 +5,7 @@ import numpy as np
 
 from P61App import P61App
 from FitWidgets.FloatEdit import FloatEdit
-from ListWidgets import ActiveList
+from DatasetManager import DatasetSelector
 
 
 class AutoFindPopUp(QDialog):
@@ -16,7 +16,7 @@ class AutoFindPopUp(QDialog):
         self.q_app = P61App.instance()
 
         self.btn_ok = QPushButton('Search', parent=self)
-        self.selection_list = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.selection_list = DatasetSelector(parent=self)
 
         self.setWindowTitle('Auto search for peaks')
 

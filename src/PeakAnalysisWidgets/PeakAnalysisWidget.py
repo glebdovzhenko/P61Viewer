@@ -4,7 +4,7 @@ from P61App import P61App
 
 from PeakAnalysisWidgets.AutoFind import AutoFindWidget
 from PlotWidgets import PAPlot
-from ListWidgets import ActiveList
+from DatasetManager import DatasetViewer
 
 
 class PeakAnalysisWidget(QWidget):
@@ -14,7 +14,7 @@ class PeakAnalysisWidget(QWidget):
 
         self.afw = AutoFindWidget(parent=self)
         self.plw = PAPlot(parent=self)
-        self.list = ActiveList(parent=self)
+        self.list = DatasetViewer(parent=self)
 
         layout = QGridLayout()
         self.setLayout(layout)

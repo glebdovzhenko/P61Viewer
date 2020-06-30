@@ -6,6 +6,7 @@ src/P61App.py
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import pyqtSignal
 import pandas as pd
+import numpy as np
 
 
 class P61App(QApplication):
@@ -54,7 +55,7 @@ class P61App(QApplication):
 
     **Signals and their meaning:**
 
-    - :code:`dataRowsAppended`: when new histograms (rows) are added to the :code:`P61App.instance().data` Dataframe;
+    - :code:`dataRowsInserted`: when new histograms (rows) are added to the :code:`P61App.instance().data` Dataframe;
     - :code:`dataRowsRemoved`: when histograms (rows) are deleted from the :code:`P61App.instance().data` Dataframe;
     - :code:`dataActiveChanged`: when the :code:`'Active'` status of the rows is changed;
 
@@ -69,12 +70,13 @@ class P61App(QApplication):
     name = 'P61 Viewer'
     version = '0.1.0'
 
-    dataRowsAppended = pyqtSignal(int)
+    dataRowsInserted = pyqtSignal(int, int)
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
+    dataModelSetUp = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -82,15 +84,16 @@ class P61App(QApplication):
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'DataID', 'ScreenName', 'Active', 'Color',
                                           'PeakList', 'GeneralFitResult', 'PeakFitResult'))
-
-        self.debug = True
+        self.data_model = None
+        self.debug = False
         if self.debug:
-            self.dataRowsAppended.connect(self.debug_print('dataRowsAppended'))
+            self.dataRowsInserted.connect(self.debug_print('dataRowsInserted'))
             self.dataRowsRemoved.connect(self.debug_print('dataRowsRemoved'))
             self.dataActiveChanged.connect(self.debug_print('dataActiveChanged'))
             self.selectedIndexChanged.connect(self.debug_print('selectedIndexChanged'))
             self.peakListChanged.connect(self.debug_print('peakListChanged'))
             self.genFitResChanged.connect(self.debug_print('genFitResChanged'))
+            self.dataModelSetUp.connect(self.debug_print('dataModelSetUp'))
 
         # data storage for one-per application items
         self.params = {
@@ -99,6 +102,23 @@ class P61App(QApplication):
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),
         }
+
+    def insert_rows(self, position, rows):
+        d1, d2 = self.data[:position], self.data[position:]
+        insert = pd.DataFrame({col: [None] * rows for col in self.data.columns},
+                              index=np.arange(position, position + rows).astype(np.int))
+        self.data = pd.concat((d1, insert, d2.set_index(d2.index + rows)))
+
+        if self.debug:
+            print('Inserted %d rows to position %d' % (rows, position))
+            print(self.data)
+
+    def remove_rows(self, position, rows):
+        self.data.drop(index=np.arange(position, position + rows).astype(np.int), inplace=True)
+        self.data.set_index(np.arange(self.data.shape[0]), inplace=True)
+        if self.debug:
+            print('Removed %d rows from position %d' % (rows, position))
+            print(self.data)
 
     @staticmethod
     def debug_print(name):

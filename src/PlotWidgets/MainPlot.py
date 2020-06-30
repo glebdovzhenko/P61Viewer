@@ -22,12 +22,12 @@ class MainPlot(QWidget):
         layout.addWidget(line_canvas)
         layout.addWidget(NavigationToolbar(line_canvas, self))
 
-        self.q_app.dataRowsAppended.connect(self.on_data_rows_appended)
+        self.q_app.dataRowsInserted.connect(self.on_data_rows_appended)
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
 
-    def on_data_rows_appended(self, n_rows):
-        for ii in range(self.q_app.data.shape[0] - n_rows, self.q_app.data.shape[0]):
+    def on_data_rows_appended(self, pos, n_rows):
+        for ii in range(pos, pos + n_rows):
             data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
             self._line_ax.plot(data['DataX'], data['DataY'], color=str(hex(data['Color'])).replace('0x', '#'))
         self.update_line_axes()
@@ -53,11 +53,11 @@ class MainPlot(QWidget):
 
 
 if __name__ == '__main__':
-    from ListWidgets import MainFileList
+    from ListWidgets import DataSetManager
     import sys
     q_app = P61App(sys.argv)
     app = MainPlot()
-    app2 = MainFileList()
+    app2 = DataSetManager()
     app.show()
     app2.show()
     sys.exit(q_app.exec_())

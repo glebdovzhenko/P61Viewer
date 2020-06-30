@@ -3,7 +3,7 @@ import copy
 import numpy as np
 
 from P61App import P61App
-from ListWidgets import ActiveList
+from DatasetManager import DatasetSelector, DatasetViewer
 
 
 class CopyPopUp(QDialog):
@@ -14,8 +14,8 @@ class CopyPopUp(QDialog):
 
         self.label_from = QLabel('From:')
         self.label_to = QLabel('To:')
-        self.list_from = ActiveList(parent=self)
-        self.list_to = ActiveList(parent=self, selection_mode=QAbstractItemView.ExtendedSelection)
+        self.list_from = DatasetViewer(parent=self)
+        self.list_to = DatasetSelector(parent=self)
         self.button_ok = QPushButton('Copy')
 
         self.setWindowTitle('Copy fit parameters')
@@ -34,9 +34,10 @@ class CopyPopUp(QDialog):
         if self.q_app.get_selected_idx() == -1:
             pass
         else:
-            idx_to = self.list_to.get_selection()
+            idx_to = [k for k in self.list_to.proxy.selected if self.list_to.proxy.selected[k]]
             result = copy.deepcopy(self.q_app.get_general_result(self.q_app.get_selected_idx()))
-            result.chisqr = np.NaN
+            if result is not None:
+                result.chisqr = None
             self.q_app.data.loc[idx_to, 'GeneralFitResult'] = [copy.deepcopy(result) for _ in range(len(idx_to))]
             self.q_app.genFitResChanged.emit(idx_to)
         self.close()
