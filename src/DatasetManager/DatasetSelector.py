@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QModelIndex, QSortFilterProxyModel
-from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QGridLayout
+from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QGridLayout, QCheckBox
 
 from P61App import P61App
 
@@ -69,9 +69,13 @@ class DatasetSelector(QWidget):
         self.view = QTableView()
         self.proxy = None
 
+        self.checkbox = QCheckBox('')
+        self.checkbox.setTristate(False)
+
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.view, 1, 1, 1, 1)
+        layout.addWidget(self.checkbox, 1, 1, 1, 1)
+        layout.addWidget(self.view, 2, 1, 1, 4)
 
         if self.q_app.data_model is None:
             self.q_app.dataModelSetUp.connect(self.setup_model)
@@ -82,4 +86,29 @@ class DatasetSelector(QWidget):
         self.proxy = SelectorProxyModel()
         self.proxy.setSourceModel(self.q_app.data_model)
         self.view.setModel(self.proxy)
+        self.view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.view.setSelectionBehavior(QTableView.SelectRows)
+        self.checkbox.clicked.connect(self.checkbox_onclick)
+        self.view.selectionModel().selectionChanged.connect(self.checkbox_update)
+
+    def checkbox_onclick(self):
+        self.checkbox.setTristate(False)
+        rows = sorted(set([idx.row() for idx in self.view.selectedIndexes()]))
+        for row in rows:
+            self.proxy.selected[self.proxy.mapToSource(self.proxy.index(row, 0)).row()] = bool(self.checkbox.checkState())
+
+        self.proxy.dataChanged.emit(
+            self.proxy.index(min(rows), 0),
+            self.proxy.index(max(rows), 0),
+        )
+
+    def checkbox_update(self):
+        rows = sorted(set([idx.row() for idx in self.view.selectedIndexes()]))
+        status = [self.proxy.selected[self.proxy.mapToSource(self.proxy.index(row, 0)).row()] for row in rows]
+
+        if all(status):
+            self.checkbox.setCheckState(Qt.Checked)
+        elif not any(status):
+            self.checkbox.setCheckState(Qt.Unchecked)
+        else:
+            self.checkbox.setCheckState(Qt.PartiallyChecked)

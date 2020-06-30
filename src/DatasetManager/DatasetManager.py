@@ -22,10 +22,11 @@ class DataSetStorageModel(QAbstractTableModel):
         self.q_app.genFitResChanged.connect(self.on_gen_fit_changed)
 
     def on_gen_fit_changed(self, rows):
-        self.dataChanged.emit(
-            self.index(min(rows), 2),
-            self.index(max(rows), 2)
-        )
+        if rows:
+            self.dataChanged.emit(
+                self.index(min(rows), 2),
+                self.index(max(rows), 2)
+            )
 
     def columnCount(self, parent=None, *args, **kwargs):
         return 3
