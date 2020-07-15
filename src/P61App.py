@@ -82,8 +82,8 @@ class P61App(QApplication):
         QApplication.__init__(self, *args, **kwargs)
 
         # data storage for one-per-dataset items
-        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'DataID', 'ScreenName', 'Active', 'Color',
-                                          'PeakList', 'GeneralFitResult', 'PeakFitResult'))
+        self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'Channel', 'DataID', 'ScreenName', 'Active',
+                                          'Color', 'PeakList', 'GeneralFitResult', 'PeakFitResult'))
         self.data_model = None
         self.debug = False
         if self.debug:

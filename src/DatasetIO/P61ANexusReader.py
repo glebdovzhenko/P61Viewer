@@ -52,6 +52,7 @@ class P61ANexusReader:
                     'DataX': kev,
                     'DataY': frames,
                     'DataID': f_name + ':' + '/'.join(channel),
+                    'Channel': ii,
                     'ScreenName': os.path.basename(f_name) + ':' + '%02d' % ii,
                     'Active': True,
                     'Color': next(self.q_app.params['ColorWheel'])
