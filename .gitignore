@@ -129,3 +129,7 @@ dmypy.json
 apps/P61Viewer.app
 *.DS_Store
 
+test_files/collected/Probe_5-5_sin2psi_04082015
+test_files/collected/Probe_5-5_sin2psi_04082015_positions.txt
+test_files/collected/Probe_TBB_2379_sin2psi_06082015
+test_files/collected/Probe_TBB_2379_sin2psi_06082015_positions.txt

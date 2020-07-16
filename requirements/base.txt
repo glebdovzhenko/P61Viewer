@@ -3,6 +3,8 @@ h5py
 pandas
 scipy
 PyQt5==5.9.2
+pyqtgraph
+pyopengl
 matplotlib
 tornado
 pyinstaller
