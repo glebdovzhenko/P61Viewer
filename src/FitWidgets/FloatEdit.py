@@ -2,10 +2,13 @@ from PyQt5.QtWidgets import QLineEdit
 import re
 import numpy as np
 from collections import defaultdict
+from PyQt5.QtCore import pyqtSignal
 
 
 class FloatEdit(QLineEdit):
     """"""
+    valueChanged = pyqtSignal(object)
+
     def __init__(self, parent=None, inf_allowed=True, none_allowed=False, init_val=0.):
         QLineEdit.__init__(self, parent=parent)
 
@@ -28,6 +31,7 @@ class FloatEdit(QLineEdit):
             self.setText('%.03E' % self._value)
         else:
             self.setText('None')
+        self.valueChanged.emit(self._value)
 
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())

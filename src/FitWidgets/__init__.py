@@ -13,4 +13,6 @@ Implementation
    :members:
 
 """
+
 from .GeneralFitWidget import GeneralFitWidget
+from .FloatEdit import FloatEdit
