@@ -29,12 +29,13 @@ class MainPlot3DWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
-        self.plot = MainPlot3D(parent=self)
         self.zscale_label = QLabel('Intensity scale')
         self.zscale_edit = FloatEdit(init_val=1E3)
         self.erange_label = QLabel('Energy range (keV)')
-        self.erange_min = FloatEdit(init_val=700)
-        self.erange_max = FloatEdit(init_val=1200)
+        self.erange_min = FloatEdit(init_val=0)
+        self.erange_max = FloatEdit(init_val=200)
+        self.plot = MainPlot3D(parent=self)
+        self.update_plot()
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -59,8 +60,8 @@ class MainPlot3D(gl.GLViewWidget):
         self.q_app = P61App.instance()
 
         self._lines = []
-        self.e_range = (700, 1200)
-        self.z_scale = 1E3
+        self.e_range = None
+        self.z_scale = None
         self.setCameraPosition(pos=QVector3D(0.5, 0.5, 0.0), distance=1.5, azimuth=-90, elevation=20)
 
         self.q_app.dataRowsInserted.connect(self.on_data_rows_appended)
@@ -108,8 +109,8 @@ class MainPlot3D(gl.GLViewWidget):
         self._lines = self._lines[:pos] + [None] * n_rows + self._lines[pos:]
         for ii in range(pos, pos + n_rows):
             data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color', 'Active']]
-            xx = np.array(1E3 * data['DataX'])
-            zz = np.array(data['DataY'])
+            xx = np.array(1E3 * data['DataX'], dtype=np.float)
+            zz = np.array(data['DataY'], dtype=np.float)
             yy = np.array([ii] * zz.shape[0], dtype=np.float)
 
             yy = yy[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
