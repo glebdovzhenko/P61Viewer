@@ -1,26 +1,38 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget
 import pyqtgraph as pg
-
 from P61App import P61App
 
+pg.setConfigOptions(antialias=True)
+pg.setConfigOption('background', 'w')
 
-class MainPlot(QWidget):
+
+class MainPlot(QTabWidget):
+    def __init__(self, parent=None):
+        QTabWidget.__init__(self, parent=parent)
+        self.q_app = P61App.instance()
+
+        self.tab_2d = MainPlot2D(parent=self)
+        self.addTab(self.tab_2d, "2D plot")
+        self.tab_3d = MainPlot3D(parent=self)
+        self.addTab(self.tab_3d, "3D plot")
+
+
+class MainPlot3D(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
-        pg.setConfigOptions(antialias=True)
-        pg.setConfigOption('background', 'w')
 
-        graph_widget = pg.GraphicsLayoutWidget(show=True)
-        self._line_ax = graph_widget.addPlot(title="Imported spectra")
+
+class MainPlot2D(pg.GraphicsLayoutWidget):
+    def __init__(self, parent=None):
+        pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
+        self.q_app = P61App.instance()
+
+        self._line_ax = self.addPlot(title="Imported spectra")
         self._line_ax.setLabel('bottom', "Energy", units='eV')
         self._line_ax.setLabel('left', "Intensity", units='counts')
         self._line_ax.showGrid(x=True, y=True)
         self._lines = []
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(graph_widget)
 
         self.q_app.dataRowsInserted.connect(self.on_data_rows_appended)
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)

@@ -1,0 +1,13 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+numpy
+h5py
+pandas
+scipy
+pyopengl
+pyqt
+pyqtgraph
+pyinstaller
+lmfit
+Sphinx
+python.app

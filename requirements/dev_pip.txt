@@ -1,10 +1,10 @@
+# pip install -r requirements/base_pip.txt
 numpy
 h5py
 pandas
 scipy
 pyopengl
 pyqt5
-pyqtwebengine
 pyqtgraph
 pyinstaller
 lmfit

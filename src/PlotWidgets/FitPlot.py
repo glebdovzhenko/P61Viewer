@@ -5,29 +5,24 @@ import pyqtgraph as pg
 from P61App import P61App
 
 
-class FitPlot(QWidget):
+class FitPlot(pg.GraphicsLayoutWidget):
     def __init__(self, parent=None):
-        QWidget.__init__(self, parent=parent)
+        pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
 
         pg.setConfigOptions(antialias=True)
         pg.setConfigOption('background', 'w')
 
-        graph_widget = pg.GraphicsLayoutWidget(show=True)
-        self._line_ax = graph_widget.addPlot(title="Fit")
+        self._line_ax = self.addPlot(title="Fit")
         self._line_ax.setLabel('bottom', "Energy", units='eV')
         self._line_ax.setLabel('left', "Intensity", units='counts')
         self._line_ax.showGrid(x=True, y=True)
-        graph_widget.nextRow()
-        self._diff_ax = graph_widget.addPlot(title="Difference plot")
+        self.nextRow()
+        self._diff_ax = self.addPlot(title="Difference plot")
         self._diff_ax.setLabel('bottom', "Energy", units='eV')
         self._diff_ax.setLabel('left', "Intensity", units='counts')
         self._diff_ax.showGrid(x=True, y=True)
         self._diff_ax.setXLink(self._line_ax)
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(graph_widget)
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.genFitResChanged.connect(self.on_fit_changed)
