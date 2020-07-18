@@ -29,6 +29,10 @@ class MainPlot3DWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
+        self.explanation_label = QLabel('[W] [A] [S] [D] move the plot in XY plane, [R] [F] move it along Z axis. '
+                                        'Arrow keys or mouse click & drag rotate the camera. '
+                                        '[Z] and [X] zoom the camera in and out. ')
+        self.explanation_label.setMaximumHeight(20)
         self.zscale_label = QLabel('Intensity scale')
         self.zscale_edit = FloatEdit(init_val=1E3)
         self.erange_label = QLabel('Energy range (keV)')
@@ -45,14 +49,18 @@ class MainPlot3DWidget(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.plot, 1, 1, 1, 7)
-        layout.addWidget(self.autoscale_cb, 2, 1, 1, 1)
-        layout.addWidget(self.autoscale_label, 2, 2, 1, 1)
-        layout.addWidget(self.zscale_label, 2, 3, 1, 1)
-        layout.addWidget(self.zscale_edit, 2, 4, 1, 1)
-        layout.addWidget(self.erange_label, 2, 5, 1, 1)
-        layout.addWidget(self.erange_min, 2, 6, 1, 1)
-        layout.addWidget(self.erange_max, 2, 7, 1, 1)
+        layout.addWidget(self.explanation_label, 1, 1, 1, 7)
+        layout.addWidget(self.plot, 2, 1, 1, 7)
+        layout.addWidget(self.autoscale_cb, 3, 1, 1, 1)
+        layout.addWidget(self.autoscale_label, 3, 2, 1, 1)
+        layout.addWidget(self.zscale_label, 3, 3, 1, 1)
+        layout.addWidget(self.zscale_edit, 3, 4, 1, 1)
+        layout.addWidget(self.erange_label, 3, 5, 1, 1)
+        layout.addWidget(self.erange_min, 3, 6, 1, 1)
+        layout.addWidget(self.erange_max, 3, 7, 1, 1)
+        layout.setRowStretch(1, 1)
+        layout.setRowStretch(2, 5)
+        layout.setRowStretch(3, 1)
 
         self.zscale_edit.valueChanged.connect(self.update_plot)
         self.erange_min.valueChanged.connect(self.update_plot)
@@ -79,7 +87,9 @@ class MainPlot3DWidget(QWidget):
             self.autoscale()
 
     def update_plot(self, *args, **kwargs):
-        self.plot.update_scale(self.erange_min.get_value(), self.erange_max.get_value(), self.zscale_edit.get_value())
+        self.plot.e_range = (self.erange_min.get_value(), self.erange_max.get_value())
+        self.plot.z_scale = self.zscale_edit.get_value()
+        self.plot.upd_and_redraw()
 
     def autoscale(self):
         if self.q_app.data.shape[0]:
@@ -106,30 +116,12 @@ class MainPlot3D(gl.GLViewWidget):
         self.grid_xy = gl.GLGridItem()
         self.grid_yz = gl.GLGridItem()
         self.grid_xz = gl.GLGridItem()
-        self.init_grids()
-
         self.text_objs = []
-        self.x_ticks = 5
+        self.x_ticks = 7
         self.z_ticks = 2
-        self.init_text_objs()
+        self._init_axes()
 
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
-
-    def paintGL(self, *args, **kwds):
-        gl.GLViewWidget.paintGL(self, *args, **kwds)
-
-        self.qglColor(QtCore.Qt.white)
-        for to in self.text_objs:
-            self.renderText(*to)
-
-    def init_text_objs(self):
-        for xx in np.linspace(0., 1., self.x_ticks):
-            self.text_objs.append([xx, 0., -0.05, ''])
-
-        for zz in np.linspace(0., 1., self.z_ticks):
-            self.text_objs.append([0., -0.05, zz, ''])
-
-        self.text_objs.append([0.5, 0., -0.1, 'keV'])
 
     def update_text_objs(self):
         if self.e_range is not None:
@@ -146,27 +138,7 @@ class MainPlot3D(gl.GLViewWidget):
             for ii in range(self.z_ticks):
                 self.text_objs[ii + self.x_ticks][3] = ''
 
-    def init_grids(self):
-        self.grid_xy.scale(.05, .05, 1)
-        self.grid_xy.translate(.5, .5, 0)
-        self.grid_xy.setDepthValue(10)
-
-        self.grid_yz.scale(.05, .05, 1)
-        self.grid_yz.rotate(90, 0, 1, 0)
-        self.grid_yz.translate(0., 0.5, 0.5)
-        self.grid_yz.setDepthValue(10)
-
-        self.grid_xz.scale(.05, .05, 1)
-        self.grid_xz.rotate(90, 1, 0, 0)
-        self.grid_xz.translate(0.5, 1.0, 0.5)
-        self.grid_xz.setDepthValue(10)
-
-    def update_scale(self, erange_min, erange_max, zscale):
-        self.e_range = erange_min, erange_max
-        self.z_scale = zscale
-
-        self.update_text_objs()
-
+    def upd_and_redraw(self):
         for item in self.items:
             item._setView(None)
         self.items = []
@@ -176,6 +148,9 @@ class MainPlot3D(gl.GLViewWidget):
         self.addItem(self.grid_xy)
         self.addItem(self.grid_yz)
         self.addItem(self.grid_xz)
+
+        self.update_text_objs()
+
         self.on_data_rows_appended(0, self.q_app.data.shape[0])
 
     def keyPressEvent(self, ev):
@@ -215,40 +190,19 @@ class MainPlot3D(gl.GLViewWidget):
 
     def on_data_rows_appended(self, pos, n_rows):
         self._lines = self._lines[:pos] + [None] * n_rows + self._lines[pos:]
-        for ii in range(len(self._lines)):
-            if self._lines[ii] is not None:
-                pos = self._lines[ii].pos
-                pos[:, 1] = float(ii) / float(len(self._lines)) + self.lines_origin[1]
-                self._lines[ii].setData(pos=pos, antialias=True)
-            else:
-                data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color', 'Active']]
-                xx = np.array(1E3 * data['DataX'], dtype=np.float)
-                zz = np.array(data['DataY'], dtype=np.float)
-                yy = np.array([ii] * zz.shape[0], dtype=np.float)
 
-                yy = yy[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
-                zz = zz[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
-                xx = xx[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
+        for ii in range(pos, pos + n_rows):
+            self._lines[ii] = self._init_line(ii)
+            self.addItem(self._lines[ii])
 
-                xx = (xx - self.e_range[0] * 1E3) / (self.e_range[1] * 1E3 - self.e_range[0] * 1E3)
-                zz /= self.z_scale
-                yy /= np.float(len(self._lines))
-
-                xx += self.lines_origin[0]
-                yy += self.lines_origin[1]
-                zz += self.lines_origin[2]
-
-                pts = np.vstack([xx, yy, zz]).transpose()
-                self._lines[ii] = gl.GLLinePlotItem(pos=pts, color=str(hex(data['Color'])).replace('0x', '#'),
-                                                    antialias=True)
-                if not data['Active']:
-                    self._lines[ii].setVisible(False)
-                self.addItem(self._lines[ii])
+        self._restack_ys()
 
     def on_data_rows_removed(self, rows):
         for ii in sorted(rows, reverse=True):
             self.removeItem(self._lines[ii])
             self._lines.pop(ii)
+
+        self._restack_ys()
 
     def on_data_active_changed(self, rows):
         for ii in rows:
@@ -256,6 +210,68 @@ class MainPlot3D(gl.GLViewWidget):
                 self._lines[ii].setVisible(True)
             else:
                 self._lines[ii].setVisible(False)
+
+    def _init_line(self, idx):
+        data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'Active']]
+
+        xx = np.array(1E3 * data['DataX'], dtype=np.float)
+        zz = np.array(data['DataY'], dtype=np.float)
+        yy = np.array([idx] * zz.shape[0], dtype=np.float)
+
+        yy = yy[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
+        zz = zz[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
+        xx = xx[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
+
+        xx = (xx - self.e_range[0] * 1E3) / (self.e_range[1] * 1E3 - self.e_range[0] * 1E3)
+        zz /= self.z_scale
+        yy /= np.float(len(self._lines))
+
+        xx += self.lines_origin[0]
+        yy += self.lines_origin[1]
+        zz += self.lines_origin[2]
+
+        result = gl.GLLinePlotItem(pos=np.vstack([xx, yy, zz]).transpose(),
+                                   color=str(hex(data['Color'])).replace('0x', '#'),
+                                   antialias=True)
+        result.setVisible(data['Active'])
+        return result
+
+    def _restack_ys(self):
+        for ii in range(len(self._lines)):
+            if self._lines[ii] is not None:
+                pos = self._lines[ii].pos
+                pos[:, 1] = float(ii) / float(len(self._lines)) + self.lines_origin[1]
+                self._lines[ii].setData(pos=pos, antialias=True)
+
+    def _init_axes(self):
+        self.grid_xy.scale(.05, .05, 1)
+        self.grid_xy.translate(.5, .5, 0)
+        self.grid_xy.setDepthValue(10)
+
+        self.grid_yz.scale(.05, .05, 1)
+        self.grid_yz.rotate(90, 0, 1, 0)
+        self.grid_yz.translate(0., 0.5, 0.5)
+        self.grid_yz.setDepthValue(10)
+
+        self.grid_xz.scale(.05, .05, 1)
+        self.grid_xz.rotate(90, 1, 0, 0)
+        self.grid_xz.translate(0.5, 1.0, 0.5)
+        self.grid_xz.setDepthValue(10)
+
+        for xx in np.linspace(0., 1., self.x_ticks):
+            self.text_objs.append([xx, 0., -0.05, ''])
+
+        for zz in np.linspace(0., 1., self.z_ticks):
+            self.text_objs.append([0., -0.05, zz, ''])
+
+        self.text_objs.append([0.5, 0., -0.1, 'keV'])
+
+    def paintGL(self, *args, **kwds):
+        gl.GLViewWidget.paintGL(self, *args, **kwds)
+
+        self.qglColor(QtCore.Qt.white)
+        for to in self.text_objs:
+            self.renderText(*to)
 
 
 class MainPlot2D(pg.GraphicsLayoutWidget):
