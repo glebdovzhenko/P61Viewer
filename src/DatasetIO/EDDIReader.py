@@ -25,7 +25,7 @@ class EDDIReader:
 
     def read(self, f_name):
         result = pd.DataFrame(columns=self.q_app.data.columns)
-        kev_per_bin = 1.
+        kev_per_bin = 1.25E-2
 
         with open(f_name, 'r') as f:
             buffer = None

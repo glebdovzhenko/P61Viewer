@@ -26,12 +26,13 @@ class FloatEdit(QLineEdit):
         self.returnPressed.connect(self.on_text_submitted)
         self.editingFinished.connect(self.on_text_submitted)
 
-    def _upd(self):
+    def _upd(self, emit=True):
         if self._value is not None:
             self.setText('%.03E' % self._value)
         else:
             self.setText('None')
-        self.valueChanged.emit(self._value)
+        if emit:
+            self.valueChanged.emit(self._value)
 
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())
@@ -63,12 +64,12 @@ class FloatEdit(QLineEdit):
     def get_value(self):
         return self._value
 
-    def set_value(self, val):
-        if not isinstance(val, (int, float, np.int, np.float, type(None))):
-            raise ValueError(val, 'is not any of the', (int, float, np.int, np.float, type(None)), 'types')
+    def set_value(self, val, emit=True):
+        if not isinstance(val, (int, float, np.int, np.float, np.int64, type(None))):
+            raise ValueError(str(val) + ' is ' + str(type(val)) + ' and not supported')
         else:
             self._value = val
-            self._upd()
+            self._upd(emit)
 
     value = property(fget=get_value, fset=set_value)
 
