@@ -14,7 +14,7 @@ import sys
 from PlotWidgets import MainPlot
 from DatasetManager import DatasetManager
 from FitWidgets import GeneralFitWidget
-from PeakAnalysisWidgets import PeakAnalysisWidget
+from PeakTrackerWidgets import PeakAnalysisWidget
 
 from P61App import P61App
 
@@ -67,7 +67,7 @@ class P61Viewer(QMainWindow):
 
         self.cw.addTab(self.view_tab, 'Import and view')
         self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
-        self.cw.addTab(self.pa_w, 'Peak analysis')
+        self.cw.addTab(self.pa_w, 'Peak tracker')
 
 
 if __name__ == '__main__':

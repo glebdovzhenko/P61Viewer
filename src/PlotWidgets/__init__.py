@@ -16,3 +16,4 @@ Implementation
 """
 from .MainPlot import MainPlot
 from .FitPlot import FitPlot
+from .PeakTrackerPlot import PTPlot3D, PTPlot3DWidget
