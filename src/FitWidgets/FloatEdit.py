@@ -8,6 +8,9 @@ from PyQt5.QtCore import pyqtSignal
 class FloatEdit(QLineEdit):
     """"""
     valueChanged = pyqtSignal(object)
+    read_only_style = 'QLineEdit {background-color: rgb(70, 70, 70); color: rgb(200, 200, 200)}'
+    regular_style = 'QLineEdit {background-color: rgb(255, 255, 255);}'
+    wrong_input_style = 'QLineEdit {background-color: rgb(255, 70, 70);}'
 
     def __init__(self, parent=None, inf_allowed=True, none_allowed=False, init_val=0.):
         QLineEdit.__init__(self, parent=parent)
@@ -26,6 +29,14 @@ class FloatEdit(QLineEdit):
         self.returnPressed.connect(self.on_text_submitted)
         self.editingFinished.connect(self.on_text_submitted)
 
+    def setReadOnly(self, a0: bool) -> None:
+        QLineEdit.setReadOnly(self, a0)
+
+        if a0:
+            self.setStyleSheet(self.read_only_style)
+        else:
+            self.setStyleSheet(self.regular_style)
+
     def _upd(self, emit=True):
         if self._value is not None:
             self.setText('%.03E' % self._value)
@@ -37,10 +48,13 @@ class FloatEdit(QLineEdit):
     def on_text_changed(self):
         match = self.float_regexp.match(self.text())
         if not match:
-            self.setStyleSheet('QLineEdit {background-color: rgb(255, 70, 70);}')
+            self.setStyleSheet(self.wrong_input_style)
             return None
         else:
-            self.setStyleSheet('QLineEdit {background-color: rgb(255, 255, 255);}')
+            if self.isReadOnly():
+                self.setStyleSheet(self.read_only_style)
+            else:
+                self.setStyleSheet(self.regular_style)
             return match
 
     def on_text_submitted(self):
