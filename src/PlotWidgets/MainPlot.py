@@ -55,10 +55,12 @@ class MainPlot3D(GlPlot3D):
     def __init__(self, parent=None):
         GlPlot3D.__init__(self, parent=parent)
         self.q_app = P61App.instance()
+        self._lines = []
 
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
 
     def redraw_data(self):
+        del self._lines[:]
         self.on_data_rows_appended(0, self.q_app.data.shape[0])
 
     def on_data_rows_appended(self, pos, n_rows):

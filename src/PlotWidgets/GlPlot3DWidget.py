@@ -72,7 +72,7 @@ class GlPlot3DWidget(QWidget):
         self.plot.emin = self.emin_edit.get_value()
         self.plot.emax = self.emax_edit.get_value()
         self.plot.imax = self.imax_edit.get_value()
-        self.plot._upd_and_redraw()
+        self.plot.upd_and_redraw()
 
     def _scale_to(self, e_min=None, e_max=None, z_max=None):
         if e_min is not None:
@@ -101,7 +101,6 @@ class GlPlot3D(gl.GLViewWidget):
         self.q_app = P61App.instance()
 
         self.lines_origin = [0., 0., 0.]
-        self._lines = []
         self.emin = self.emin_default
         self.emax = self.emax_default
         self.imax = self.imax_default
@@ -117,7 +116,7 @@ class GlPlot3D(gl.GLViewWidget):
 
     def redraw_data(self):
         """
-        Function that fills self._lines array and adds them to the plot.
+        Function that generates lines and adds them to the plot.
         Base class behaviour is to do nothing.
 
         :return:
@@ -131,13 +130,12 @@ class GlPlot3D(gl.GLViewWidget):
         for ii, zz in enumerate(np.linspace(0, self.imax, self.z_ticks)):
             self.text_objs[ii + self.x_ticks][3] = '%.0f' % zz
 
-    def _upd_and_redraw(self):
+    def upd_and_redraw(self):
         # clear the scene
         for item in self.items:
             item._setView(None)
         self.items = []
         self.update()
-        del self._lines[:]
 
         # draw the axes
         self.addItem(self.grid_xy)
@@ -145,7 +143,7 @@ class GlPlot3D(gl.GLViewWidget):
         self.addItem(self.grid_xz)
         self._update_text_objs()
 
-        # draw the lines
+        # delete old and create + draw new lines
         self.redraw_data()
 
     def keyPressEvent(self, ev):
@@ -205,7 +203,6 @@ class GlPlot3D(gl.GLViewWidget):
 
         xx = (xx - self.emin * 1E3) / (self.emax * 1E3 - self.emin * 1E3)
         zz /= self.imax
-        yy /= np.float(len(self._lines))
 
         xx += self.lines_origin[0]
         yy += self.lines_origin[1]
