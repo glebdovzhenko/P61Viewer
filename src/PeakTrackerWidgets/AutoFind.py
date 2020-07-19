@@ -32,7 +32,7 @@ class AutoFindPopUp(QDialog):
             self.close()
             return
 
-        fit_ids = list(self.selection_list.get_selection())
+        fit_ids = [k for k in self.selection_list.proxy.selected if self.selection_list.proxy.selected[k]]
         progress = QProgressDialog("Searching", "Cancel", 0, len(fit_ids))
         progress.setWindowModality(Qt.WindowModal)
 
@@ -97,7 +97,6 @@ class AutoFindWidget(QWidget):
             idx = self.q_app.get_selected_idx()
 
         if idx != -1:
-            print(idx)
             yy = self.q_app.data.loc[idx, 'DataY']
             xx = self.q_app.data.loc[idx, 'DataX']
             if params['distance'] is not None:
