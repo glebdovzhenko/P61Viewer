@@ -85,6 +85,8 @@ class P61App(QApplication):
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'Channel', 'DataID', 'ScreenName', 'Active',
                                           'Color', 'PeakList', 'GeneralFitResult', 'PeakFitResult'))
         self.data_model = None
+        self.peak_search_range = None
+
         self.debug = False
         if self.debug:
             self.dataRowsInserted.connect(self.debug_print('dataRowsInserted'))

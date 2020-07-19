@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QDialog, QAbstractItemView, QProgressDialog
 from PyQt5.Qt import Qt
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, find_peaks_cwt
 import numpy as np
 
 from P61App import P61App
@@ -28,10 +28,6 @@ class AutoFindPopUp(QDialog):
         self.btn_ok.clicked.connect(self.on_btn_ok)
 
     def on_btn_ok(self):
-        if self.q_app.get_selected_idx() == -1:
-            self.close()
-            return
-
         fit_ids = [k for k in self.selection_list.proxy.selected if self.selection_list.proxy.selected[k]]
         progress = QProgressDialog("Searching", "Cancel", 0, len(fit_ids))
         progress.setWindowModality(Qt.WindowModal)
@@ -50,18 +46,18 @@ class AutoFindWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
-        self.title_label = QLabel('Automatic Peak Search')
+        self.title_label = QLabel('Sample Peak Search')
 
         self.height_label = QLabel('Height')
-        self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
+        self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=1.)
         self.thr_label = QLabel('Threshhold')
         self.thr_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.dist_label = QLabel('Distance')
-        self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
+        self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=8E-1)
         self.prom_label = QLabel('Prominence')
-        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=10.)
+        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-1)
         self.width_label = QLabel('Width')
-        self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
+        self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-2)
         self.btn_this = QPushButton('Find')
         self.btn_all = QPushButton('Find in all')
 
@@ -70,19 +66,19 @@ class AutoFindWidget(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.title_label, 1, 1, 1, 4)
-        layout.addWidget(self.height_label, 2, 3, 1, 1)
+        layout.addWidget(self.title_label, 1, 1, 1, 2)
+        layout.addWidget(self.height_label, 2, 1, 1, 1)
         layout.addWidget(self.thr_label, 3, 1, 1, 1)
         layout.addWidget(self.dist_label, 4, 1, 1, 1)
-        layout.addWidget(self.prom_label, 2, 1, 1, 1)
-        layout.addWidget(self.width_label, 3, 3, 1, 1)
-        layout.addWidget(self.height_edit, 2, 4, 1, 2)
+        layout.addWidget(self.prom_label, 5, 1, 1, 1)
+        layout.addWidget(self.width_label, 6, 1, 1, 1)
+        layout.addWidget(self.height_edit, 2, 2, 1, 1)
         layout.addWidget(self.thr_edit, 3, 2, 1, 1)
         layout.addWidget(self.dist_edit, 4, 2, 1, 1)
-        layout.addWidget(self.prom_edit, 2, 2, 1, 1)
-        layout.addWidget(self.width_edit, 3, 4, 1, 2)
-        layout.addWidget(self.btn_this, 5, 2, 1, 1)
-        layout.addWidget(self.btn_all, 5, 3, 1, 2)
+        layout.addWidget(self.prom_edit, 5, 2, 1, 1)
+        layout.addWidget(self.width_edit, 6, 2, 1, 1)
+        layout.addWidget(self.btn_this, 7, 1, 1, 1)
+        layout.addWidget(self.btn_all, 7, 2, 1, 1)
 
     def on_btn_this(self, *args, idx=-1):
         params = {
@@ -99,13 +95,29 @@ class AutoFindWidget(QWidget):
         if idx != -1:
             yy = self.q_app.data.loc[idx, 'DataY']
             xx = self.q_app.data.loc[idx, 'DataX']
+
+            if self.q_app.peak_search_range is not None:
+                yy = yy[(xx < self.q_app.peak_search_range[1]) & (xx > self.q_app.peak_search_range[0])]
+                xx = xx[(xx < self.q_app.peak_search_range[1]) & (xx > self.q_app.peak_search_range[0])]
+
             if params['distance'] is not None:
                 params['distance'] /= np.abs(np.max(xx) - np.min(xx)) / xx.shape[0]
                 params['distance'] = params['distance'] if params['distance'] >= 1. else 1.
             if params['width'] is not None:
                 params['width'] /= np.abs(np.max(xx) - np.min(xx)) / xx.shape[0]
-            peaks, _ = find_peaks(yy, **params)
-            self.q_app.set_peak_list(idx, peaks)
+
+            for pp in params:
+                if pp != 'distance' and params[pp] is None:
+                    params[pp] = (None, None)
+
+            result_idx = find_peaks(yy, **params)
+            #  dict_keys(['peak_heights', 'left_thresholds', 'right_thresholds', 'prominences', 'left_bases',
+            #  'right_bases', 'widths', 'width_heights', 'left_ips', 'right_ips'])
+            pos_xy = np.array([xx[result_idx[0]], yy[result_idx[0]]])
+            left_bases = xx[result_idx[1]['left_bases']]
+            right_bases = xx[result_idx[1]['right_bases']]
+
+            self.q_app.set_peak_list(idx, (pos_xy, {'left_bases': left_bases, 'right_bases': right_bases}))
 
     def on_btn_all(self):
         af = AutoFindPopUp(parent=self)
