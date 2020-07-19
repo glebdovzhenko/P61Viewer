@@ -19,8 +19,8 @@ class MainPlot(QTabWidget):
         self.addTab(self.tab_2d, "2D")
         self.tab_3d = MainPlot3DWidget(MainPlot3D(parent=self), parent=self)
         self.addTab(self.tab_3d, "3D")
-        self.tab_test = GlPlot3DWidget(GlPlot3D(parent=self), parent=self)
-        self.addTab(self.tab_test, "Test")
+        # self.tab_test = GlPlot3DWidget(GlPlot3D(parent=self), parent=self)
+        # self.addTab(self.tab_test, " Base Class Test")
 
 
 class MainPlot3DWidget(GlPlot3DWidget):
@@ -43,12 +43,12 @@ class MainPlot3DWidget(GlPlot3DWidget):
     def on_data_rows_appended(self, *args, **kwargs):
         self.plot.on_data_rows_appended(*args, **kwargs)
         if self.autoscale_cb.isChecked():
-            self._scale_to()
+            self.autoscale()
 
     def on_data_rows_removed(self, *args, **kwargs):
         self.plot.on_data_rows_removed(*args, **kwargs)
         if self.autoscale_cb.isChecked():
-            self._scale_to()
+            self.autoscale()
 
 
 class MainPlot3D(GlPlot3D):
