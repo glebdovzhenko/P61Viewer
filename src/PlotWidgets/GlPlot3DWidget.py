@@ -18,22 +18,22 @@ class GlPlot3DWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
+        self.plot = plot
         self.explanation_label = QLabel('[W] [A] [S] [D] move the plot in XY plane, [R] [F] move it along Z axis. '
                                         'Arrow keys or mouse click & drag rotate the camera. '
                                         '[Z] and [X] zoom the camera in and out. ')
         self.explanation_label.setMaximumHeight(20)
         self.zscale_label = QLabel('Intensity scale')
-        self.zscale_edit = FloatEdit(init_val=1E3)
+        self.imax_edit = FloatEdit(init_val=self.plot.imax_default)
         self.erange_label = QLabel('Energy range (keV)')
-        self.erange_min = FloatEdit(init_val=0)
-        self.erange_max = FloatEdit(init_val=200)
-        self.plot = plot
+        self.emin_edit = FloatEdit(init_val=self.plot.emin_default)
+        self.emax_edit = FloatEdit(init_val=self.plot.emax_default)
         self.autoscale_cb = QCheckBox(text='Autoscale')
         self.autoscale_cb.setChecked(True)
-        self.erange_min.setReadOnly(True)
-        self.erange_max.setReadOnly(True)
-        self.zscale_edit.setReadOnly(True)
-        self.update_plot()
+        self.emin_edit.setReadOnly(True)
+        self.emax_edit.setReadOnly(True)
+        self.imax_edit.setReadOnly(True)
+        self._update_scale()
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -41,50 +41,70 @@ class GlPlot3DWidget(QWidget):
         layout.addWidget(self.plot, 2, 1, 1, 6)
         layout.addWidget(self.autoscale_cb, 3, 1, 1, 1)
         layout.addWidget(self.zscale_label, 3, 2, 1, 1)
-        layout.addWidget(self.zscale_edit, 3, 3, 1, 1)
+        layout.addWidget(self.imax_edit, 3, 3, 1, 1)
         layout.addWidget(self.erange_label, 3, 4, 1, 1)
-        layout.addWidget(self.erange_min, 3, 5, 1, 1)
-        layout.addWidget(self.erange_max, 3, 6, 1, 1)
+        layout.addWidget(self.emin_edit, 3, 5, 1, 1)
+        layout.addWidget(self.emax_edit, 3, 6, 1, 1)
         layout.setRowStretch(1, 1)
         layout.setRowStretch(2, 5)
         layout.setRowStretch(3, 1)
 
-        self.zscale_edit.valueChanged.connect(self.update_plot)
-        self.erange_min.valueChanged.connect(self.update_plot)
-        self.erange_max.valueChanged.connect(self.update_plot)
-        self.autoscale_cb.stateChanged.connect(self.on_autoscale_sc)
+        self.imax_edit.valueChanged.connect(self._update_scale)
+        self.emin_edit.valueChanged.connect(self._update_scale)
+        self.emax_edit.valueChanged.connect(self._update_scale)
+        self.autoscale_cb.stateChanged.connect(self._on_autoscale_sc)
 
-    def on_autoscale_sc(self, state):
-        for edit in (self.erange_min, self.erange_max, self.zscale_edit):
+    def autoscale(self):
+        """
+        Function to be overridden in subclasses to change default autoscaling behaviour,
+        which is scale to default values
+        :return:
+        """
+        self._scale_to()
+
+    def _on_autoscale_sc(self, state):
+        for edit in (self.emin_edit, self.emax_edit, self.imax_edit):
             edit.setReadOnly(bool(state))
         if state:
             self.autoscale()
 
-    def update_plot(self, *args, **kwargs):
-        self.plot.e_range = (self.erange_min.get_value(), self.erange_max.get_value())
-        self.plot.z_scale = self.zscale_edit.get_value()
-        self.plot.upd_and_redraw()
+    def _update_scale(self, *args, **kwargs):
+        self.plot.emin = self.emin_edit.get_value()
+        self.plot.emax = self.emax_edit.get_value()
+        self.plot.imax = self.imax_edit.get_value()
+        self.plot._upd_and_redraw()
 
-    def autoscale(self):
-        if self.q_app.data.shape[0]:
-            self.erange_min.set_value(self.q_app.data['DataX'].apply(np.min).min(), emit=False)
-            self.erange_max.set_value(self.q_app.data['DataX'].apply(np.max).max(), emit=False)
-            self.zscale_edit.value = self.q_app.data['DataY'].apply(np.max).max()
+    def _scale_to(self, e_min=None, e_max=None, z_max=None):
+        if e_min is not None:
+            self.emin_edit.set_value(e_min, emit=False)
         else:
-            self.erange_min.set_value(0, emit=False)
-            self.erange_max.set_value(200, emit=False)
-            self.zscale_edit.value = 1E3
+            self.emin_edit.set_value(self.plot.emin_default, emit=False)
+
+        if e_max is not None:
+            self.emax_edit.set_value(e_max, emit=False)
+        else:
+            self.emax_edit.set_value(self.plot.emax_default, emit=False)
+
+        if z_max is not None:
+            self.imax_edit.set_value(z_max, emit=True)
+        else:
+            self.imax_edit.set_value(self.plot.imax_default, emit=True)
 
 
 class GlPlot3D(gl.GLViewWidget):
+    emin_default = 0
+    emax_default = 200
+    imax_default = 1E3  # default values for shown energy and intensity range (min intensity is always 0)
+
     def __init__(self, parent=None):
         gl.GLViewWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
 
         self.lines_origin = [0., 0., 0.]
         self._lines = []
-        self.e_range = None
-        self.z_scale = None
+        self.emin = self.emin_default
+        self.emax = self.emax_default
+        self.imax = self.imax_default
         self.setCameraPosition(pos=QVector3D(0.5, 0.5, 0.0), distance=1.5, azimuth=-90, elevation=20)
 
         self.grid_xy = gl.GLGridItem()
@@ -95,38 +115,38 @@ class GlPlot3D(gl.GLViewWidget):
         self.z_ticks = 2
         self._init_axes()
 
-    def update_text_objs(self):
-        if self.e_range is not None:
-            for ii, ee in enumerate(np.linspace(self.e_range[0], self.e_range[1], self.x_ticks)):
-                self.text_objs[ii][3] = '%.0f' % ee
-        else:
-            for ii in range(self.x_ticks):
-                self.text_objs[ii][3] = ''
+    def redraw_data(self):
+        """
+        Function that fills self._lines array and adds them to the plot.
+        Base class behaviour is to do nothing.
 
-        if self.z_scale is not None:
-            for ii, zz in enumerate(np.linspace(0, self.z_scale, self.z_ticks)):
-                self.text_objs[ii + self.x_ticks][3] = '%.0f' % zz
-        else:
-            for ii in range(self.z_ticks):
-                self.text_objs[ii + self.x_ticks][3] = ''
+        :return:
+        """
+        pass
 
-    def upd_and_redraw(self):
+    def _update_text_objs(self):
+        for ii, ee in enumerate(np.linspace(self.emin, self.emax, self.x_ticks)):
+            self.text_objs[ii][3] = '%.0f' % ee
+
+        for ii, zz in enumerate(np.linspace(0, self.imax, self.z_ticks)):
+            self.text_objs[ii + self.x_ticks][3] = '%.0f' % zz
+
+    def _upd_and_redraw(self):
+        # clear the scene
         for item in self.items:
             item._setView(None)
         self.items = []
         self.update()
         del self._lines[:]
 
+        # draw the axes
         self.addItem(self.grid_xy)
         self.addItem(self.grid_yz)
         self.addItem(self.grid_xz)
+        self._update_text_objs()
 
-        self.update_text_objs()
-
-        self.on_data_rows_appended(0, self.q_app.data.shape[0])
-
-    def on_data_rows_appended(self, *args, **kwargs):
-        pass
+        # draw the lines
+        self.redraw_data()
 
     def keyPressEvent(self, ev):
         dx, dy, dz, dr = 0., 0., 0., 0.
@@ -163,19 +183,28 @@ class GlPlot3D(gl.GLViewWidget):
 
         gl.GLViewWidget.keyPressEvent(self, ev)
 
-    def _prepare_line_data(self, idx):
-        data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'Active']]
+    def transform_xz(self, energy, intensity):
+        """
+        Turns energy and intensity vestors as stored in P61App.data to stacked XYZ values to plot on the 3D plot.
+        Fills the Y values with 0s (relative to the plot axes origin), because after new lines are added / removed
+        a restacking of Y axis is needed for every line anyway to put all lines at the equal distance from one another
+        and restacking behaviour is subclass-specific.
 
-        xx = np.array(1E3 * data['DataX'], dtype=np.float)
-        zz = np.array(data['DataY'], dtype=np.float)
-        yy = np.array([idx] * zz.shape[0], dtype=np.float)
+        :param energy:
+        :param intensity:
+        :param index:
+        :return:
+        """
+        xx = np.array(1E3 * energy, dtype=np.float)
+        zz = np.array(intensity, dtype=np.float)
+        yy = np.array([0.0] * zz.shape[0], dtype=np.float)
 
-        yy = yy[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
-        zz = zz[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
-        xx = xx[(xx < self.e_range[1] * 1E3) & (xx > self.e_range[0] * 1E3)]
+        yy = yy[(xx < self.emax * 1E3) & (xx > self.emin * 1E3)]
+        zz = zz[(xx < self.emax * 1E3) & (xx > self.emin * 1E3)]
+        xx = xx[(xx < self.emax * 1E3) & (xx > self.emin * 1E3)]
 
-        xx = (xx - self.e_range[0] * 1E3) / (self.e_range[1] * 1E3 - self.e_range[0] * 1E3)
-        zz /= self.z_scale
+        xx = (xx - self.emin * 1E3) / (self.emax * 1E3 - self.emin * 1E3)
+        zz /= self.imax
         yy /= np.float(len(self._lines))
 
         xx += self.lines_origin[0]
@@ -183,21 +212,6 @@ class GlPlot3D(gl.GLViewWidget):
         zz += self.lines_origin[2]
 
         return np.vstack([xx, yy, zz]).transpose()
-
-    def _init_line(self, idx):
-        data = self.q_app.data.loc[idx, ['Color', 'Active']]
-        result = gl.GLLinePlotItem(pos=self._prepare_line_data(idx),
-                                   color=str(hex(data['Color'])).replace('0x', '#'),
-                                   antialias=True)
-        result.setVisible(data['Active'])
-        return result
-
-    def _restack_ys(self):
-        for ii in range(len(self._lines)):
-            if self._lines[ii] is not None:
-                pos = self._lines[ii].pos
-                pos[:, 1] = float(ii) / float(len(self._lines)) + self.lines_origin[1]
-                self._lines[ii].setData(pos=pos, antialias=True)
 
     def _init_axes(self):
         self.grid_xy.scale(.05, .05, 1)

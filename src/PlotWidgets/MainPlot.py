@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QTabWidget
 import pyqtgraph as pg
+import pyqtgraph.opengl as gl
+import numpy as np
 
 from P61App import P61App
 from PlotWidgets.GlPlot3DWidget import GlPlot3D, GlPlot3DWidget
@@ -17,8 +19,8 @@ class MainPlot(QTabWidget):
         self.addTab(self.tab_2d, "2D")
         self.tab_3d = MainPlot3DWidget(MainPlot3D(parent=self), parent=self)
         self.addTab(self.tab_3d, "3D")
-        # self.tab_test = GlPlot3DWidget(GlPlot3D(parent=self), parent=self)
-        # self.addTab(self.tab_test, "Test")
+        self.tab_test = GlPlot3DWidget(GlPlot3D(parent=self), parent=self)
+        self.addTab(self.tab_test, "Test")
 
 
 class MainPlot3DWidget(GlPlot3DWidget):
@@ -29,15 +31,24 @@ class MainPlot3DWidget(GlPlot3DWidget):
         self.q_app.dataRowsInserted.connect(self.on_data_rows_appended)
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
 
+    def autoscale(self):
+        if self.q_app.data.shape[0]:
+            emin = self.q_app.data['DataX'].apply(np.min).min()
+            emax = self.q_app.data['DataX'].apply(np.max).max()
+            imax = self.q_app.data['DataY'].apply(np.max).max()
+        else:
+            emin, emax, imax = None, None, None
+        self._scale_to(emin, emax, imax)
+
     def on_data_rows_appended(self, *args, **kwargs):
         self.plot.on_data_rows_appended(*args, **kwargs)
         if self.autoscale_cb.isChecked():
-            self.autoscale()
+            self._scale_to()
 
     def on_data_rows_removed(self, *args, **kwargs):
         self.plot.on_data_rows_removed(*args, **kwargs)
         if self.autoscale_cb.isChecked():
-            self.autoscale()
+            self._scale_to()
 
 
 class MainPlot3D(GlPlot3D):
@@ -46,6 +57,9 @@ class MainPlot3D(GlPlot3D):
         self.q_app = P61App.instance()
 
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
+
+    def redraw_data(self):
+        self.on_data_rows_appended(0, self.q_app.data.shape[0])
 
     def on_data_rows_appended(self, pos, n_rows):
         self._lines = self._lines[:pos] + [None] * n_rows + self._lines[pos:]
@@ -69,6 +83,23 @@ class MainPlot3D(GlPlot3D):
                 self._lines[ii].setVisible(True)
             else:
                 self._lines[ii].setVisible(False)
+
+    def _init_line(self, idx):
+        data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'Active']]
+
+        pos = self.transform_xz(data['DataX'], data['DataY'])
+        result = gl.GLLinePlotItem(pos=pos,
+                                   color=str(hex(data['Color'])).replace('0x', '#'),
+                                   antialias=True)
+        result.setVisible(data['Active'])
+        return result
+
+    def _restack_ys(self):
+        for ii in range(len(self._lines)):
+            if self._lines[ii] is not None:
+                pos = self._lines[ii].pos
+                pos[:, 1] = float(ii) / float(len(self._lines)) + self.lines_origin[1]
+                self._lines[ii].setData(pos=pos, antialias=True)
 
 
 class MainPlot2D(pg.GraphicsLayoutWidget):
