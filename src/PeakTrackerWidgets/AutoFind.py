@@ -49,15 +49,20 @@ class AutoFindWidget(QWidget):
         self.title_label = QLabel('Sample Peak Search')
 
         self.height_label = QLabel('Height')
+        self.height_label.setToolTip('Required minimal height of peaks. Either a number or None.')
         self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=1.)
         self.thr_label = QLabel('Threshhold')
         self.thr_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.dist_label = QLabel('Distance')
+        self.dist_label.setToolTip('Required minimal horizontal distance between neighbouring peaks.\n'
+                                   'Smaller peaks are removed first until the condition is fulfilled '
+                                   'for all remaining peaks.')
         self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=8E-1)
         self.prom_label = QLabel('Prominence')
         self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-1)
         self.width_label = QLabel('Width')
         self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-2)
+        self.width_label.setToolTip('Required minimal width of peaks. Either a number or None.')
         self.btn_this = QPushButton('Find')
         self.btn_all = QPushButton('Find in all')
 
@@ -67,16 +72,22 @@ class AutoFindWidget(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.title_label, 1, 1, 1, 2)
+
         layout.addWidget(self.height_label, 2, 1, 1, 1)
-        layout.addWidget(self.thr_label, 3, 1, 1, 1)
-        layout.addWidget(self.dist_label, 4, 1, 1, 1)
-        layout.addWidget(self.prom_label, 5, 1, 1, 1)
-        layout.addWidget(self.width_label, 6, 1, 1, 1)
         layout.addWidget(self.height_edit, 2, 2, 1, 1)
-        layout.addWidget(self.thr_edit, 3, 2, 1, 1)
-        layout.addWidget(self.dist_edit, 4, 2, 1, 1)
-        layout.addWidget(self.prom_edit, 5, 2, 1, 1)
-        layout.addWidget(self.width_edit, 6, 2, 1, 1)
+
+        layout.addWidget(self.dist_label, 3, 1, 1, 1)
+        layout.addWidget(self.dist_edit, 3, 2, 1, 1)
+
+        layout.addWidget(self.width_label, 4, 1, 1, 1)
+        layout.addWidget(self.width_edit, 4, 2, 1, 1)
+
+        layout.addWidget(self.thr_label, 5, 1, 1, 1)
+        layout.addWidget(self.thr_edit, 5, 2, 1, 1)
+
+        layout.addWidget(self.prom_label, 6, 1, 1, 1)
+        layout.addWidget(self.prom_edit, 6, 2, 1, 1)
+
         layout.addWidget(self.btn_this, 7, 1, 1, 1)
         layout.addWidget(self.btn_all, 7, 2, 1, 1)
 
