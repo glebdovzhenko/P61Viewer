@@ -24,6 +24,9 @@ class FitPlot(pg.GraphicsLayoutWidget):
         self._diff_ax.showGrid(x=True, y=True)
         self._diff_ax.setXLink(self._line_ax)
 
+        self.ci.layout.setRowStretchFactor(0, 4)
+        self.ci.layout.setRowStretchFactor(1, 1)
+
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.genFitResChanged.connect(self.on_fit_changed)
 

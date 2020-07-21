@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QCheckBox
+from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QCheckBox, QPushButton
 from PyQt5.Qt import QVector3D
 from PyQt5 import QtCore
 import pyqtgraph as pg
@@ -34,17 +34,19 @@ class GlPlot3DWidget(QWidget):
         self.emax_edit.setReadOnly(True)
         self.imax_edit.setReadOnly(True)
         self._update_scale()
+        self.view_to_default = QPushButton(u'👀')
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.explanation_label, 1, 1, 1, 6)
-        layout.addWidget(self.plot, 2, 1, 1, 6)
-        layout.addWidget(self.autoscale_cb, 3, 1, 1, 1)
-        layout.addWidget(self.zscale_label, 3, 2, 1, 1)
-        layout.addWidget(self.imax_edit, 3, 3, 1, 1)
-        layout.addWidget(self.erange_label, 3, 4, 1, 1)
-        layout.addWidget(self.emin_edit, 3, 5, 1, 1)
-        layout.addWidget(self.emax_edit, 3, 6, 1, 1)
+        layout.addWidget(self.explanation_label, 1, 1, 1, 7)
+        layout.addWidget(self.plot, 2, 1, 1, 7)
+        layout.addWidget(self.view_to_default, 3, 1, 1, 1)
+        layout.addWidget(self.autoscale_cb, 3, 2, 1, 1)
+        layout.addWidget(self.zscale_label, 3, 3, 1, 1)
+        layout.addWidget(self.imax_edit, 3, 4, 1, 1)
+        layout.addWidget(self.erange_label, 3, 5, 1, 1)
+        layout.addWidget(self.emin_edit, 3, 6, 1, 1)
+        layout.addWidget(self.emax_edit, 3, 7, 1, 1)
         layout.setRowStretch(1, 1)
         layout.setRowStretch(2, 5)
         layout.setRowStretch(3, 1)
@@ -53,6 +55,11 @@ class GlPlot3DWidget(QWidget):
         self.emin_edit.valueChanged.connect(self._update_scale)
         self.emax_edit.valueChanged.connect(self._update_scale)
         self.autoscale_cb.stateChanged.connect(self._on_autoscale_sc)
+        self.view_to_default.clicked.connect(self.set_view_to_default)
+
+    def set_view_to_default(self):
+        self.plot.translate_scene(-self.plot.lines_origin[0], -self.plot.lines_origin[1], -self.plot.lines_origin[2])
+        self.plot.setCameraPosition(**self.plot.cam_default)
 
     def autoscale(self):
         """
@@ -95,6 +102,8 @@ class GlPlot3D(gl.GLViewWidget):
     emin_default = 0
     emax_default = 200
     imax_default = 1E3  # default values for shown energy and intensity range (min intensity is always 0)
+    x_ratio = 16. / 9.  # shows how much longer the x axis is on the plot compared to y and z
+    cam_default = {'pos': QVector3D(0.5 * x_ratio, 0.5, 0.5), 'distance': 2.5, 'azimuth': -90, 'elevation': 20}
 
     def __init__(self, parent=None):
         gl.GLViewWidget.__init__(self, parent=parent)
@@ -104,11 +113,11 @@ class GlPlot3D(gl.GLViewWidget):
         self.emin = self.emin_default
         self.emax = self.emax_default
         self.imax = self.imax_default
-        self.setCameraPosition(pos=QVector3D(0.5, 0.5, 0.0), distance=1.5, azimuth=-90, elevation=20)
+        self.setCameraPosition(**self.cam_default)
 
-        self.grid_xy = gl.GLGridItem()
+        self.grid_xy = gl.GLGridItem(size=QVector3D(20. * self.x_ratio, 20., 1.))
         self.grid_yz = gl.GLGridItem()
-        self.grid_xz = gl.GLGridItem()
+        self.grid_xz = gl.GLGridItem(size=QVector3D(20. * self.x_ratio, 20., 1.))
         self.text_objs = []
         self.x_ticks = 7
         self.z_ticks = 2
@@ -166,7 +175,11 @@ class GlPlot3D(gl.GLViewWidget):
             dr = 0.1
 
         self.setCameraPosition(distance=self.opts['distance'] + dr)
+        self.translate_scene(dx, dy, dz)
 
+        gl.GLViewWidget.keyPressEvent(self, ev)
+
+    def translate_scene(self, dx, dy, dz):
         for item in self.items:
             item.translate(dx, dy, dz)
 
@@ -178,8 +191,6 @@ class GlPlot3D(gl.GLViewWidget):
         self.lines_origin[0] += dx
         self.lines_origin[1] += dy
         self.lines_origin[2] += dz
-
-        gl.GLViewWidget.keyPressEvent(self, ev)
 
     def transform_xz(self, energy, intensity):
         """
@@ -201,7 +212,7 @@ class GlPlot3D(gl.GLViewWidget):
         zz = zz[(xx < self.emax * 1E3) & (xx > self.emin * 1E3)]
         xx = xx[(xx < self.emax * 1E3) & (xx > self.emin * 1E3)]
 
-        xx = (xx - self.emin * 1E3) / (self.emax * 1E3 - self.emin * 1E3)
+        xx = self.x_ratio * (xx - self.emin * 1E3) / (self.emax * 1E3 - self.emin * 1E3)
         zz /= self.imax
 
         xx += self.lines_origin[0]
@@ -212,7 +223,7 @@ class GlPlot3D(gl.GLViewWidget):
 
     def _init_axes(self):
         self.grid_xy.scale(.05, .05, 1)
-        self.grid_xy.translate(.5, .5, 0)
+        self.grid_xy.translate(.5 * self.x_ratio, .5, 0)
         self.grid_xy.setDepthValue(10)
 
         self.grid_yz.scale(.05, .05, 1)
@@ -222,16 +233,16 @@ class GlPlot3D(gl.GLViewWidget):
 
         self.grid_xz.scale(.05, .05, 1)
         self.grid_xz.rotate(90, 1, 0, 0)
-        self.grid_xz.translate(0.5, 1.0, 0.5)
+        self.grid_xz.translate(.5 * self.x_ratio, 1.0, 0.5)
         self.grid_xz.setDepthValue(10)
 
-        for xx in np.linspace(0., 1., self.x_ticks):
+        for xx in np.linspace(0., self.x_ratio, self.x_ticks):
             self.text_objs.append([xx, 0., -0.05, ''])
 
         for zz in np.linspace(0., 1., self.z_ticks):
             self.text_objs.append([0., -0.05, zz, ''])
 
-        self.text_objs.append([0.5, 0., -0.1, 'keV'])
+        self.text_objs.append([.5 * self.x_ratio, 0., -0.1, 'keV'])
 
     def paintGL(self, *args, **kwds):
         gl.GLViewWidget.paintGL(self, *args, **kwds)

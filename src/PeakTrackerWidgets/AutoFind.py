@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QDialog, QAbstractItemView, QProgressDialog
 from PyQt5.Qt import Qt
-from scipy.signal import find_peaks, find_peaks_cwt
+from scipy.signal import find_peaks
 import numpy as np
 
 from P61App import P61App
@@ -59,7 +59,7 @@ class AutoFindWidget(QWidget):
                                    'for all remaining peaks.')
         self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=8E-1)
         self.prom_label = QLabel('Prominence')
-        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-1)
+        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.width_label = QLabel('Width')
         self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-2)
         self.width_label.setToolTip('Required minimal width of peaks. Either a number or None.')
