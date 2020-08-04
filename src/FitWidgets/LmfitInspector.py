@@ -65,7 +65,7 @@ class LmfitInspectorModel(QAbstractItemModel):
         else:
             self._fit_res = self.q_app.get_general_result(idx)
 
-        self.beginResetModel()
+        self.modelAboutToBeReset.emit()  # so this is private apparently so look for a different way???
         self._clear_tree()
 
         if self._fit_res is not None:
@@ -78,6 +78,7 @@ class LmfitInspectorModel(QAbstractItemModel):
                             TreeNode(self._fit_res.params[par], self.rootItem.childItems[-1]))
 
         self.endResetModel()
+        self.layoutChanged.emit()
 
     def columnCount(self, parent):
         return self.rootItem.columnCount()
@@ -227,6 +228,7 @@ class LmfitInspector(QWidget):
 
         self.bplus = QPushButton('+')
         self.bminus = QPushButton('-')
+        self.b_from_peaklist = QPushButton('Init from PT')
         self.treeview_md = LmfitInspectorModel()
         self._delegate = SpinBoxDelegate()
         self.treeview = QTreeView()
@@ -241,13 +243,18 @@ class LmfitInspector(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        layout.addWidget(self.bplus, 1, 1, 1, 1)
-        layout.addWidget(self.bminus, 1, 3, 1, 1)
-        layout.addWidget(self.treeview, 2, 1, 1, 3)
+        layout.addWidget(self.b_from_peaklist, 1, 1, 1, 1)
+        layout.addWidget(self.bplus, 2, 1, 1, 1)
+        layout.addWidget(self.bminus, 2, 3, 1, 1)
+        layout.addWidget(self.treeview, 3, 1, 1, 3)
 
         self.bplus.clicked.connect(self.bplus_onclick)
         self.bminus.clicked.connect(self.bminus_onclick)
+        self.b_from_peaklist.clicked.connect(self.from_peaklist_onclick)
         self.treeview_md.modelReset.connect(self.expander)
+
+    def from_peaklist_onclick(self):
+        print('Clickl')
 
     def expander(self, *args, **kwargs):
         self.treeview.expandAll()
@@ -259,31 +266,7 @@ class LmfitInspector(QWidget):
         if not isinstance(name, QAction) or idx == -1:
             return
 
-        name = name.text()
-        old_res = self.q_app.get_general_result(idx)
-
-        kwargs = {'name': name}
-        if name == 'PolynomialModel':
-            ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
-            if ok:
-                kwargs['degree'] = ii
-
-        if old_res is None:
-            kwargs['prefix'] = self.prefixes[name] + '0_'
-            new_md = getattr(lmfit_models, name)(**kwargs)
-            self.q_app.set_general_result(idx, lmfit.model.ModelResult(new_md, new_md.make_params()))
-        elif isinstance(old_res, lmfit.model.ModelResult):
-            prefixes = [md.prefix for md in old_res.model.components]
-            for ii in range(100):
-                if self.prefixes[name] + '%d_' % ii not in prefixes:
-                    kwargs['prefix'] = self.prefixes[name] + '%d_' % ii
-                    break
-
-            new_md = getattr(lmfit_models, name)(**kwargs)
-            params = old_res.params
-            params.update(new_md.make_params())
-            self.q_app.set_general_result(idx, lmfit.model.ModelResult(old_res.model + new_md, params))
-        # print(self.q_app.get_general_result(idx).params)
+        self._add_model(name.text(), idx)
 
     def bminus_onclick(self):
         selected_obj = self.treeview.currentIndex().internalPointer()
@@ -307,3 +290,28 @@ class LmfitInspector(QWidget):
             result.model = new_md
             result.params = new_params
             self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
+
+    def _add_model(self, name, idx):
+        old_res = self.q_app.get_general_result(idx)
+
+        kwargs = {'name': name}
+        if name == 'PolynomialModel':
+            ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
+            if ok:
+                kwargs['degree'] = ii
+
+        if old_res is None:
+            kwargs['prefix'] = self.prefixes[name] + '0_'
+            new_md = getattr(lmfit_models, name)(**kwargs)
+            self.q_app.set_general_result(idx, lmfit.model.ModelResult(new_md, new_md.make_params()))
+        elif isinstance(old_res, lmfit.model.ModelResult):
+            prefixes = [md.prefix for md in old_res.model.components]
+            for ii in range(100):
+                if self.prefixes[name] + '%d_' % ii not in prefixes:
+                    kwargs['prefix'] = self.prefixes[name] + '%d_' % ii
+                    break
+
+            new_md = getattr(lmfit_models, name)(**kwargs)
+            params = old_res.params
+            params.update(new_md.make_params())
+            self.q_app.set_general_result(idx, lmfit.model.ModelResult(old_res.model + new_md, params))
