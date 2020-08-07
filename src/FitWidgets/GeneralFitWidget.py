@@ -62,12 +62,26 @@ class GeneralFitWidget(QWidget):
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
 
+        vary_params = dict()
+        for model in result.model.components:
+            if ('GaussianModel' in model.name) or \
+                    ('LorentzianModel' in model.name) or \
+                    ('PseudoVoigtModel' in model.name):
+                if not x_lim[0] <= result.params[model.prefix + 'center'].value <= x_lim[1]:
+                    for param in result.params:
+                        if model.prefix in param:
+                            vary_params[param] = result.params[param].vary
+                            result.params[param].vary = False
+
         try:
-            result.fit(yy, x=xx)
+            result.fit(yy, x=xx, workers=8)
         except Exception as e:
             msg = QErrorMessage()
             msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
             msg.exec_()
+
+        for param in vary_params:
+            result.params[param].vary = vary_params[param]
 
         self.q_app.set_general_result(idx, result)
         print(result.fit_report())

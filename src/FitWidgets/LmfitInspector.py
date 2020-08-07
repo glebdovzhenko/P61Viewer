@@ -1,4 +1,5 @@
 import lmfit
+import numpy as np
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
     QStyledItemDelegate, QStyleOptionViewItem
@@ -6,8 +7,7 @@ from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
 from P61App import P61App
-import lmfit_wrappers as lmfit_models
-from functools import reduce
+import lmfit_utils
 
 
 class TreeNode(object):
@@ -254,7 +254,41 @@ class LmfitInspector(QWidget):
         self.treeview_md.modelReset.connect(self.expander)
 
     def from_peaklist_onclick(self):
-        print('Clickl')
+        idx = self.q_app.get_selected_idx()
+        if idx == -1:
+            return
+
+        peak_list = self.q_app.data.loc[idx, 'PeakList']
+        if peak_list is None:
+            return
+
+        self._add_model('PolynomialModel', idx, {'c0': 0., 'c1': 0., 'c2': 0.})
+
+        old_res = self.q_app.get_general_result(idx)
+
+        result = lmfit_utils.add_peak_md('PseudoVoigtModel', peak_list, old_res)
+        self.q_app.set_general_result(idx, result)
+
+        # for ta in peak_list:
+        #     for peak in ta['peaks']:
+        #         width = peak['right_ip'] - peak['left_ip']
+        #         sigma = width / (2. * np.sqrt(2. * np.log(2)))
+        #
+        #         # self._add_model('GaussianModel', idx,
+        #         #                 {'amplitude': peak['center_y'] * np.sqrt(2. * np.pi) * sigma,
+        #         #                  'center': peak['center_x'],
+        #         #                  'sigma': sigma})
+        #
+        #         # self._add_model('LorentzianModel', idx,
+        #         #                 {'amplitude': peak['center_y'] * np.pi * 0.5 * width,
+        #         #                  'center': peak['center_x'],
+        #         #                  'sigma': 0.5 * width})
+        #
+        #         self._add_model('PseudoVoigtModel', idx,
+        #                         {'amplitude': peak['center_y'] * np.sqrt(2. * np.pi) * sigma / np.sqrt(2. * np.log(2)),
+        #                          'center': peak['center_x'],
+        #                          'sigma': sigma,
+        #                          'fraction': 0.0})
 
     def expander(self, *args, **kwargs):
         self.treeview.expandAll()
@@ -275,43 +309,18 @@ class LmfitInspector(QWidget):
 
         if isinstance(selected_obj.itemData, lmfit.Model):
             prefix = selected_obj.itemData.prefix
-            result = self.q_app.get_general_result(self.q_app.get_selected_idx())
-
-            if len(result.model.components) == 1:
-                self.q_app.set_general_result(self.q_app.get_selected_idx(), None)
-                return
-
-            new_md = reduce(lambda a, b: a + b, (cmp for cmp in result.model.components if cmp.prefix != prefix))
-            new_params = result.params.copy()
-            for par in result.params:
-                if prefix in result.params[par].name:
-                    new_params.pop(par)
-
-            result.model = new_md
-            result.params = new_params
+            result = lmfit_utils.rm_md(prefix, self.q_app.get_general_result(self.q_app.get_selected_idx()))
             self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
 
-    def _add_model(self, name, idx):
+    def _add_model(self, name, idx, init_params=dict()):
         old_res = self.q_app.get_general_result(idx)
 
-        kwargs = {'name': name}
         if name == 'PolynomialModel':
             ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
             if ok:
-                kwargs['degree'] = ii
+                init_params['degree'] = ii
+                for i in range(ii + 1):
+                    init_params['c%d' % i] = 0.
 
-        if old_res is None:
-            kwargs['prefix'] = self.prefixes[name] + '0_'
-            new_md = getattr(lmfit_models, name)(**kwargs)
-            self.q_app.set_general_result(idx, lmfit.model.ModelResult(new_md, new_md.make_params()))
-        elif isinstance(old_res, lmfit.model.ModelResult):
-            prefixes = [md.prefix for md in old_res.model.components]
-            for ii in range(100):
-                if self.prefixes[name] + '%d_' % ii not in prefixes:
-                    kwargs['prefix'] = self.prefixes[name] + '%d_' % ii
-                    break
-
-            new_md = getattr(lmfit_models, name)(**kwargs)
-            params = old_res.params
-            params.update(new_md.make_params())
-            self.q_app.set_general_result(idx, lmfit.model.ModelResult(old_res.model + new_md, params))
+        result = lmfit_utils.add_md(name, init_params, old_res)
+        self.q_app.set_general_result(idx, result)

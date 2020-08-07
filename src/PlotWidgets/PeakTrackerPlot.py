@@ -2,8 +2,7 @@ from PyQt5.Qt import QVector3D
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
-import pandas as pd
-from itertools import chain
+import lmfit
 
 from P61App import P61App
 from PlotWidgets.GlPlot3DWidget import GlPlot3D, GlPlot3DWidget
@@ -94,11 +93,14 @@ class PTPlot3D(GlPlot3D):
         if data is None:
             return None
 
-        peak_xs = data[0][0]
-        peak_ys = data[0][1]
+        peak_xs, peak_ys = [], []
+        for ta in data:
+            for peak in ta['peaks']:
+                peak_xs.append(peak['center_x'])
+                peak_ys.append(peak['center_y'])
 
-        # if data[1] is not None:
-        #     print(idx, '::', ', '.join(str(l) + ':' + str(r) for l, r in zip(data[1]['left_bases'], data[1]['right_bases'])))
+        peak_xs = np.array(peak_xs)
+        peak_ys = np.array(peak_ys)
 
         pos = self.transform_xz(peak_xs, peak_ys)
         result = gl.GLScatterPlotItem(pos=pos, color=(1, 0, 0, 1))
@@ -121,8 +123,6 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
 
-        self._peak_hist = None
-
         self._line_ax = self.addPlot(title="Fit")
         self._line_ax.setLabel('bottom', "Energy", units='eV')
         self._line_ax.setLabel('left', "Intensity", units='counts')
@@ -132,26 +132,39 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
 
     def on_peak_list_changed(self):
-        data = self.q_app.data['PeakList']
-        data = data.apply(lambda x: None if x is None else x[0][0])
-        data = data[pd.notnull(data)]
-        data = list(chain.from_iterable(data))
-
-        xx = self.q_app.data.loc[self.q_app.get_selected_idx(), 'DataX']
-        yy, xx = np.histogram(data, bins=np.linspace(np.min(xx), np.max(xx), min(5000, xx.shape[0])))
-        self._peak_hist = (1E3 * xx, yy)
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def on_selected_active_changed(self, idx):
         self.clear_axes()
         if idx != -1:
-            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'GeneralFitResult']]
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList']]
 
             self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
                                pen=pg.mkPen(color='#000000'))
-            if self._peak_hist is not None:
-                self._line_ax.plot(*self._peak_hist, stepMode=True, fillLevel=0, fillOutline=True,
-                                   brush=(255, 0, 0, 255))
+
+            if data['PeakList'] is not None:
+                for ta in data['PeakList']:
+                    self._line_ax.addItem(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+
+                    for peak in ta['peaks']:
+                        self._line_ax.plot([1E3 * peak['center_x'], 1E3 * peak['center_x']], [0., peak['center_y']],
+                                           pen=pg.mkPen(color='#ff0000'))
+                        self._line_ax.plot([1E3 * peak['left_ip'], 1E3 * peak['right_ip']],
+                                           [peak['width_height'], peak['width_height']], pen=pg.mkPen(color='#ff0000'))
+
+                        self._line_ax.addItem(pg.ScatterPlotItem([1E3 * peak['center_x']], [-50],
+                                                                 pen=pg.mkPen(color='#ff0000')))
+
+                        width = peak['right_ip'] - peak['left_ip']
+                        sigma = width / (2. * np.sqrt(2. * np.log(2)))
+                        amplitude = np.sqrt(2. * np.pi) * sigma * peak['center_y']
+                        xmin, xmax = peak['center_x'] - 3. * sigma, peak['center_x'] + 3. * sigma
+                        xdata = data['DataX'][(xmin < data['DataX']) & (xmax > data['DataX'])]
+
+                        self._line_ax.plot(xdata * 1E3,
+                                           lmfit.models.GaussianModel().eval(x=xdata, center=peak['center_x'],
+                                                                             amplitude=amplitude, sigma=sigma),
+                                           pen=pg.mkPen(color='#ff0000'))
 
     def clear_axes(self):
         self._line_ax.clear()
@@ -163,7 +176,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         if xmin is not None and xmax is not None:
             self._line_ax.setXRange(xmin, xmax)
         if ymax is not None:
-            self._line_ax.setYRange(0, ymax)
+            self._line_ax.setYRange(-70, ymax)
 
 
 if __name__ == '__main__':

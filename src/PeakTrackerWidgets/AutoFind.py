@@ -50,7 +50,7 @@ class AutoFindWidget(QWidget):
 
         self.height_label = QLabel('Height')
         self.height_label.setToolTip('Required minimal height of peaks. Either a number or None.')
-        self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=1.)
+        self.height_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=20.)
         self.thr_label = QLabel('Threshhold')
         self.thr_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
         self.dist_label = QLabel('Distance')
@@ -59,7 +59,7 @@ class AutoFindWidget(QWidget):
                                    'for all remaining peaks.')
         self.dist_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=8E-1)
         self.prom_label = QLabel('Prominence')
-        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=None)
+        self.prom_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=10.)
         self.width_label = QLabel('Width')
         self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-2)
         self.width_label.setToolTip('Required minimal width of peaks. Either a number or None.')
@@ -124,11 +124,31 @@ class AutoFindWidget(QWidget):
             result_idx = find_peaks(yy, **params)
             #  dict_keys(['peak_heights', 'left_thresholds', 'right_thresholds', 'prominences', 'left_bases',
             #  'right_bases', 'widths', 'width_heights', 'left_ips', 'right_ips'])
-            pos_xy = np.array([xx[result_idx[0]], yy[result_idx[0]]])
+            pos_x = xx[result_idx[0]]
+            pos_y = yy[result_idx[0]]
             left_bases = xx[result_idx[1]['left_bases']]
             right_bases = xx[result_idx[1]['right_bases']]
+            left_ips = np.interp(result_idx[1]['left_ips'], np.arange(0, xx.shape[0]), xx)
+            right_ips = np.interp(result_idx[1]['right_ips'], np.arange(0, xx.shape[0]), xx)
+            width_heights = result_idx[1]['width_heights']
 
-            self.q_app.set_peak_list(idx, (pos_xy, {'left_bases': left_bases, 'right_bases': right_bases}))
+            track_areas = []
+            sort_ids = np.argsort(left_bases)
+
+            for lb, rb, li, ri, wh, cx, cy in zip(left_bases[sort_ids], right_bases[sort_ids], left_ips[sort_ids],
+                                                  right_ips[sort_ids], width_heights[sort_ids], pos_x[sort_ids],
+                                                  pos_y[sort_ids]):
+                for ta in track_areas:
+                    if lb < ta['area'][1]:
+                        ta['area'] = (ta['area'][0], max(ta['area'][1], rb))
+                        ta['peaks'] += ({'center_x': cx, 'center_y': cy, 'width_height': wh,
+                                         'left_ip': li, 'right_ip': ri}, )
+                        break
+                else:
+                    track_areas.append({'area': (lb, rb), 'peaks': ({'center_x': cx, 'center_y': cy, 'width_height': wh,
+                                                                     'left_ip': li, 'right_ip': ri}, )})
+
+            self.q_app.set_peak_list(idx, track_areas)
 
     def on_btn_all(self):
         af = AutoFindPopUp(parent=self)
