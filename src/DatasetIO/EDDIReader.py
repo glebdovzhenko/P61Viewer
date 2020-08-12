@@ -25,7 +25,7 @@ class EDDIReader:
 
     def read(self, f_name):
         result = pd.DataFrame(columns=self.q_app.data.columns)
-        kev_per_bin = 1.25E-2
+        channel_to_kev = {'A': 0.0, 'B': 1.0, 'C': 0.0}
 
         with open(f_name, 'r') as f:
             buffer = None
@@ -37,6 +37,11 @@ class EDDIReader:
                     buffer = None
                     if line[:2] == '#S':
                         index = int(line.split(' ')[1])
+                    elif '@CALIB' in line:
+                        calib = list(filter(lambda x: len(x) > 0, line.split(' ')))
+                        channel_to_kev['A'] = float(calib[3])
+                        channel_to_kev['B'] = float(calib[2])
+                        channel_to_kev['C'] = float(calib[1])
                 elif line[:2] == '@A':
                     buffer = []
                     buffer.extend(filter(lambda x: bool(x),
@@ -49,7 +54,11 @@ class EDDIReader:
                                          line.replace('@A', '').replace('\\', '').replace('\n', '').split(' ')))
 
                     buffer = np.array(list(map(int, buffer)), dtype=np.float)
-                    kev = np.arange(buffer.shape[0]) * kev_per_bin
+                    kev = np.arange(buffer.shape[0])**2 * channel_to_kev['A'] + \
+                        np.arange(buffer.shape[0]) * channel_to_kev['B'] + channel_to_kev['C']
+
+                    buffer = buffer[(kev > 2) & (kev < 120)]
+                    kev = kev[(kev > 2) & (kev < 120)]
 
                     row = {c: None for c in self.q_app.data.columns}
 
