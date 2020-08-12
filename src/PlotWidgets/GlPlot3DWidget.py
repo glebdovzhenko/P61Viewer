@@ -134,7 +134,7 @@ class GlPlot3D(gl.GLViewWidget):
 
     def _update_text_objs(self):
         for ii, ee in enumerate(np.linspace(self.emin, self.emax, self.x_ticks)):
-            self.text_objs[ii][3] = '%.0f' % ee
+            self.text_objs[ii][3] = '%.01f' % ee
 
         for ii, zz in enumerate(np.linspace(0, self.imax, self.z_ticks)):
             self.text_objs[ii + self.x_ticks][3] = '%.0f' % zz
@@ -247,7 +247,7 @@ class GlPlot3D(gl.GLViewWidget):
     def paintGL(self, *args, **kwds):
         gl.GLViewWidget.paintGL(self, *args, **kwds)
 
-        self.qglColor(QtCore.Qt.white)
+        self.qglClearColor(QtCore.Qt.white)
         for to in self.text_objs:
             self.renderText(*to)
 
