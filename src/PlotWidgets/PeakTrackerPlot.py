@@ -123,6 +123,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
 
+        self._linear_regions = []
         self._line_ax = self.addPlot(title="Fit")
         self._line_ax.setLabel('bottom', "Energy", units='eV')
         self._line_ax.setLabel('left', "Intensity", units='counts')
@@ -130,21 +131,37 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
+        self.q_app.bckgInterpChanged.connect(self.on_bckg_interp_changed)
+
+    def on_bckg_interp_changed(self):
+        self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def on_peak_list_changed(self):
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
+    def make_callback(self, ii):
+        def cb():
+            idx = self.q_app.get_selected_idx()
+            pl = self.q_app.data.loc[idx, 'PeakList']
+            region = self._linear_regions[ii].getRegion()
+            pl[ii]['area'] = [1E-3 * region[0], 1E-3 * region[1]]
+            self.q_app.data.loc[idx, 'PeakList'] = pl
+        return cb
+
     def on_selected_active_changed(self, idx):
         self.clear_axes()
+        del self._linear_regions[:]
         if idx != -1:
-            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList']]
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList', 'BckgInterp']]
 
             self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
                                pen=pg.mkPen(color='#000000'))
 
             if data['PeakList'] is not None:
-                for ta in data['PeakList']:
-                    self._line_ax.addItem(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+                for ii, ta in enumerate(data['PeakList']):
+                    self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+                    self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii))
+                    self._line_ax.addItem(self._linear_regions[-1])
 
                     for peak in ta['peaks']:
                         self._line_ax.plot([1E3 * peak['center_x'], 1E3 * peak['center_x']], [0., peak['center_y']],
@@ -165,6 +182,10 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                                            lmfit.models.GaussianModel().eval(x=xdata, center=peak['center_x'],
                                                                              amplitude=amplitude, sigma=sigma),
                                            pen=pg.mkPen(color='#ff0000'))
+
+            if data['BckgInterp'] is not None:
+                self._line_ax.plot(1E3 * data['DataX'], data['BckgInterp'],
+                                   pen=pg.mkPen(color='#0000ff'))
 
     def clear_axes(self):
         self._line_ax.clear()

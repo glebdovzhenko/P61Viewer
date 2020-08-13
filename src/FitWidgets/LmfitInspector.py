@@ -270,27 +270,6 @@ class LmfitInspector(QWidget):
         result = lmfit_utils.add_peak_md('PseudoVoigtModel', peak_list, old_res)
         self.q_app.set_general_result(idx, result)
 
-        # for ta in peak_list:
-        #     for peak in ta['peaks']:
-        #         width = peak['right_ip'] - peak['left_ip']
-        #         sigma = width / (2. * np.sqrt(2. * np.log(2)))
-        #
-        #         # self._add_model('GaussianModel', idx,
-        #         #                 {'amplitude': peak['center_y'] * np.sqrt(2. * np.pi) * sigma,
-        #         #                  'center': peak['center_x'],
-        #         #                  'sigma': sigma})
-        #
-        #         # self._add_model('LorentzianModel', idx,
-        #         #                 {'amplitude': peak['center_y'] * np.pi * 0.5 * width,
-        #         #                  'center': peak['center_x'],
-        #         #                  'sigma': 0.5 * width})
-        #
-        #         self._add_model('PseudoVoigtModel', idx,
-        #                         {'amplitude': peak['center_y'] * np.sqrt(2. * np.pi) * sigma / np.sqrt(2. * np.log(2)),
-        #                          'center': peak['center_x'],
-        #                          'sigma': sigma,
-        #                          'fraction': 0.0})
-
     def expander(self, *args, **kwargs):
         self.treeview.expandAll()
 
