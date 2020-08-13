@@ -1,6 +1,24 @@
-from lmfit import model, models
+from lmfit import model, models, lineshapes
 import numpy as np
 from functools import reduce
+
+
+def cut_pvoigt(x, amplitude=1.0, center=0.0, sigma=1.0, fraction=0.5, cutoff=3.0):
+    ys = lineshapes.pvoigt(x, amplitude, center, sigma, fraction)
+    ys[x >= center + cutoff * sigma] = 0.0
+    ys[x <= center - cutoff * sigma] = 0.0
+    return ys
+
+
+class CutPseudoVoigtModel(models.PseudoVoigtModel):
+    def __init__(self, independent_vars=['x'], prefix='', nan_policy='raise', **kwargs):
+        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
+                       'independent_vars': independent_vars})
+        model.Model.__init__(self, cut_pvoigt, **kwargs)
+        self._set_paramhints_prefix()
+
+
+models.CutPseudoVoigtModel = CutPseudoVoigtModel
 
 
 def make_prefix(name, composite):
@@ -13,7 +31,7 @@ def make_prefix(name, composite):
     """
     prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
                 'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-                'SplitLorentzianModel': 'spl'}
+                'SplitLorentzianModel': 'spl', 'CutPseudoVoigtModel': 'pv'}
 
     if composite is None:
         return prefixes[name] + '0_'
@@ -76,7 +94,7 @@ def add_md(name, init_params, composite):
 
 
 def add_peak_md(name, peak_list, composite):
-    if name not in ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel'):
+    if name not in ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'CutPseudoVoigtModel'):
         return composite
 
     for ta in peak_list:
@@ -100,19 +118,28 @@ def add_peak_md(name, peak_list, composite):
 
             params[prefix + 'height'].max = 1.5 * peak['center_y']
 
+            if 'Cut' in name:
+                params[prefix + 'cutoff'].vary = False
+                params[prefix + 'cutoff'].min = 1.
+                params[prefix + 'cutoff'].max = 3.
+
             if name == 'GaussianModel':
                 params[prefix + 'amplitude'].value = peak['center_y'] * np.sqrt(2. * np.pi) * sigma
                 params[prefix + 'sigma'].value = sigma
             elif name == 'LorentzianModel':
                 params[prefix + 'amplitude'].value = peak['center_y'] * np.pi * 0.5 * width
                 params[prefix + 'sigma'].value = 0.5 * width
-            elif name == 'PseudoVoigtModel':
-                params[prefix + 'amplitude'].value = peak['center_y'] * np.sqrt(2. * np.pi) * sigma / np.sqrt(2. * np.log(2))
+            elif name == 'PseudoVoigtModel' or name == 'CutPseudoVoigtModel':
+                params[prefix + 'amplitude'].value = peak['center_y'] * np.sqrt(2. * np.pi) * sigma / np.sqrt(
+                    2. * np.log(2))
                 params[prefix + 'sigma'].value = sigma
                 params[prefix + 'fraction'].value = 0.
 
-            c_params = composite.params
-            c_params.update(params)
-            composite = model.ModelResult(composite.model + new_md, c_params)
+            if composite is not None:
+                c_params = composite.params
+                c_params.update(params)
+                composite = model.ModelResult(composite.model + new_md, c_params)
+            else:
+                composite = model.ModelResult(new_md, params)
 
     return composite

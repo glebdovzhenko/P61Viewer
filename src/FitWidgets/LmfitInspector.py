@@ -262,6 +262,7 @@ class LmfitInspector(QWidget):
         if peak_list is None:
             return
 
+        self.q_app.set_general_result(idx, None)
         self._add_model('PolynomialModel', idx, {'c0': 0., 'c1': 0., 'c2': 0.})
 
         old_res = self.q_app.get_general_result(idx)
