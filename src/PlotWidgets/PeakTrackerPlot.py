@@ -2,6 +2,7 @@ from PyQt5.Qt import QVector3D
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
+from copy import deepcopy
 import lmfit
 
 from P61App import P61App
@@ -157,11 +158,13 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
             self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
                                pen=pg.mkPen(color='#000000'))
 
+            plotted_peaks = []
             if data['PeakList'] is not None:
                 for ii, ta in enumerate(data['PeakList']):
-                    self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
-                    self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii))
-                    self._line_ax.addItem(self._linear_regions[-1])
+                    if self.q_app.stacked_peaks is None:
+                        self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+                        self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii))
+                        self._line_ax.addItem(self._linear_regions[-1])
 
                     for peak in ta['peaks']:
                         self._line_ax.plot([1E3 * peak['center_x'], 1E3 * peak['center_x']], [0., peak['center_y']],
@@ -171,6 +174,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
 
                         self._line_ax.addItem(pg.ScatterPlotItem([1E3 * peak['center_x']], [-50],
                                                                  pen=pg.mkPen(color='#ff0000')))
+                        plotted_peaks.append(peak['center_x'])
 
                         width = peak['right_ip'] - peak['left_ip']
                         sigma = width / (2. * np.sqrt(2. * np.log(2)))
@@ -182,6 +186,21 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                                            lmfit.models.GaussianModel().eval(x=xdata, center=peak['center_x'],
                                                                              amplitude=amplitude, sigma=sigma),
                                            pen=pg.mkPen(color='#ff0000'))
+
+            if self.q_app.stacked_peaks is not None:
+                peaks = []
+                for ii, ta in enumerate(self.q_app.stacked_peaks):
+                    self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+                    self._line_ax.addItem(self._linear_regions[-1])
+                    peaks.extend(deepcopy(ta['peaks']))
+
+                for pp in plotted_peaks:
+                    peaks.remove(min(peaks, key=lambda x: np.abs(x['center_x'] - pp)))
+
+                for peak in peaks:
+                    self._line_ax.addItem(pg.ScatterPlotItem([1E3 * peak['center_x']], [-50],
+                                                             pen=pg.mkPen(color='#ff0000'),
+                                                             brush=pg.mkBrush(color='#ffffff')))
 
             if data['BckgInterp'] is not None:
                 self._line_ax.plot(1E3 * data['DataX'], data['BckgInterp'],

@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton, QDialog, 
 from PyQt5.Qt import Qt
 from scipy.signal import find_peaks
 import numpy as np
+from functools import reduce
+from copy import deepcopy
 
 from P61App import P61App
 from FitWidgets.FloatEdit import FloatEdit
@@ -30,7 +32,7 @@ class AutoFindPopUp(QDialog):
     def on_btn_ok(self):
         fit_ids = [k for k in self.selection_list.proxy.selected if self.selection_list.proxy.selected[k]]
         progress = QProgressDialog("Searching", "Cancel", 0, len(fit_ids))
-        progress.setWindowModality(Qt.WindowModal)
+        progress.setWindowModality(Qt.ApplicationModal)
 
         for ii in fit_ids:
             self.parent().on_btn_this(idx=ii)
@@ -66,11 +68,16 @@ class AutoFindWidget(QWidget):
         self.cutoff_label = QLabel('Cutoff')
         self.cutoff_edit = FloatEdit(inf_allowed=True, none_allowed=True, init_val=3.)
         self.cutoff_label.setToolTip('Peak base cutoff measured in sigmas.')
+        self.tw_label = QLabel('Track window')
+        self.tw_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=1E-1)
+        self.tw_label.setToolTip('Max peak shift between the spectra.')
         self.btn_this = QPushButton('Find')
         self.btn_all = QPushButton('Find in all')
+        self.btn_stack = QPushButton('Stack peaks')
 
         self.btn_this.clicked.connect(self.on_btn_this)
         self.btn_all.clicked.connect(self.on_btn_all)
+        self.btn_stack.clicked.connect(self.on_btn_stack)
 
         layout = QGridLayout()
         self.setLayout(layout)
@@ -96,6 +103,44 @@ class AutoFindWidget(QWidget):
 
         layout.addWidget(self.btn_this, 8, 1, 1, 1)
         layout.addWidget(self.btn_all, 8, 2, 1, 1)
+
+        layout.addWidget(self.tw_label, 9, 1, 1, 1)
+        layout.addWidget(self.tw_edit, 9, 2, 1, 1)
+
+        layout.addWidget(self.btn_stack, 10, 1, 1, 2)
+
+    def on_btn_stack(self):
+        idx = self.q_app.get_selected_idx()
+        if idx == -1:
+            return
+
+        tw = self.tw_edit.get_value()
+
+        peak_list = reduce(lambda a, b: a + b,
+                           filter(lambda x: x is not None,
+                                  self.q_app.data.loc[self.q_app.get_active_ids(), 'PeakList']),
+                           [])
+        peak_list = deepcopy(peak_list)
+        for _ in range(2):  # stupid but I'll fix it later
+            for ii, ta in enumerate(peak_list):
+                for ii2 in range(len(peak_list) - 1, ii, -1):
+                    ta2 = peak_list[ii2]
+                    if (ta2['area'][0] <= ta['area'][0] <= ta2['area'][1]) or \
+                        (ta2['area'][0] <= ta['area'][1] <= ta2['area'][1]) or \
+                            (ta['area'][0] <= ta2['area'][0] and ta['area'][1] >= ta2['area'][1]):
+
+                        ta['area'] = (min(ta['area'][0], ta2['area'][0]),
+                                      max(ta['area'][1], ta2['area'][1]))
+
+                        for p2 in ta2['peaks']:
+                            for p in ta['peaks']:
+                                if np.abs(p['center_x'] - p2['center_x']) <= tw:
+                                    break
+                            else:
+                                ta['peaks'] += (p2, )
+                        peak_list.pop(ii2)
+
+        self.q_app.stacked_peaks = peak_list
 
     def on_btn_this(self, *args, idx=-1):
         params = {

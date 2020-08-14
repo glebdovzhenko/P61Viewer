@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout
 import numpy as np
 import scipy
 
+from FitWidgets import LmfitInspector
 from P61App import P61App
 
 
@@ -11,12 +12,20 @@ class PeakFitWidget(QWidget):
         self.q_app = P61App.instance()
 
         self.btn_bckg = QPushButton('Interpolate background')
+        self.btn_init = QPushButton('Initiate peak models')
+        self.inspector = LmfitInspector(parent=self)
 
         self.btn_bckg.clicked.connect(self.on_interpolate)
+        self.btn_init.clicked.connect(self.on_initiate)
 
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.btn_bckg, 1, 1, 1, 1)
+        layout.addWidget(self.btn_init, 2, 1, 1, 1)
+        layout.addWidget(self.inspector, 3, 1, 1, 1)
+
+    def on_initiate(self):
+        pass
 
     def on_interpolate(self):
         idx = self.q_app.get_selected_idx()

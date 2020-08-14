@@ -87,6 +87,7 @@ class P61App(QApplication):
                                           'Color', 'PeakList', 'GeneralFitResult', 'PeakFitResult', 'BckgInterp'))
         self.data_model = None
         self.peak_search_range = None
+        self.stacked_peaks = None
 
         self.debug = False
         if self.debug:
