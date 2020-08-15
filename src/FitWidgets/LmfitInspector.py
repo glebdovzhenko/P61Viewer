@@ -285,7 +285,7 @@ class LmfitInspector(QWidget):
             stacked_peaks.remove(min(stacked_peaks, key=lambda x: np.abs(x['center_x'] - pp)))
 
         for peak in stacked_peaks:
-            peak['center_y'] = 0.0
+            peak['center_y'] = 0.1
 
         result = lmfit_utils.add_peak_md('PseudoVoigtModel', [{'peaks': stacked_peaks}], result)
 

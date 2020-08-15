@@ -61,6 +61,7 @@ class GeneralFitWidget(QWidget):
         x_lim = self.plot_w.get_axes_xlim()
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
+        print(xx, yy)
 
         vary_params = dict()
         for model in result.model.components:
@@ -74,7 +75,7 @@ class GeneralFitWidget(QWidget):
                             result.params[param].vary = False
 
         try:
-            result.fit(yy, x=xx, workers=8)
+            result.fit(yy, x=xx, workers=8, max_nfev=1000, method='least_squares')
         except Exception as e:
             msg = QErrorMessage()
             msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))

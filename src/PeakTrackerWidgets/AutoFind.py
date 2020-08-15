@@ -66,10 +66,10 @@ class AutoFindWidget(QWidget):
         self.width_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=5E-2)
         self.width_label.setToolTip('Required minimal width of peaks. Either a number or None.')
         self.cutoff_label = QLabel('Cutoff')
-        self.cutoff_edit = FloatEdit(inf_allowed=True, none_allowed=True, init_val=3.)
+        self.cutoff_edit = FloatEdit(inf_allowed=True, none_allowed=True, init_val=5.)
         self.cutoff_label.setToolTip('Peak base cutoff measured in sigmas.')
         self.tw_label = QLabel('Track window')
-        self.tw_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=1E-1)
+        self.tw_edit = FloatEdit(inf_allowed=False, none_allowed=True, init_val=3E-1)
         self.tw_label.setToolTip('Max peak shift between the spectra.')
         self.btn_this = QPushButton('Find')
         self.btn_all = QPushButton('Find in all')
@@ -150,6 +150,8 @@ class AutoFindWidget(QWidget):
             'width': self.width_edit.get_value()
         }
         cutoff = self.cutoff_edit.get_value()
+        if cutoff is None:
+            cutoff = np.inf
 
         if idx == -1:
             idx = self.q_app.get_selected_idx()

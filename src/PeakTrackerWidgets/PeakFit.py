@@ -35,7 +35,9 @@ class PeakFitWidget(QWidget):
         data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList']]
         yy = data.loc['DataY']
         xx = data.loc['DataX']
-        peak_list = data.loc['PeakList']
+        peak_list = self.q_app.get_stacked_peaks()
+        if peak_list is None:
+            peak_list = data.loc['PeakList']
 
         xx_orig = xx.copy()
         if peak_list is not None:
