@@ -18,7 +18,26 @@ class CutPseudoVoigtModel(models.PseudoVoigtModel):
         self._set_paramhints_prefix()
 
 
+class PolynomialModel(models.PolynomialModel):
+    def __init__(self, degree, independent_vars=['x'], prefix='',
+                 nan_policy='raise', **kwargs):
+        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
+                       'independent_vars': independent_vars})
+        if not isinstance(degree, int) or degree > self.MAX_DEGREE:
+            raise TypeError(self.DEGREE_ERR % self.MAX_DEGREE)
+
+        self.poly_degree = degree
+        pnames = ['c%i' % (i) for i in range(degree + 1)]
+        kwargs['param_names'] = pnames
+
+        def polynomial(x, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0):
+            return np.abs(np.polyval([c7, c6, c5, c4, c3, c2, c1, c0], x))
+
+        model.Model.__init__(self, polynomial, **kwargs)
+
+
 models.CutPseudoVoigtModel = CutPseudoVoigtModel
+models.PolynomialModel = PolynomialModel
 
 
 def make_prefix(name, composite):
@@ -143,3 +162,39 @@ def add_peak_md(name, peak_list, composite):
                 composite = model.ModelResult(new_md, params)
 
     return composite
+
+
+def fix_background(result, reverse=False):
+    """
+    Fixes background parameters (sets them not to vary). If reverse == False, fixes everything except the background
+    :param result:
+    :param reverse:
+    :return:
+    """
+    param_status = dict()
+    for model in result.model.components:
+        if ('PolynomialModel' in model.name) != reverse:
+            for param in result.params:
+                if model.prefix in param:
+                    param_status[param] = result.params[param].vary
+                    result.params[param].vary = False
+    return result, param_status
+
+
+def fix_outlier_peaks(result, x_lim):
+    """
+    Fixes all parameters for peaks whose centers are outside of the region x_lim
+    :param result:
+    :return:
+    """
+    param_status = dict()
+    for model in result.model.components:
+        if ('GaussianModel' in model.name) or \
+                ('LorentzianModel' in model.name) or \
+                ('PseudoVoigtModel' in model.name):
+            if not x_lim[0] <= result.params[model.prefix + 'center'].value <= x_lim[1]:
+                for param in result.params:
+                    if model.prefix in param:
+                        param_status[param] = result.params[param].vary
+                        result.params[param].vary = False
+    return result, param_status

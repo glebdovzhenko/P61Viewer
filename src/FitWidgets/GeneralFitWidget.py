@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage, QFileDialog
 import pandas as pd
+import numpy as np
 
 from P61App import P61App
 from DatasetManager import DatasetViewer
@@ -7,6 +8,7 @@ from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from PlotWidgets import FitPlot
+from lmfit_utils import fix_background, fix_outlier_peaks
 
 
 class GeneralFitWidget(QWidget):
@@ -18,7 +20,9 @@ class GeneralFitWidget(QWidget):
 
         self.active_list = DatasetViewer()
 
-        self.fit_btn = QPushButton('Fit this')
+        self.fit_btn = QPushButton('Fit')
+        self.bckg_fit_btn = QPushButton('Fit Background')
+        self.peaks_fit_btn = QPushButton('Fit peaks')
         self.fit_all_btn = QPushButton('Fit multiple')
         self.copy_btn = QPushButton('Copy params')
         self.export_btn = QPushButton('Export')
@@ -27,12 +31,14 @@ class GeneralFitWidget(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.lmfit_inspector, 1, 1, 3, 3)
-        layout.addWidget(self.active_list, 4, 2, 4, 2)
+        layout.addWidget(self.active_list, 4, 2, 6, 2)
         layout.addWidget(self.fit_btn, 4, 1, 1, 1)
-        layout.addWidget(self.copy_btn, 5, 1, 1, 1)
-        layout.addWidget(self.fit_all_btn, 6, 1, 1, 1)
-        layout.addWidget(self.export_btn, 7, 1, 1, 1)
-        layout.addWidget(self.plot_w, 1, 4, 6, 1)
+        layout.addWidget(self.bckg_fit_btn, 5, 1, 1, 1)
+        layout.addWidget(self.peaks_fit_btn, 6, 1, 1, 1)
+        layout.addWidget(self.copy_btn, 7, 1, 1, 1)
+        layout.addWidget(self.fit_all_btn, 8, 1, 1, 1)
+        layout.addWidget(self.export_btn, 9, 1, 1, 1)
+        layout.addWidget(self.plot_w, 1, 4, 8, 1)
         layout.setColumnStretch(1, 1)
         layout.setColumnStretch(2, 1)
         layout.setColumnStretch(3, 1)
@@ -40,8 +46,84 @@ class GeneralFitWidget(QWidget):
 
         self.fit_btn.clicked.connect(self.on_fit_btn)
         self.fit_all_btn.clicked.connect(self.on_fit_all_btn)
+        self.bckg_fit_btn.clicked.connect(self.on_bckg_fit_btn)
+        self.peaks_fit_btn.clicked.connect(self.on_peak_fit_btn)
         self.copy_btn.clicked.connect(self.on_copy_btn)
         self.export_btn.clicked.connect(self.on_export_button)
+
+    def on_peak_fit_btn(self, *args, idx=None):
+        if self.q_app.get_selected_idx() == -1:
+            return
+        elif idx is None:
+            idx = self.q_app.get_selected_idx()
+
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
+        peak_list = self.q_app.stacked_peaks
+        if peak_list is None:
+            return
+
+        result, vary_bckg = fix_background(result)
+
+        for ta in peak_list:
+            xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
+            x_lim = self.plot_w.get_axes_xlim()
+            yy = yy[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
+            xx = xx[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
+            result, vary_peaks = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
+
+            try:
+                result.fit(yy, x=xx, workers=8, max_nfev=1000, method='least_squares')
+            except Exception as e:
+                msg = QErrorMessage()
+                msg.showMessage(
+                    'During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
+                msg.exec_()
+
+            for param in vary_peaks:
+                result.params[param].vary = vary_peaks[param]
+
+        for param in vary_bckg:
+            result.params[param].vary = vary_bckg[param]
+
+        self.q_app.set_general_result(idx, result)
+
+    def on_bckg_fit_btn(self, *args, idx=None):
+        if self.q_app.get_selected_idx() == -1:
+            return
+        elif idx is None:
+            idx = self.q_app.get_selected_idx()
+
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
+        peak_list = self.q_app.stacked_peaks
+        if peak_list is None:
+            return
+
+        result, vary_bckg = fix_background(result, reverse=True)
+
+        bckg_xx, bckg_yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
+        x_lim = self.plot_w.get_axes_xlim()
+        sel = (x_lim[0] < bckg_xx) & (x_lim[1] > bckg_xx)
+        bckg_xx, bckg_yy = bckg_xx[sel], bckg_yy[sel]
+
+        for ta in peak_list:
+            bckg_yy = bckg_yy[(bckg_xx < ta['area'][0]) | (bckg_xx > ta['area'][1])]
+            bckg_xx = bckg_xx[(bckg_xx < ta['area'][0]) | (bckg_xx > ta['area'][1])]
+
+        try:
+            result.fit(bckg_yy, x=bckg_xx, workers=8, max_nfev=1000, method='least_squares')
+        except Exception as e:
+            pass
+
+        for param in vary_bckg:
+            result.params[param].vary = vary_bckg[param]
+
+        self.q_app.set_general_result(idx, result)
 
     def on_copy_btn(self, *args):
         w = CopyPopUp(parent=self)
@@ -62,16 +144,7 @@ class GeneralFitWidget(QWidget):
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
 
-        vary_params = dict()
-        for model in result.model.components:
-            if ('GaussianModel' in model.name) or \
-                    ('LorentzianModel' in model.name) or \
-                    ('PseudoVoigtModel' in model.name):
-                if not x_lim[0] <= result.params[model.prefix + 'center'].value <= x_lim[1]:
-                    for param in result.params:
-                        if model.prefix in param:
-                            vary_params[param] = result.params[param].vary
-                            result.params[param].vary = False
+        result, vary_params = fix_outlier_peaks(result, x_lim)
 
         try:
             result.fit(yy, x=xx, workers=8, max_nfev=1000, method='least_squares')
