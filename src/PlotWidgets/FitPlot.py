@@ -52,10 +52,7 @@ class FitPlot(pg.GraphicsLayoutWidget):
 
             if data['GeneralFitResult'] is not None:
                 xx = data['DataX']
-                x_lim = self.get_axes_xlim()
-                sel = (x_lim[0] < xx) & (x_lim[1] > xx)
-                xx = xx[sel]
-                yy = data['DataY'][sel]
+                yy = data['DataY']
                 diff = yy - data['GeneralFitResult'].eval(data['GeneralFitResult'].params, x=xx)
 
                 cmps = data['GeneralFitResult'].eval_components(x=xx)
