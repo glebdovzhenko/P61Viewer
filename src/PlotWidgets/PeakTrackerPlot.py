@@ -133,6 +133,10 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
         self.q_app.bckgInterpChanged.connect(self.on_bckg_interp_changed)
+        self.q_app.stackedPeaksChanged.connect(self.on_stacked_peaks_changed)
+
+    def on_stacked_peaks_changed(self):
+        self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def on_bckg_interp_changed(self):
         self.on_selected_active_changed(self.q_app.get_selected_idx())
@@ -140,13 +144,20 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
     def on_peak_list_changed(self):
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
-    def make_callback(self, ii):
-        def cb():
-            idx = self.q_app.get_selected_idx()
-            pl = self.q_app.data.loc[idx, 'PeakList']
-            region = self._linear_regions[ii].getRegion()
-            pl[ii]['area'] = [1E-3 * region[0], 1E-3 * region[1]]
-            self.q_app.data.loc[idx, 'PeakList'] = pl
+    def make_callback(self, ii, stacked=True):
+        if not stacked:
+            def cb():
+                idx = self.q_app.get_selected_idx()
+                pl = self.q_app.data.loc[idx, 'PeakList']
+                region = self._linear_regions[ii].getRegion()
+                pl[ii]['area'] = [1E-3 * region[0], 1E-3 * region[1]]
+                self.q_app.data.loc[idx, 'PeakList'] = pl
+        else:
+            def cb():
+                pl = self.q_app.stacked_peaks
+                region = self._linear_regions[ii].getRegion()
+                pl[ii]['area'] = [1E-3 * region[0], 1E-3 * region[1]]
+                self.q_app.set_stacked_peaks(pl, emit=False)
         return cb
 
     def on_selected_active_changed(self, idx):
@@ -163,7 +174,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                 for ii, ta in enumerate(data['PeakList']):
                     if self.q_app.stacked_peaks is None:
                         self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
-                        self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii))
+                        self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii, stacked=False))
                         self._line_ax.addItem(self._linear_regions[-1])
 
                     for peak in ta['peaks']:
@@ -191,6 +202,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                 peaks = []
                 for ii, ta in enumerate(self.q_app.stacked_peaks):
                     self._linear_regions.append(pg.LinearRegionItem([1E3 * ta['area'][0], 1E3 * ta['area'][1]]))
+                    self._linear_regions[-1].sigRegionChanged.connect(self.make_callback(ii, stacked=True))
                     self._line_ax.addItem(self._linear_regions[-1])
                     peaks.extend(deepcopy(ta['peaks']))
 

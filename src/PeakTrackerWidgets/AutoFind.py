@@ -110,10 +110,6 @@ class AutoFindWidget(QWidget):
         layout.addWidget(self.btn_stack, 10, 1, 1, 2)
 
     def on_btn_stack(self):
-        idx = self.q_app.get_selected_idx()
-        if idx == -1:
-            return
-
         tw = self.tw_edit.get_value()
 
         peak_list = reduce(lambda a, b: a + b,
@@ -121,6 +117,9 @@ class AutoFindWidget(QWidget):
                                   self.q_app.data.loc[self.q_app.get_active_ids(), 'PeakList']),
                            [])
         peak_list = deepcopy(peak_list)
+        if len(peak_list) == 0:
+            return
+
         for _ in range(2):  # stupid but I'll fix it later
             for ii, ta in enumerate(peak_list):
                 for ii2 in range(len(peak_list) - 1, ii, -1):
@@ -140,7 +139,7 @@ class AutoFindWidget(QWidget):
                                 ta['peaks'] += (p2, )
                         peak_list.pop(ii2)
 
-        self.q_app.stacked_peaks = peak_list
+        self.q_app.set_stacked_peaks(peak_list)
 
     def on_btn_this(self, *args, idx=-1):
         params = {

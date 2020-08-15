@@ -77,6 +77,7 @@ class P61App(QApplication):
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
     bckgInterpChanged = pyqtSignal(list)
+    stackedPeaksChanged = pyqtSignal()
     dataModelSetUp = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
@@ -204,3 +205,11 @@ class P61App(QApplication):
         self.data.loc[idx, 'GeneralFitResult'] = result
         if emit:
             self.genFitResChanged.emit([idx])
+
+    def get_stacked_peaks(self):
+        return self.stacked_peaks
+
+    def set_stacked_peaks(self, result, emit=True):
+        self.stacked_peaks = result
+        if emit:
+            self.stackedPeaksChanged.emit()

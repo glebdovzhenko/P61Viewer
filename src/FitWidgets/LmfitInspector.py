@@ -1,5 +1,6 @@
 import lmfit
 import numpy as np
+from copy import deepcopy
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
     QStyledItemDelegate, QStyleOptionViewItem
@@ -262,12 +263,32 @@ class LmfitInspector(QWidget):
         if peak_list is None:
             return
 
+        present_peaks = []
+        for ta in peak_list:
+            for peak in ta['peaks']:
+                present_peaks.append(peak['center_x'])
+
         self.q_app.set_general_result(idx, None)
         self._add_model('PolynomialModel', idx, {'c0': 0., 'c1': 0., 'c2': 0.})
 
         old_res = self.q_app.get_general_result(idx)
 
         result = lmfit_utils.add_peak_md('PseudoVoigtModel', peak_list, old_res)
+
+        stacked_list = self.q_app.stacked_peaks
+        stacked_peaks = []
+        if stacked_list is not None:
+            for ta in self.q_app.stacked_peaks:
+                stacked_peaks.extend(deepcopy(ta['peaks']))
+
+        for pp in present_peaks:
+            stacked_peaks.remove(min(stacked_peaks, key=lambda x: np.abs(x['center_x'] - pp)))
+
+        for peak in stacked_peaks:
+            peak['center_y'] = 0.0
+
+        result = lmfit_utils.add_peak_md('PseudoVoigtModel', [{'peaks': stacked_peaks}], result)
+
         self.q_app.set_general_result(idx, result)
 
     def expander(self, *args, **kwargs):
