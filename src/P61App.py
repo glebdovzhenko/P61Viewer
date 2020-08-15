@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import pyqtSignal
 import pandas as pd
 import numpy as np
+import logging
 
 
 class P61App(QApplication):
@@ -90,15 +91,7 @@ class P61App(QApplication):
         self.peak_search_range = None
         self.stacked_peaks = None
 
-        self.debug = False
-        if self.debug:
-            self.dataRowsInserted.connect(self.debug_print('dataRowsInserted'))
-            self.dataRowsRemoved.connect(self.debug_print('dataRowsRemoved'))
-            self.dataActiveChanged.connect(self.debug_print('dataActiveChanged'))
-            self.selectedIndexChanged.connect(self.debug_print('selectedIndexChanged'))
-            self.peakListChanged.connect(self.debug_print('peakListChanged'))
-            self.genFitResChanged.connect(self.debug_print('genFitResChanged'))
-            self.dataModelSetUp.connect(self.debug_print('dataModelSetUp'))
+        self.logger = logging.getLogger(str(self.__class__))
 
         # data storage for one-per application items
         self.params = {
@@ -114,22 +107,15 @@ class P61App(QApplication):
                               index=np.arange(position, position + rows).astype(np.int))
         self.data = pd.concat((d1, insert, d2.set_index(d2.index + rows)))
 
-        if self.debug:
-            print('Inserted %d rows to position %d' % (rows, position))
-            print(self.data)
+        self.logger.debug('insert_rows: Inserted %d rows to position %d' %
+                          (rows, position))
 
     def remove_rows(self, position, rows):
         self.data.drop(index=np.arange(position, position + rows).astype(np.int), inplace=True)
         self.data.set_index(np.arange(self.data.shape[0]), inplace=True)
-        if self.debug:
-            print('Removed %d rows from position %d' % (rows, position))
-            print(self.data)
 
-    @staticmethod
-    def debug_print(name):
-        def fn(*args, **kwargs):
-            print(name, args, kwargs)
-        return fn
+        self.logger.debug('remove_rows: Removed %d rows from position %d' %
+                          (rows, position))
 
     @staticmethod
     def _color_wheel(key):
@@ -157,6 +143,7 @@ class P61App(QApplication):
     def set_selected_idx(self, val, emit=True):
         self.params['SelectedIndex'] = val
         if emit:
+            self.logger.debug('set_selected_idx: Emitting selectedIndexChanged(%d)' % (val, ))
             self.selectedIndexChanged.emit(val)
 
     def get_screen_names(self, only_active=False):
@@ -177,6 +164,7 @@ class P61App(QApplication):
     def set_active_status(self, idx, status, emit=True):
         self.data.loc[idx, 'Active'] = bool(status)
         if emit:
+            self.logger.debug('set_active_status: Emitting dataActiveChanged([%d])' % (idx, ))
             self.dataActiveChanged.emit([idx])
 
     def get_selected_screen_name(self):
@@ -188,6 +176,7 @@ class P61App(QApplication):
     def set_peak_list(self, idx, result, emit=True):
         self.data.loc[idx, 'PeakList'] = result
         if emit:
+            self.logger.debug('set_peak_list: Emitting peakListChanged([%d])' % (idx, ))
             self.peakListChanged.emit([idx])
 
     def get_bckg_interp(self, idx):
@@ -196,6 +185,7 @@ class P61App(QApplication):
     def set_bckg_interp(self, idx, result, emit=True):
         self.data.loc[idx, 'BckgInterp'] = result
         if emit:
+            self.logger.debug('set_bckg_interp: Emitting bckgInterpChanged([%d])' % (idx, ))
             self.bckgInterpChanged.emit([idx])
 
     def get_general_result(self, idx):
@@ -204,6 +194,7 @@ class P61App(QApplication):
     def set_general_result(self, idx, result, emit=True):
         self.data.loc[idx, 'GeneralFitResult'] = result
         if emit:
+            self.logger.debug('set_general_result: Emitting genFitResChanged([%d])' % (idx))
             self.genFitResChanged.emit([idx])
 
     def get_stacked_peaks(self):
@@ -212,4 +203,5 @@ class P61App(QApplication):
     def set_stacked_peaks(self, result, emit=True):
         self.stacked_peaks = result
         if emit:
+            self.logger.debug('set_stacked_peaks: Emitting stackedPeaksChanged')
             self.stackedPeaksChanged.emit()

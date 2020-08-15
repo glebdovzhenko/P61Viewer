@@ -61,7 +61,6 @@ class GeneralFitWidget(QWidget):
         x_lim = self.plot_w.get_axes_xlim()
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
-        print(xx, yy)
 
         vary_params = dict()
         for model in result.model.components:
@@ -85,7 +84,6 @@ class GeneralFitWidget(QWidget):
             result.params[param].vary = vary_params[param]
 
         self.q_app.set_general_result(idx, result)
-        print(result.fit_report())
 
     def on_fit_all_btn(self):
         w = SeqFitPopUp(parent=self)

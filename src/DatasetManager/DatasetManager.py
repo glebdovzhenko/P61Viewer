@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton,
     QErrorMessage, QMessageBox
 import os
 import pandas as pd
+import logging
 
 from P61App import P61App
 from DatasetIO import DatasetReaders
@@ -13,15 +14,18 @@ class DataSetStorageModel(QAbstractTableModel):
     def __init__(self, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.c_names = ['Name', u'💀⏱', u'χ²']
 
         self.q_app.data_model = self
+        self.logger.debug('__init__: Emitting dataModelSetUp')
         self.q_app.dataModelSetUp.emit()
 
         self.q_app.genFitResChanged.connect(self.on_gen_fit_changed)
 
     def on_gen_fit_changed(self, rows):
+        self.logger.debug('on_gen_fit_changed: Handling genFitResChanged(%s)' % (str(rows),))
         if rows:
             self.dataChanged.emit(
                 self.index(min(rows), 2),
@@ -111,6 +115,7 @@ class DatasetManager(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.view = QTableView()
         self.model = DataSetStorageModel()
@@ -142,7 +147,11 @@ class DatasetManager(QWidget):
 
         # signals and handlers
         self.view.selectionModel().selectionChanged.connect(self.checkbox_update)
-        self.q_app.dataActiveChanged.connect(self.checkbox_update)
+        self.q_app.dataActiveChanged.connect(self.on_data_ac)
+
+    def on_data_ac(self, rows):
+        self.logger.debug('on_data_ac: Handling dataActiveChanged(%s)' % (str(rows), ))
+        self.checkbox_update()
 
     def bplus_onclick(self):
         fd = QFileDialog()
@@ -164,7 +173,7 @@ class DatasetManager(QWidget):
                 else:
                     failed.append(file)
             except Exception as e:
-                print(e)
+                self.logger.info(str(e))
                 failed.append(file)
 
         # opened = opened.astype({'DeadTime': })
@@ -175,7 +184,9 @@ class DatasetManager(QWidget):
             self.model.index(opened.shape[0], self.model.columnCount())
         )
 
+        self.logger.debug('bplus_onclick: Emitting dataRowsInserted(%d, %d)' % (0, opened.shape[0]))
         self.q_app.dataRowsInserted.emit(0, opened.shape[0])
+
         if failed:
             msg = QErrorMessage()
             msg.showMessage('Could not open files:\n' + '\n'.join(failed))
@@ -207,6 +218,7 @@ class DatasetManager(QWidget):
         rows = list(set(idx.row() for idx in self.view.selectedIndexes()))
         for position, amount in self.to_consecutive(sorted(rows)):
             self.model.removeRows(position, amount)
+        self.logger.debug('bminus_onclick: Emitting dataRowsRemoved(%s)' % (str(rows), ))
         self.q_app.dataRowsRemoved.emit(rows)
 
     def bexport_onclick(self):
@@ -247,6 +259,8 @@ class DatasetManager(QWidget):
             self.model.index(min(rows), 0),
             self.model.index(max(rows), 0),
         )
+
+        self.logger.debug('checkbox_onclick: Emitting dataActiveChanged(%s)' % (str(rows),))
         self.q_app.dataActiveChanged.emit(rows)
 
     def checkbox_update(self):

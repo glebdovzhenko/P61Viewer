@@ -2,6 +2,7 @@ from PyQt5.QtCore import Qt, QModelIndex, QSortFilterProxyModel
 from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QGridLayout, QCheckBox
 
 from P61App import P61App
+import logging
 
 
 class SelectorProxyModel(QSortFilterProxyModel):
@@ -65,6 +66,7 @@ class DatasetSelector(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.view = QTableView()
         self.proxy = None
@@ -78,9 +80,13 @@ class DatasetSelector(QWidget):
         layout.addWidget(self.view, 2, 1, 1, 4)
 
         if self.q_app.data_model is None:
-            self.q_app.dataModelSetUp.connect(self.setup_model)
+            self.q_app.dataModelSetUp.connect(self.on_md_setup)
         else:
             self.setup_model()
+
+    def on_md_setup(self):
+        self.logger.debug('on_dataset_md_sup: Handling dataModelSetUp')
+        self.setup_model()
 
     def setup_model(self):
         self.proxy = SelectorProxyModel()

@@ -28,8 +28,6 @@ class XSpressCSVReader:
             except ValueError:
                 ii += 1
 
-        print(dd[dd['channel'] == 'dt'])
-
         result = pd.DataFrame(columns=self.q_app.data.columns)
         for ch in ('0', '1'):
             row = {c: None for c in self.q_app.data.columns}

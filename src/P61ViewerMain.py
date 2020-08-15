@@ -18,6 +18,8 @@ from PeakTrackerWidgets import PeakAnalysisWidget
 
 from P61App import P61App
 
+import logging
+
 
 class P61Viewer(QMainWindow):
     """
@@ -39,6 +41,7 @@ class P61Viewer(QMainWindow):
         :param parent:
         """
         QMainWindow.__init__(self, parent=parent)
+        self.logger = logging.getLogger(str(self.__class__))
 
         # initiate self
         self.resize(1200, 800)
@@ -69,8 +72,16 @@ class P61Viewer(QMainWindow):
         self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
         self.cw.addTab(self.pa_w, 'Peak tracker')
 
+        self.logger.debug('Initialization complete')
+
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
+                        handlers=[logging.FileHandler("debug.log", mode='w'), logging.StreamHandler()])
+
+    logger = logging.getLogger(__name__)
+    logger.info('Starting up...')
+
     q_app = P61App(sys.argv)
 
     trayIcon = QSystemTrayIcon(QIcon("../img/icon.png"), q_app)

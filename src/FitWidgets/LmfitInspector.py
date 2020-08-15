@@ -1,6 +1,7 @@
 import lmfit
 import numpy as np
 from copy import deepcopy
+import logging
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
     QStyledItemDelegate, QStyleOptionViewItem
@@ -46,13 +47,22 @@ class LmfitInspectorModel(QAbstractItemModel):
     def __init__(self, parent=None):
         QAbstractItemModel.__init__(self, parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.rootItem = TreeNode(('Name', 'Value', 'STD', 'Min', 'Max'))
         self._fit_res = None
         self._upd()
 
-        self.q_app.selectedIndexChanged.connect(self._upd)
-        self.q_app.genFitResChanged.connect(self._upd)
+        self.q_app.selectedIndexChanged.connect(self.on_selected_idx_ch)
+        self.q_app.genFitResChanged.connect(self.on_gen_fit_res_changed)
+
+    def on_selected_idx_ch(self, *args, **kwargs):
+        self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%s, %s)' % (str(args), str(kwargs)))
+        self._upd()
+
+    def on_gen_fit_res_changed(self, *args, **kwargs):
+        self.logger.debug('on_gen_fit_res_changed: Handling genFitResChanged(%s, %s)' % (str(args), str(kwargs)))
+        self._upd()
 
     def _clear_tree(self):
         for item in self.rootItem.childItems:

@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QTabWidget
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
+import logging
 
 from P61App import P61App
 from PlotWidgets.GlPlot3DWidget import GlPlot3D, GlPlot3DWidget
@@ -41,11 +42,13 @@ class MainPlot3DWidget(GlPlot3DWidget):
         self._scale_to(emin, emax, imax)
 
     def on_data_rows_appended(self, *args, **kwargs):
+        self.logger.debug('on_data_rows_appended: Handling dataRowsInserted(%s, %s)' % (str(args), str(kwargs)))
         self.plot.on_data_rows_appended(*args, **kwargs)
         if self.autoscale_cb.isChecked():
             self.autoscale()
 
     def on_data_rows_removed(self, *args, **kwargs):
+        self.logger.debug('on_data_rows_removed: Handling dataRowsRemoved(%s, %s)' % (str(args), str(kwargs)))
         self.plot.on_data_rows_removed(*args, **kwargs)
         if self.autoscale_cb.isChecked():
             self.autoscale()
@@ -80,6 +83,8 @@ class MainPlot3D(GlPlot3D):
         self._restack_ys()
 
     def on_data_active_changed(self, rows):
+        self.logger.debug('on_data_active_changed: Handling dataActiveChanged(%s)' % (str(rows),))
+
         for ii in rows:
             if self.q_app.data.loc[ii, 'Active']:
                 self._lines[ii].setVisible(True)
@@ -108,6 +113,7 @@ class MainPlot2D(pg.GraphicsLayoutWidget):
     def __init__(self, parent=None):
         pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self._line_ax = self.addPlot(title="Imported spectra")
         self._line_ax.setLabel('bottom', "Energy", units='eV')
@@ -120,6 +126,7 @@ class MainPlot2D(pg.GraphicsLayoutWidget):
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
 
     def on_data_rows_appended(self, pos, n_rows):
+        self.logger.debug('on_data_rows_appended: Handling dataRowsInserted(%d, %d)' % (pos, n_rows))
         self._lines = self._lines[:pos] + [None] * n_rows + self._lines[pos:]
         for ii in range(pos, pos + n_rows):
             data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
@@ -127,11 +134,13 @@ class MainPlot2D(pg.GraphicsLayoutWidget):
                                                  pen=str(hex(data['Color'])).replace('0x', '#'))
 
     def on_data_rows_removed(self, rows):
+        self.logger.debug('on_data_rows_removed: Handling dataRowsInserted(%s)' % (str(rows), ))
         for ii in sorted(rows, reverse=True):
             self._line_ax.removeItem(self._lines[ii])
             self._lines.pop(ii)
 
     def on_data_active_changed(self, rows):
+        self.logger.debug('on_data_active_changed: Handling dataActiveChanged(%s)' % (str(rows),))
         for ii in rows:
             if self.q_app.data.loc[ii, 'Active']:
                 self._lines[ii].setPen(str(hex(self.q_app.data.loc[ii, 'Color'])).replace('0x', '#'))

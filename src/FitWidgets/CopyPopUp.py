@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel
 import copy
 import numpy as np
+import logging
 
 from P61App import P61App
 from DatasetManager import DatasetSelector, DatasetViewer
@@ -11,6 +12,7 @@ class CopyPopUp(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.label_from = QLabel('From:')
         self.label_to = QLabel('To:')
@@ -39,6 +41,7 @@ class CopyPopUp(QDialog):
             if result is not None:
                 result.chisqr = None
             self.q_app.data.loc[idx_to, 'GeneralFitResult'] = [copy.deepcopy(result) for _ in range(len(idx_to))]
+            self.logger.debug('on_button_ok: Emitting genFitResChanged(%s)' % (str(idx_to),))
             self.q_app.genFitResChanged.emit(idx_to)
         self.close()
 

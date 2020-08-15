@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.Qt import Qt
 import pyqtgraph as pg
+import logging
 
 from P61App import P61App
 
@@ -9,6 +10,7 @@ class FitPlot(pg.GraphicsLayoutWidget):
     def __init__(self, parent=None):
         pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         pg.setConfigOptions(antialias=True)
         pg.setConfigOption('background', 'w')
@@ -27,10 +29,15 @@ class FitPlot(pg.GraphicsLayoutWidget):
         self.ci.layout.setRowStretchFactor(0, 4)
         self.ci.layout.setRowStretchFactor(1, 1)
 
-        self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
+        self.q_app.selectedIndexChanged.connect(self.on_selected_idx_ch)
         self.q_app.genFitResChanged.connect(self.on_fit_changed)
 
+    def on_selected_idx_ch(self, idx):
+        self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%d)' % (idx, ))
+        self.on_selected_active_changed(idx)
+
     def on_fit_changed(self, idxs):
+        self.logger.debug('on_fit_changed: Handling genFitResChanged(%s)' % (str(idxs),))
         if self.q_app.get_selected_idx() in idxs:
             self.on_selected_active_changed(self.q_app.get_selected_idx())
 

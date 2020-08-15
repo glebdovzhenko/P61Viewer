@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
+import logging
 
 from P61App import P61App
 
@@ -17,6 +18,7 @@ class GlPlot3DWidget(QWidget):
 
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.plot = plot
         self.explanation_label = QLabel('[W] [A] [S] [D] move the plot in XY plane, [R] [F] move it along Z axis. '
@@ -108,6 +110,7 @@ class GlPlot3D(gl.GLViewWidget):
     def __init__(self, parent=None):
         gl.GLViewWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.lines_origin = [0., 0., 0.]
         self.emin = self.emin_default

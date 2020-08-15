@@ -4,6 +4,7 @@ import pyqtgraph.opengl as gl
 import numpy as np
 from copy import deepcopy
 import lmfit
+import logging
 
 from P61App import P61App
 from PlotWidgets.GlPlot3DWidget import GlPlot3D, GlPlot3DWidget
@@ -36,21 +37,25 @@ class PTPlot3DWidget(GlPlot3DWidget):
         self._scale_to(emin, emax, imax)
 
     def on_data_rows_appended(self, *args, **kwargs):
+        self.logger.debug('on_data_rows_appended: Handling dataRowsInserted(%s, %s)' % (str(args), str(kwargs)))
         self.plot.upd_and_redraw()
         if self.autoscale_cb.isChecked():
             self.autoscale()
 
     def on_data_rows_removed(self, *args, **kwargs):
+        self.logger.debug('on_data_rows_removed: Handling dataRowsRemoved(%s, %s)' % (str(args), str(kwargs)))
         self.plot.upd_and_redraw()
         if self.autoscale_cb.isChecked():
             self.autoscale()
 
     def on_data_active_changed(self, *args, **kwargs):
+        self.logger.debug('on_data_active_changed: Handling dataActiveChanged(%s, %s)' % (str(args), str(kwargs)))
         self.plot.upd_and_redraw()
         if self.autoscale_cb.isChecked():
             self.autoscale()
 
     def on_peak_list_changed(self, *args, **kwargs):
+        self.logger.debug('on_peak_list_changed: Handling peakListChanged(%s, %s)' % (str(args), str(kwargs)))
         self.plot.upd_and_redraw()
 
     def _update_scale(self, *args, **kwargs):
@@ -123,6 +128,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
     def __init__(self, parent=None):
         pg.GraphicsLayoutWidget.__init__(self, parent=parent, show=True)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self._linear_regions = []
         self._line_ax = self.addPlot(title="Fit")
@@ -130,18 +136,25 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         self._line_ax.setLabel('left', "Intensity", units='counts')
         self._line_ax.showGrid(x=True, y=True)
 
-        self.q_app.selectedIndexChanged.connect(self.on_selected_active_changed)
+        self.q_app.selectedIndexChanged.connect(self.on_selected_idx_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
         self.q_app.bckgInterpChanged.connect(self.on_bckg_interp_changed)
         self.q_app.stackedPeaksChanged.connect(self.on_stacked_peaks_changed)
 
+    def on_selected_idx_changed(self, idx):
+        self.logger.debug('on_selected_idx_changed: Handling selectedIndexChanged(%d)' % (idx,))
+        self.on_selected_active_changed(idx)
+
     def on_stacked_peaks_changed(self):
+        self.logger.debug('on_stacked_peaks_changed: Handling stackedPeaksChanged')
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
-    def on_bckg_interp_changed(self):
+    def on_bckg_interp_changed(self, *args, **kwargs):
+        self.logger.debug('on_bckg_interp_changed: Handling bckgInterpChanged(%s, %s)' % (str(args), str(kwargs)))
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
-    def on_peak_list_changed(self):
+    def on_peak_list_changed(self, *args, **kwargs):
+        self.logger.debug('on_peak_list_changed: Handling peakListChanged(%s, %s)' % (str(args), str(kwargs)))
         self.on_selected_active_changed(self.q_app.get_selected_idx())
 
     def make_callback(self, ii, stacked=True):

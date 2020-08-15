@@ -2,6 +2,7 @@ from PyQt5.QtCore import Qt, QModelIndex, QSortFilterProxyModel
 from PyQt5.QtWidgets import QTableView, QAbstractItemView
 
 from P61App import P61App
+import logging
 
 
 class ViewerProxyModel(QSortFilterProxyModel):
@@ -37,13 +38,18 @@ class DatasetViewer(QTableView):
     def __init__(self, parent=None, *args):
         QTableView.__init__(self, parent, *args)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.proxy = None
 
         if self.q_app.data_model is None:
-            self.q_app.dataModelSetUp.connect(self.setup_model)
+            self.q_app.dataModelSetUp.connect(self.on_md_setup)
         else:
             self.setup_model()
+
+    def on_md_setup(self):
+        self.logger.debug('on_md_setup: Handling dataModelSetUp')
+        self.setup_model()
 
     def setup_model(self):
         self.proxy = ViewerProxyModel()
