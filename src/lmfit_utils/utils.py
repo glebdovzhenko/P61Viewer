@@ -38,6 +38,7 @@ class PolynomialModel(models.PolynomialModel):
 
 models.CutPseudoVoigtModel = CutPseudoVoigtModel
 models.PolynomialModel = PolynomialModel
+fit_kwargs = {'method': 'least_squares'}
 
 
 def make_prefix(name, composite):

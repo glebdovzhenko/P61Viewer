@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage, QFileDialog
 import pandas as pd
 import numpy as np
+import copy
+import logging
 
 from P61App import P61App
 from DatasetManager import DatasetViewer
@@ -8,13 +10,14 @@ from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from PlotWidgets import FitPlot
-from lmfit_utils import fix_background, fix_outlier_peaks
+from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs
 
 
 class GeneralFitWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.lmfit_inspector = LmfitInspector()
 
@@ -66,16 +69,23 @@ class GeneralFitWidget(QWidget):
             return
 
         result, vary_bckg = fix_background(result)
-
+        # import datetime
+        # result_backup = copy.deepcopy(result)
+        #
+        # for method in ('leastsq', 'least_squares', 'differential_evolution', 'brute'):
+        #     t_ = datetime.datetime.now()
         for ta in peak_list:
             xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
             x_lim = self.plot_w.get_axes_xlim()
             yy = yy[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
             xx = xx[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
+            if xx.shape[0] == 0:
+                continue
+
             result, vary_peaks = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
 
             try:
-                result.fit(yy, x=xx, workers=8, max_nfev=1000, method='least_squares')
+                result.fit(yy, x=xx, **fit_kwargs)
             except Exception as e:
                 msg = QErrorMessage()
                 msg.showMessage(
@@ -84,6 +94,9 @@ class GeneralFitWidget(QWidget):
 
             for param in vary_peaks:
                 result.params[param].vary = vary_peaks[param]
+
+            # self.logger.info('on_peak_fit_btn: fit using %s took %s' % (method, str(datetime.datetime.now() - t_)))
+            # result = copy.deepcopy(result_backup)
 
         for param in vary_bckg:
             result.params[param].vary = vary_bckg[param]
@@ -116,7 +129,7 @@ class GeneralFitWidget(QWidget):
             bckg_xx = bckg_xx[(bckg_xx < ta['area'][0]) | (bckg_xx > ta['area'][1])]
 
         try:
-            result.fit(bckg_yy, x=bckg_xx, workers=8, max_nfev=1000, method='least_squares')
+            result.fit(bckg_yy, x=bckg_xx, **fit_kwargs)
         except Exception as e:
             pass
 
@@ -147,7 +160,7 @@ class GeneralFitWidget(QWidget):
         result, vary_params = fix_outlier_peaks(result, x_lim)
 
         try:
-            result.fit(yy, x=xx, workers=8, max_nfev=1000, method='least_squares')
+            result.fit(yy, x=xx, **fit_kwargs)
         except Exception as e:
             msg = QErrorMessage()
             msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))

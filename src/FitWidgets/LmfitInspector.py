@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, Q
 from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
+from FitWidgets.InitPopUp import InitPopUp
 from P61App import P61App
 import lmfit_utils
 
@@ -265,7 +266,13 @@ class LmfitInspector(QWidget):
         self.treeview_md.modelReset.connect(self.expander)
 
     def from_peaklist_onclick(self):
-        idx = self.q_app.get_selected_idx()
+        w = InitPopUp(parent=self)
+        w.exec_()
+
+    def init_from_peaklist(self, idx=-1):
+        if idx == -1:
+            idx = self.q_app.get_selected_idx()
+
         if idx == -1:
             return
 
@@ -311,7 +318,7 @@ class LmfitInspector(QWidget):
         if not isinstance(name, QAction) or idx == -1:
             return
 
-        self._add_model(name.text(), idx)
+        self._add_model(name.text(), idx, poly_deg_default=False)
 
     def bminus_onclick(self):
         selected_obj = self.treeview.currentIndex().internalPointer()
@@ -323,15 +330,19 @@ class LmfitInspector(QWidget):
             result = lmfit_utils.rm_md(prefix, self.q_app.get_general_result(self.q_app.get_selected_idx()))
             self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
 
-    def _add_model(self, name, idx, init_params=dict()):
+    def _add_model(self, name, idx, init_params=dict(), poly_deg_default=4):
         old_res = self.q_app.get_general_result(idx)
 
         if name == 'PolynomialModel':
-            ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
-            if ok:
-                init_params['degree'] = ii
-                for i in range(ii + 1):
-                    init_params['c%d' % i] = 0.
+            if not poly_deg_default:
+                ii, ok = QInputDialog.getInt(self, 'Polynomial degree', 'Polynomial degree', 3, 2, 7, 1)
+                if ok:
+                    init_params['degree'] = ii
+            else:
+                init_params['degree'] = poly_deg_default
+
+            for i in range(init_params['degree'] + 1):
+                init_params['c%d' % i] = 0.
 
         result = lmfit_utils.add_md(name, init_params, old_res)
         self.q_app.set_general_result(idx, result)
