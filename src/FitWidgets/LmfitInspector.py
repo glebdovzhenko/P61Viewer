@@ -57,12 +57,12 @@ class LmfitInspectorModel(QAbstractItemModel):
         self.q_app.selectedIndexChanged.connect(self.on_selected_idx_ch)
         self.q_app.genFitResChanged.connect(self.on_gen_fit_res_changed)
 
-    def on_selected_idx_ch(self, *args, **kwargs):
-        self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%s, %s)' % (str(args), str(kwargs)))
+    def on_selected_idx_ch(self, idx):
+        self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%d)' % idx)
         self._upd()
 
-    def on_gen_fit_res_changed(self, *args, **kwargs):
-        self.logger.debug('on_gen_fit_res_changed: Handling genFitResChanged(%s, %s)' % (str(args), str(kwargs)))
+    def on_gen_fit_res_changed(self, ids):
+        self.logger.debug('on_gen_fit_res_changed: Handling genFitResChanged(%s)' % str(ids))
         self._upd()
 
     def _clear_tree(self):

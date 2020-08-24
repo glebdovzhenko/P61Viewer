@@ -34,16 +34,17 @@ class FitPlot(pg.GraphicsLayoutWidget):
 
     def on_selected_idx_ch(self, idx):
         self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%d)' % (idx, ))
-        self.on_selected_active_changed(idx)
+        self.on_selected_active_changed()
 
     def on_fit_changed(self, idxs):
         self.logger.debug('on_fit_changed: Handling genFitResChanged(%s)' % (str(idxs),))
         if self.q_app.get_selected_idx() in idxs:
-            self.on_selected_active_changed(self.q_app.get_selected_idx())
+            self.on_selected_active_changed()
 
-    def on_selected_active_changed(self, idx):
+    def on_selected_active_changed(self):
         self.clear_axes()
         self._line_ax.addLegend()
+        idx = self.q_app.get_selected_idx()
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'Color', 'GeneralFitResult']]
 

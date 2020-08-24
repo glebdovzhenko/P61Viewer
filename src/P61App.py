@@ -50,7 +50,7 @@ class P61App(QApplication):
 
     - :code:`'LmFitModel'`: :code:`lmfit.Model` (https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model) to fit
       the data in FitWidget;
-    - :code:`'SelectedIndex'`: currently selected item's index in ActiveWidget;
+    - :code:`'SelectedActiveIdx'`: currently selected item's index in ActiveWidget;
     - :code:`'ColorWheel'`: a python generator_ holding the list of colors for plotting;
     - :code:`'ColorWheel2'`: same thing, we just need two of them;
 
@@ -96,7 +96,7 @@ class P61App(QApplication):
         # data storage for one-per application items
         self.params = {
             'LmFitModelColors': dict(),
-            'SelectedIndex': -1,
+            'SelectedActiveIdx': -1,
             'ColorWheel': self._color_wheel('def'),
             'ColorWheel2': self._color_wheel('def_no_red'),
         }
@@ -138,12 +138,17 @@ class P61App(QApplication):
         return self.data.index
 
     def get_selected_idx(self):
-        return self.params['SelectedIndex']
+        if self.params['SelectedActiveIdx'] == -1:
+            return -1
+        return self.data[self.data['Active']].index[self.params['SelectedActiveIdx']]
 
-    def set_selected_idx(self, val, emit=True):
-        self.params['SelectedIndex'] = val
+    def get_selected_active_idx(self):
+        return self.params['SelectedActiveIdx']
+
+    def set_selected_active_idx(self, val, emit=True):
+        self.params['SelectedActiveIdx'] = val
         if emit:
-            self.logger.debug('set_selected_idx: Emitting selectedIndexChanged(%d)' % (val, ))
+            self.logger.debug('set_selected_active_idx: Emitting selectedIndexChanged(%d)' % (val, ))
             self.selectedIndexChanged.emit(val)
 
     def get_screen_names(self, only_active=False):
@@ -168,7 +173,7 @@ class P61App(QApplication):
             self.dataActiveChanged.emit([idx])
 
     def get_selected_screen_name(self):
-        return self.data.loc[self.params['SelectedIndex'], 'ScreenName']
+        return self.data.loc[self.params['SelectedActiveIdx'], 'ScreenName']
 
     def get_peak_list(self, idx):
         return self.data.loc[idx, 'PeakList']

@@ -64,4 +64,4 @@ class DatasetViewer(QTableView):
         si = self.selectedIndexes()
         if si:
             idx, _ = si
-            self.q_app.set_selected_idx(self.model().index(idx.row(), 0).row())
+            self.q_app.set_selected_active_idx(self.model().index(idx.row(), 0).row())

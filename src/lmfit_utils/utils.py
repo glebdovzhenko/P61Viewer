@@ -134,7 +134,7 @@ def add_peak_md(name, peak_list, composite):
             params[prefix + 'center'].max = peak['center_x'] + .25 * width
 
             params[prefix + 'sigma'].max = 10.
-            params[prefix + 'sigma'].min = 0.1
+            params[prefix + 'sigma'].min = 0.01
 
             params[prefix + 'height'].max = 1.5 * peak['center_y']
 

@@ -143,19 +143,19 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
 
     def on_selected_idx_changed(self, idx):
         self.logger.debug('on_selected_idx_changed: Handling selectedIndexChanged(%d)' % (idx,))
-        self.on_selected_active_changed(idx)
+        self.on_selected_active_changed()
 
     def on_stacked_peaks_changed(self):
         self.logger.debug('on_stacked_peaks_changed: Handling stackedPeaksChanged')
-        self.on_selected_active_changed(self.q_app.get_selected_idx())
+        self.on_selected_active_changed()
 
     def on_bckg_interp_changed(self, *args, **kwargs):
         self.logger.debug('on_bckg_interp_changed: Handling bckgInterpChanged(%s, %s)' % (str(args), str(kwargs)))
-        self.on_selected_active_changed(self.q_app.get_selected_idx())
+        self.on_selected_active_changed()
 
     def on_peak_list_changed(self, *args, **kwargs):
         self.logger.debug('on_peak_list_changed: Handling peakListChanged(%s, %s)' % (str(args), str(kwargs)))
-        self.on_selected_active_changed(self.q_app.get_selected_idx())
+        self.on_selected_active_changed()
 
     def make_callback(self, ii, stacked=True):
         if not stacked:
@@ -173,9 +173,10 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                 self.q_app.set_stacked_peaks(pl, emit=False)
         return cb
 
-    def on_selected_active_changed(self, idx):
+    def on_selected_active_changed(self):
         self.clear_axes()
         del self._linear_regions[:]
+        idx = self.q_app.get_selected_idx()
         if idx != -1:
             data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList', 'BckgInterp']]
 
