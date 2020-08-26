@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>ListWidgets &#8212; P61 Viewer  documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>&lt;no title&gt; &#8212; P61 Viewer  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ImportWidgets" href="ImportWidgets.html" />
+    <link rel="next" title="&lt;no title&gt;" href="ImportWidgets.html" />
     <link rel="prev" title="src/P61App.py" href="P61App.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -32,78 +33,7 @@
 
           <div class="body" role="main">
             
-  <span class="target" id="module-ListWidgets"></span><div class="section" id="listwidgets">
-<h1>ListWidgets<a class="headerlink" href="#listwidgets" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="interface">
-<h2>Interface<a class="headerlink" href="#interface" title="Permalink to this headline">¶</a></h2>
-<p>This sub-module interfaces two classes: <code class="code docutils literal notranslate"><span class="pre">EditableListWidget</span></code> and <code class="code docutils literal notranslate"><span class="pre">ActiveListWidget</span></code>.</p>
-<ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">EditableListWidget</span></code> represents a list of datasets. Allows for group operations such as adding, deleting,
-changing active status.</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">ActiveListWidget</span></code> represents a list of active datasets. Allows for having selected just one item at a time.</p></li>
-</ul>
-</div>
-<div class="section" id="module-ListWidgets.ActiveListWidget">
-<span id="implementation"></span><h2>Implementation<a class="headerlink" href="#module-ListWidgets.ActiveListWidget" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="activelist-py">
-<h3>ActiveList.py<a class="headerlink" href="#activelist-py" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="ListWidgets.ActiveListWidget.ActiveListModel">
-<em class="property">class </em><code class="sig-prename descclassname">ListWidgets.ActiveListWidget.</code><code class="sig-name descname">ActiveListModel</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ListWidgets.ActiveListWidget.ActiveListModel" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="ListWidgets.ActiveListWidget.ActiveListModel.data">
-<code class="sig-name descname">data</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">QModelIndex</em>, <em class="sig-param">role: int = Qt.DisplayRole</em><span class="sig-paren">)</span> &#x2192; Any<a class="headerlink" href="#ListWidgets.ActiveListWidget.ActiveListModel.data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="ListWidgets.ActiveListWidget.ActiveListModel.rowCount">
-<code class="sig-name descname">rowCount</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">parent: QModelIndex = QModelIndex()</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#ListWidgets.ActiveListWidget.ActiveListModel.rowCount" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ListWidgets.ActiveListWidget.ActiveListWidget">
-<em class="property">class </em><code class="sig-prename descclassname">ListWidgets.ActiveListWidget.</code><code class="sig-name descname">ActiveListWidget</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">selection_mode=1</em>, <em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#ListWidgets.ActiveListWidget.ActiveListWidget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<span class="target" id="module-ListWidgets.EditableListWidget"></span><div class="section" id="editablelist-py">
-<h3>EditableList.py<a class="headerlink" href="#editablelist-py" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="ListWidgets.EditableListWidget.EditableListModel">
-<em class="property">class </em><code class="sig-prename descclassname">ListWidgets.EditableListWidget.</code><code class="sig-name descname">EditableListModel</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListModel" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="ListWidgets.EditableListWidget.EditableListModel.data">
-<code class="sig-name descname">data</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">QModelIndex</em>, <em class="sig-param">role: int = Qt.DisplayRole</em><span class="sig-paren">)</span> &#x2192; Any<a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListModel.data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="ListWidgets.EditableListWidget.EditableListModel.flags">
-<code class="sig-name descname">flags</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">QModelIndex</em><span class="sig-paren">)</span> &#x2192; Qt.ItemFlags<a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListModel.flags" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="ListWidgets.EditableListWidget.EditableListModel.rowCount">
-<code class="sig-name descname">rowCount</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">parent: QModelIndex = QModelIndex()</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListModel.rowCount" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="ListWidgets.EditableListWidget.EditableListModel.setData">
-<code class="sig-name descname">setData</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">QModelIndex</em>, <em class="sig-param">Any</em>, <em class="sig-param">role: int = Qt.EditRole</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListModel.setData" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ListWidgets.EditableListWidget.EditableListWidget">
-<em class="property">class </em><code class="sig-prename descclassname">ListWidgets.EditableListWidget.</code><code class="sig-name descname">EditableListWidget</code><span class="sig-paren">(</span><em class="sig-param">parent=None</em>, <em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#ListWidgets.EditableListWidget.EditableListWidget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-</div>
-</div>
-
+  
 
           </div>
           
@@ -122,18 +52,10 @@ changing active status.</p></li>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation/index.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User guide (updated for version 0.0.2)</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="P61ViewerMain.html">src/P61ViewerMain.py</a></li>
-<li class="toctree-l2"><a class="reference internal" href="P61App.html">src/P61App.py</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">ListWidgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ImportWidgets.html">ImportWidgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PlotWidgets.html">PlotWidgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FitWidgets.html">FitWidgets</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Developer documentation</a></li>
 </ul>
 
 <div class="relations">
@@ -142,7 +64,7 @@ changing active status.</p></li>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">Developer documentation</a><ul>
       <li>Previous: <a href="P61App.html" title="previous chapter">src/P61App.py</a></li>
-      <li>Next: <a href="ImportWidgets.html" title="next chapter">ImportWidgets</a></li>
+      <li>Next: <a href="ImportWidgets.html" title="next chapter">&lt;no title&gt;</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -156,7 +78,7 @@ changing active status.</p></li>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -173,7 +95,7 @@ changing active status.</p></li>
       &copy;2019, Gleb Dovzhenko.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

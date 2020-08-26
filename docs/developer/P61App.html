@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>src/P61App.py &#8212; P61 Viewer  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ListWidgets" href="ListWidgets.html" />
+    <link rel="next" title="&lt;no title&gt;" href="ListWidgets.html" />
     <link rel="prev" title="src/P61ViewerMain.py" href="P61ViewerMain.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -34,9 +35,9 @@
             
   <span class="target" id="module-P61App"></span><div class="section" id="src-p61app-py">
 <h1>src/P61App.py<a class="headerlink" href="#src-p61app-py" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="P61App.P61App">
-<em class="property">class </em><code class="sig-prename descclassname">P61App.</code><code class="sig-name descname">P61App</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#P61App.P61App" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">P61App.</code><code class="sig-name descname">P61App</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#P61App.P61App" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>General:</strong></p>
 <p><a class="reference external" href="https://doc.qt.io/qtforpython/PySide2/QtWidgets/QApplication.html">QApplication</a> child class that is used for managing the application data.</p>
 <p>This class is a singleton accessible to all application widgets. By convention all widgets store a reference to the
@@ -65,13 +66,13 @@ represents a dataset read from a .nxs file. At the moment .nxs files hold two da
 <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">'LmFitModel'</span></code>: <code class="code docutils literal notranslate"><span class="pre">lmfit.Model</span></code> (<a class="reference external" href="https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model">https://lmfit.github.io/lmfit-py/model.html#lmfit.model.Model</a>) to fit
 the data in FitWidget;</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">'SelectedIndex'</span></code>: currently selected item’s index in ActiveWidget;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'SelectedActiveIdx'</span></code>: currently selected item’s index in ActiveWidget;</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">'ColorWheel'</span></code>: a python <a class="reference external" href="https://wiki.python.org/moin/Generators">generator</a> holding the list of colors for plotting;</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">'ColorWheel2'</span></code>: same thing, we just need two of them;</p></li>
 </ul>
 <p><strong>Signals and their meaning:</strong></p>
 <ul class="simple">
-<li><p><code class="code docutils literal notranslate"><span class="pre">dataRowsAppended</span></code>: when new histograms (rows) are added to the <code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> Dataframe;</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">dataRowsInserted</span></code>: when new histograms (rows) are added to the <code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> Dataframe;</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">dataRowsRemoved</span></code>: when histograms (rows) are deleted from the <code class="code docutils literal notranslate"><span class="pre">P61App.instance().data</span></code> Dataframe;</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">dataActiveChanged</span></code>: when the <code class="code docutils literal notranslate"><span class="pre">'Active'</span></code> status of the rows is changed;</p></li>
 </ul>
@@ -110,8 +111,6 @@ selected index);</p></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="P61ViewerMain.html">src/P61ViewerMain.py</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">src/P61App.py</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ListWidgets.html">ListWidgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ImportWidgets.html">ImportWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="PlotWidgets.html">PlotWidgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="FitWidgets.html">FitWidgets</a></li>
 </ul>
@@ -124,7 +123,7 @@ selected index);</p></li>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">Developer documentation</a><ul>
       <li>Previous: <a href="P61ViewerMain.html" title="previous chapter">src/P61ViewerMain.py</a></li>
-      <li>Next: <a href="ListWidgets.html" title="next chapter">ListWidgets</a></li>
+      <li>Next: <a href="ListWidgets.html" title="next chapter">&lt;no title&gt;</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -138,7 +137,7 @@ selected index);</p></li>
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -155,7 +154,7 @@ selected index);</p></li>
       &copy;2019, Gleb Dovzhenko.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
