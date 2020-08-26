@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QSize
+from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QSize, QSortFilterProxyModel
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog, \
     QErrorMessage, QMessageBox
@@ -18,7 +18,9 @@ class DataSetStorageModel(QAbstractTableModel):
 
         self.c_names = ['Name', u'💀⏱', u'χ²']
 
-        self.q_app.data_model = self
+        self.proxy = QSortFilterProxyModel()
+        self.proxy.setSourceModel(self)
+        self.q_app.data_model = self.proxy
         self.logger.debug('__init__: Emitting dataModelSetUp')
         self.q_app.dataModelSetUp.emit()
 
@@ -119,9 +121,10 @@ class DatasetManager(QWidget):
 
         self.view = QTableView()
         self.model = DataSetStorageModel()
-        self.view.setModel(self.model)
+        self.view.setModel(self.q_app.data_model)
         self.view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.view.setSelectionBehavior(QTableView.SelectRows)
+        self.view.setSortingEnabled(True)
 
         # buttons and checkbox
         self.bplus = QPushButton('+')
