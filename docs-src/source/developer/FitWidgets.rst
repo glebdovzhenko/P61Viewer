@@ -1,2 +1,0 @@
-.. automodule:: FitWidgets
-   :members:

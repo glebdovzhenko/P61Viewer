@@ -1,2 +1,0 @@
-.. automodule:: ImportWidgets
-   :members:

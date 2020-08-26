@@ -13,11 +13,3 @@ Developer documentation
 
    P61App
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Submodules:
-
-   ListWidgets
-   ImportWidgets
-   PlotWidgets
-   FitWidgets
