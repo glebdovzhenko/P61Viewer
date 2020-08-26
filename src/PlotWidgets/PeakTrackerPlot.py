@@ -138,7 +138,6 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_idx_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
-        self.q_app.bckgInterpChanged.connect(self.on_bckg_interp_changed)
         self.q_app.stackedPeaksChanged.connect(self.on_stacked_peaks_changed)
 
     def on_selected_idx_changed(self, idx):
@@ -147,10 +146,6 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
 
     def on_stacked_peaks_changed(self):
         self.logger.debug('on_stacked_peaks_changed: Handling stackedPeaksChanged')
-        self.on_selected_active_changed()
-
-    def on_bckg_interp_changed(self, *args, **kwargs):
-        self.logger.debug('on_bckg_interp_changed: Handling bckgInterpChanged(%s, %s)' % (str(args), str(kwargs)))
         self.on_selected_active_changed()
 
     def on_peak_list_changed(self, *args, **kwargs):
@@ -178,7 +173,7 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         del self._linear_regions[:]
         idx = self.q_app.get_selected_idx()
         if idx != -1:
-            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList', 'BckgInterp']]
+            data = self.q_app.data.loc[idx, ['DataX', 'DataY', 'PeakList']]
 
             self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
                                pen=pg.mkPen(color='#000000'))
@@ -228,9 +223,6 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
                                                              pen=pg.mkPen(color='#ff0000'),
                                                              brush=pg.mkBrush(color='#ffffff')))
 
-            if data['BckgInterp'] is not None:
-                self._line_ax.plot(1E3 * data['DataX'], data['BckgInterp'],
-                                   pen=pg.mkPen(color='#0000ff'))
 
     def clear_axes(self):
         self._line_ax.clear()

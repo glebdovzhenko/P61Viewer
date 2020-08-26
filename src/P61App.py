@@ -77,7 +77,6 @@ class P61App(QApplication):
     selectedIndexChanged = pyqtSignal(int)
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
-    bckgInterpChanged = pyqtSignal(list)
     stackedPeaksChanged = pyqtSignal()
     dataModelSetUp = pyqtSignal()
 
@@ -86,7 +85,7 @@ class P61App(QApplication):
 
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'Channel', 'DataID', 'ScreenName', 'Active',
-                                          'Color', 'PeakList', 'GeneralFitResult', 'PeakFitResult', 'BckgInterp'))
+                                          'Color', 'PeakList', 'GeneralFitResult'))
         self.data_model = None
         self.peak_search_range = None
         self.stacked_peaks = None
@@ -183,15 +182,6 @@ class P61App(QApplication):
         if emit:
             self.logger.debug('set_peak_list: Emitting peakListChanged([%d])' % (idx, ))
             self.peakListChanged.emit([idx])
-
-    def get_bckg_interp(self, idx):
-        return self.data.loc[idx, 'BckgInterp']
-
-    def set_bckg_interp(self, idx, result, emit=True):
-        self.data.loc[idx, 'BckgInterp'] = result
-        if emit:
-            self.logger.debug('set_bckg_interp: Emitting bckgInterpChanged([%d])' % (idx, ))
-            self.bckgInterpChanged.emit([idx])
 
     def get_general_result(self, idx):
         return self.data.loc[idx, 'GeneralFitResult']
