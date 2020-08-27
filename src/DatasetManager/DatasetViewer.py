@@ -20,7 +20,6 @@ class ViewerProxyModel(QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row, source_parent: QModelIndex):
         active = self.q_app.data.loc[source_row, 'Active']
-        print(source_row, active)
         return True if active is None else active
 
     def data(self, ii: QModelIndex, role=None):

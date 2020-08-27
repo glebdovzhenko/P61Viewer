@@ -104,7 +104,6 @@ class DataSetStorageModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
         tmp = {0: 'ScreenName', 1: 'DeadTime', 2: 'ScreenName'}
         self.q_app.sort_data(by=tmp[column], inplace=True, ascending=bool(order))
-        print(self.q_app.data.loc[:, ('ScreenName', 'Active')])
         self.dataChanged.emit(
             self.index(0, 0),
             self.index(self.rowCount(), self.columnCount())
