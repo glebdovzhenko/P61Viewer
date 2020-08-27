@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QModelIndex, QSortFilterProxyModel
-from PyQt5.QtWidgets import QTableView, QAbstractItemView
+from PyQt5.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 
 from P61App import P61App
 import logging
@@ -49,6 +49,7 @@ class DatasetViewer(QTableView):
         self.logger = logging.getLogger(str(self.__class__))
 
         self.proxy = None
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.setup_model()
 
     def setup_model(self):

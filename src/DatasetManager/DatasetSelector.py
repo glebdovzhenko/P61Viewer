@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QModelIndex, QSortFilterProxyModel
-from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QGridLayout, QCheckBox
+from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QGridLayout, QCheckBox, QHeaderView
 
 from P61App import P61App
 import logging
@@ -77,6 +77,7 @@ class DatasetSelector(QWidget):
 
         self.view = QTableView()
         self.proxy = None
+        self.view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.checkbox = QCheckBox('')
         self.checkbox.setTristate(False)

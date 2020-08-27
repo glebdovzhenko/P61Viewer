@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog, \
-    QErrorMessage, QMessageBox
+    QErrorMessage, QMessageBox, QHeaderView
 import os
 import pandas as pd
 import logging
@@ -20,6 +20,7 @@ class DatasetManager(QWidget):
         self.view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.view.setSelectionBehavior(QTableView.SelectRows)
         self.view.setSortingEnabled(True)
+        self.view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         # buttons and checkbox
         self.bplus = QPushButton('+')
