@@ -50,6 +50,7 @@ class DatasetViewer(QTableView):
 
         self.proxy = None
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.horizontalHeader().setStretchLastSection(True)
         self.setup_model()
 
     def setup_model(self):
@@ -57,6 +58,7 @@ class DatasetViewer(QTableView):
         self.proxy.setSourceModel(self.q_app.data_model)
         self.setModel(self.proxy)
         self.setColumnHidden(1, True)
+        self.setColumnHidden(2, True)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QTableView.SelectRows)
         self.selectionModel().selectionChanged.connect(self.on_selection_changed)

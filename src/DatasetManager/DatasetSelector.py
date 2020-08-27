@@ -78,6 +78,7 @@ class DatasetSelector(QWidget):
         self.view = QTableView()
         self.proxy = None
         self.view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.view.horizontalHeader().setStretchLastSection(True)
 
         self.checkbox = QCheckBox('')
         self.checkbox.setTristate(False)

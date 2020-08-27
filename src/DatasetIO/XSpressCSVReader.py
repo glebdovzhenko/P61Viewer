@@ -35,6 +35,7 @@ class XSpressCSVReader:
                 'DataX': 1E-3 * dd.loc[ii:dd.shape[0] - 2, 'channel'].astype(np.float),
                 'DataY': dd.loc[ii:dd.shape[0] - 2, ch].astype(np.float),
                 'DataID': f_name + ':0' + ch,
+                'Channel': int(ch),
                 'DeadTime': dd[dd['channel'] == 'dt'][ch][1].astype(np.float),
                 'ScreenName': os.path.basename(f_name) + ':' + ch,
                 'Active': True,

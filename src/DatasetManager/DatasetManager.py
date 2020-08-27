@@ -21,6 +21,7 @@ class DatasetManager(QWidget):
         self.view.setSelectionBehavior(QTableView.SelectRows)
         self.view.setSortingEnabled(True)
         self.view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.view.horizontalHeader().setStretchLastSection(True)
 
         # buttons and checkbox
         self.bplus = QPushButton('+')

@@ -11,7 +11,7 @@ class DataSetStorageModel(QAbstractTableModel):
         self.q_app = instance
         self.logger = logging.getLogger(str(self.__class__))
 
-        self.c_names = ['Name', u'💀⏱', u'χ²']
+        self.c_names = ['Name', 'Channel', u'💀⏱', u'χ²']
 
         self.q_app.genFitResChanged.connect(self.on_gen_fit_changed)
 
@@ -24,7 +24,7 @@ class DataSetStorageModel(QAbstractTableModel):
             )
 
     def columnCount(self, parent=None, *args, **kwargs):
-        return 3
+        return 4
 
     def rowCount(self, parent=None, *args, **kwargs):
         return self.q_app.data.shape[0]
@@ -53,10 +53,15 @@ class DataSetStorageModel(QAbstractTableModel):
                 return None
         elif ii.column() == 1:
             if role == Qt.DisplayRole:
-                return item_row['DeadTime']
+                return item_row['Channel']
             else:
                 return None
         elif ii.column() == 2:
+            if role == Qt.DisplayRole:
+                return item_row['DeadTime']
+            else:
+                return None
+        elif ii.column() == 3:
             if role == Qt.DisplayRole:
                 if item_row['GeneralFitResult'] is not None:
                     if item_row['GeneralFitResult'].chisqr is not None:
@@ -102,7 +107,7 @@ class DataSetStorageModel(QAbstractTableModel):
             return False
 
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
-        tmp = {0: 'ScreenName', 1: 'DeadTime', 2: 'ScreenName'}
+        tmp = {0: 'ScreenName', 1: 'Channel', 2: 'DeadTime', 3: 'ScreenName'}
         self.q_app.sort_data(by=tmp[column], inplace=True, ascending=bool(order))
         self.dataChanged.emit(
             self.index(0, 0),

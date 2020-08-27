@@ -22,4 +22,4 @@ class PeakAnalysisWidget(QWidget):
         layout.addWidget(self.list, 2, 1, 1, 1)
         layout.addWidget(self.plot, 1, 2, 2, 1)
         layout.setColumnStretch(1, 1)
-        layout.setColumnStretch(2, 2)
+        layout.setColumnStretch(2, 3)
