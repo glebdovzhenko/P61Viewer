@@ -31,6 +31,11 @@ class FitPlot(pg.GraphicsLayoutWidget):
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_idx_ch)
         self.q_app.genFitResChanged.connect(self.on_fit_changed)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        self.on_selected_active_changed()
 
     def on_selected_idx_ch(self, idx):
         self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%d)' % (idx, ))

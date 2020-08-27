@@ -61,6 +61,11 @@ class MainPlot3D(GlPlot3D):
         self._lines = []
 
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        self.upd_and_redraw()
 
     def redraw_data(self):
         del self._lines[:]

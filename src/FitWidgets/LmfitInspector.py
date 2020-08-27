@@ -55,7 +55,12 @@ class LmfitInspectorModel(QAbstractItemModel):
         self._upd()
 
         self.q_app.selectedIndexChanged.connect(self.on_selected_idx_ch)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
         self.q_app.genFitResChanged.connect(self.on_gen_fit_res_changed)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        self._upd()
 
     def on_selected_idx_ch(self, idx):
         self.logger.debug('on_selected_idx_ch: Handling selectedIndexChanged(%d)' % idx)

@@ -79,7 +79,7 @@ class P61App(QApplication):
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
     stackedPeaksChanged = pyqtSignal()
-    dataModelSetUp = pyqtSignal()
+    dataSorted = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -201,3 +201,9 @@ class P61App(QApplication):
         if emit:
             self.logger.debug('set_stacked_peaks: Emitting stackedPeaksChanged')
             self.stackedPeaksChanged.emit()
+
+    def sort_data(self, **kwargs):
+        self.data.sort_values(**kwargs)
+        self.data.reset_index(drop=True, inplace=True)
+        self.logger.debug('sort_data: Emitting dataSorted')
+        self.dataSorted.emit()

@@ -26,6 +26,7 @@ class PTPlot3DWidget(GlPlot3DWidget):
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
 
     def autoscale(self):
         if len(self.q_app.get_active_ids()) > 0:
@@ -35,6 +36,12 @@ class PTPlot3DWidget(GlPlot3DWidget):
         else:
             emin, emax, imax = None, None, None
         self._scale_to(emin, emax, imax)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        self.plot.upd_and_redraw()
+        if self.autoscale_cb.isChecked():
+            self.autoscale()
 
     def on_data_rows_appended(self, *args, **kwargs):
         self.logger.debug('on_data_rows_appended: Handling dataRowsInserted(%s, %s)' % (str(args), str(kwargs)))
@@ -139,6 +146,11 @@ class PTPlot2D(pg.GraphicsLayoutWidget):
         self.q_app.selectedIndexChanged.connect(self.on_selected_idx_changed)
         self.q_app.peakListChanged.connect(self.on_peak_list_changed)
         self.q_app.stackedPeaksChanged.connect(self.on_stacked_peaks_changed)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        self.on_selected_active_changed()
 
     def on_selected_idx_changed(self, idx):
         self.logger.debug('on_selected_idx_changed: Handling selectedIndexChanged(%d)' % (idx,))

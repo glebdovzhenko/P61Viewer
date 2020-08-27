@@ -9,9 +9,18 @@ class ViewerProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None, *args):
         QSortFilterProxyModel.__init__(self, parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
+
+        self.setDynamicSortFilter(True)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted)')
+        self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent: QModelIndex):
         active = self.q_app.data.loc[source_row, 'Active']
+        print(source_row, active)
         return True if active is None else active
 
     def data(self, ii: QModelIndex, role=None):

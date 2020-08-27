@@ -11,6 +11,13 @@ class SelectorProxyModel(QSortFilterProxyModel):
         self.q_app = P61App.instance()
         self.selected = {k: True for k in self.q_app.data[self.q_app.data['Active']].index}
 
+        self.setDynamicSortFilter(True)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted)')
+        self.invalidateFilter()
+
     def filterAcceptsRow(self, source_row, source_parent: QModelIndex):
         active = self.q_app.data.loc[source_row, 'Active']
         return True if active is None else active
