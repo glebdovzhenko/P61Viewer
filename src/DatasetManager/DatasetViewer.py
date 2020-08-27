@@ -41,14 +41,6 @@ class DatasetViewer(QTableView):
         self.logger = logging.getLogger(str(self.__class__))
 
         self.proxy = None
-
-        if self.q_app.data_model is None:
-            self.q_app.dataModelSetUp.connect(self.on_md_setup)
-        else:
-            self.setup_model()
-
-    def on_md_setup(self):
-        self.logger.debug('on_md_setup: Handling dataModelSetUp')
         self.setup_model()
 
     def setup_model(self):

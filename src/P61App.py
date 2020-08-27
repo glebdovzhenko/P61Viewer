@@ -8,6 +8,7 @@ from PyQt5.QtCore import pyqtSignal
 import pandas as pd
 import numpy as np
 import logging
+from DataSetStorageModel import DataSetStorageModel
 
 
 class P61App(QApplication):
@@ -86,7 +87,7 @@ class P61App(QApplication):
         # data storage for one-per-dataset items
         self.data = pd.DataFrame(columns=('DataX', 'DataY', 'DeadTime', 'Channel', 'DataID', 'ScreenName', 'Active',
                                           'Color', 'PeakList', 'GeneralFitResult'))
-        self.data_model = None
+        self.data_model = DataSetStorageModel(instance=self)
         self.peak_search_range = None
         self.stacked_peaks = None
 

@@ -1,5 +1,4 @@
-from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex, QSize, QSortFilterProxyModel
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog, \
     QErrorMessage, QMessageBox
 import os
@@ -10,109 +9,6 @@ from P61App import P61App
 from DatasetIO import DatasetReaders
 
 
-class DataSetStorageModel(QAbstractTableModel):
-    def __init__(self, parent=None):
-        QAbstractTableModel.__init__(self, parent)
-        self.q_app = P61App.instance()
-        self.logger = logging.getLogger(str(self.__class__))
-
-        self.c_names = ['Name', u'💀⏱', u'χ²']
-
-        self.proxy = QSortFilterProxyModel()
-        self.proxy.setSourceModel(self)
-        self.q_app.data_model = self.proxy
-        self.logger.debug('__init__: Emitting dataModelSetUp')
-        self.q_app.dataModelSetUp.emit()
-
-        self.q_app.genFitResChanged.connect(self.on_gen_fit_changed)
-
-    def on_gen_fit_changed(self, rows):
-        self.logger.debug('on_gen_fit_changed: Handling genFitResChanged(%s)' % (str(rows),))
-        if rows:
-            self.dataChanged.emit(
-                self.index(min(rows), 2),
-                self.index(max(rows), 2)
-            )
-
-    def columnCount(self, parent=None, *args, **kwargs):
-        return 3
-
-    def rowCount(self, parent=None, *args, **kwargs):
-        return self.q_app.data.shape[0]
-
-    def headerData(self, section, orientation, role=None):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.c_names[section]
-
-    def data(self, ii: QModelIndex, role=None):
-        if not ii.isValid():
-            return None
-
-        item_row = self.q_app.data.loc[ii.row()]
-
-        if ii.column() == 0:
-            if role == Qt.DisplayRole:
-                return item_row['ScreenName']
-            elif role == Qt.CheckStateRole:
-                return Qt.Checked if item_row['Active'] else Qt.Unchecked
-            elif role == Qt.ForegroundRole:
-                if item_row['Active']:
-                    return QColor(item_row['Color'])
-                else:
-                    return QColor('Black')
-            else:
-                return None
-        elif ii.column() == 1:
-            if role == Qt.DisplayRole:
-                return item_row['DeadTime']
-            else:
-                return None
-        elif ii.column() == 2:
-            if role == Qt.DisplayRole:
-                if item_row['GeneralFitResult'] is not None:
-                    if item_row['GeneralFitResult'].chisqr is not None:
-                        return '%.01f' % item_row['GeneralFitResult'].chisqr
-                    else:
-                        return None
-                else:
-                    return None
-            else:
-                return None
-        else:
-            return None
-
-    def flags(self, ii: QModelIndex):
-        if not ii.isValid():
-            return 0
-
-        result = super(QAbstractTableModel, self).flags(ii)
-
-        if ii.column() == 0:
-            result |= Qt.ItemIsUserCheckable
-
-        return result
-
-    def insertRows(self, position, rows, parent=QModelIndex(), *args, **kwargs):
-        self.beginInsertRows(parent, position, position + rows - 1)
-        self.q_app.insert_rows(position, rows)
-        self.endInsertRows()
-        return True
-
-    def removeRows(self, position, rows, parent=QModelIndex(), *args, **kwargs):
-        self.beginRemoveRows(parent, position, position + rows - 1)
-        self.q_app.remove_rows(position, rows)
-        self.endRemoveRows()
-        return True
-
-    def setData(self, ii: QModelIndex, value, role=None):
-        if ii.column() == 0 and role == Qt.CheckStateRole:
-            self.q_app.set_active_status(ii.row(), bool(value))
-            self.dataChanged.emit(ii, ii)
-            return True
-        else:
-            return False
-
-
 class DatasetManager(QWidget):
     def __init__(self, parent=None, *args):
         QWidget.__init__(self, parent, *args)
@@ -120,7 +16,6 @@ class DatasetManager(QWidget):
         self.logger = logging.getLogger(str(self.__class__))
 
         self.view = QTableView()
-        self.model = DataSetStorageModel()
         self.view.setModel(self.q_app.data_model)
         self.view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.view.setSelectionBehavior(QTableView.SelectRows)
@@ -180,11 +75,11 @@ class DatasetManager(QWidget):
                 failed.append(file)
 
         # opened = opened.astype({'DeadTime': })
-        self.model.insertRows(0, opened.shape[0])
+        self.q_app.data_model.insertRows(0, opened.shape[0])
         self.q_app.data[0:opened.shape[0]] = opened
-        self.model.dataChanged.emit(
-            self.model.index(0, 0),
-            self.model.index(opened.shape[0], self.model.columnCount())
+        self.q_app.data_model.dataChanged.emit(
+            self.q_app.data_model.index(0, 0),
+            self.q_app.data_model.index(opened.shape[0], self.q_app.data_model.columnCount())
         )
 
         self.logger.debug('bplus_onclick: Emitting dataRowsInserted(%d, %d)' % (0, opened.shape[0]))
@@ -220,7 +115,7 @@ class DatasetManager(QWidget):
     def bminus_onclick(self):
         rows = list(set(idx.row() for idx in self.view.selectedIndexes()))
         for position, amount in self.to_consecutive(sorted(rows)):
-            self.model.removeRows(position, amount)
+            self.q_app.data_model.removeRows(position, amount)
         self.logger.debug('bminus_onclick: Emitting dataRowsRemoved(%s)' % (str(rows), ))
         self.q_app.dataRowsRemoved.emit(rows)
 
@@ -258,9 +153,9 @@ class DatasetManager(QWidget):
         for row in rows:
             self.q_app.set_active_status(row, bool(self.checkbox.checkState()), emit=False)
 
-        self.model.dataChanged.emit(
-            self.model.index(min(rows), 0),
-            self.model.index(max(rows), 0),
+        self.q_app.data_model.dataChanged.emit(
+            self.q_app.data_model.index(min(rows), 0),
+            self.q_app.data_model.index(max(rows), 0),
         )
 
         self.logger.debug('checkbox_onclick: Emitting dataActiveChanged(%s)' % (str(rows),))

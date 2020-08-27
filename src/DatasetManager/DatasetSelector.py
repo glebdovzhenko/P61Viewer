@@ -79,13 +79,6 @@ class DatasetSelector(QWidget):
         layout.addWidget(self.checkbox, 1, 1, 1, 1)
         layout.addWidget(self.view, 2, 1, 1, 4)
 
-        if self.q_app.data_model is None:
-            self.q_app.dataModelSetUp.connect(self.on_md_setup)
-        else:
-            self.setup_model()
-
-    def on_md_setup(self):
-        self.logger.debug('on_dataset_md_sup: Handling dataModelSetUp')
         self.setup_model()
 
     def setup_model(self):
