@@ -10,7 +10,7 @@ from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from PlotWidgets import FitPlot
-from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs
+from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, constrain_params
 
 
 class GeneralFitWidget(QWidget):
@@ -24,6 +24,7 @@ class GeneralFitWidget(QWidget):
         self.active_list = DatasetViewer()
 
         self.fit_btn = QPushButton('Fit')
+        self.constrain_btn = QPushButton('Constrain parameters')
         self.bckg_fit_btn = QPushButton('Fit Background')
         self.peaks_fit_btn = QPushButton('Fit peaks')
         self.fit_all_btn = QPushButton('Fit multiple')
@@ -35,7 +36,8 @@ class GeneralFitWidget(QWidget):
         self.setLayout(layout)
         layout.addWidget(self.lmfit_inspector, 1, 1, 3, 3)
         layout.addWidget(self.active_list, 4, 2, 6, 2)
-        layout.addWidget(self.fit_btn, 4, 1, 1, 1)
+        # layout.addWidget(self.fit_btn, 4, 1, 1, 1)
+        layout.addWidget(self.constrain_btn, 4, 1, 1, 1)
         layout.addWidget(self.bckg_fit_btn, 5, 1, 1, 1)
         layout.addWidget(self.peaks_fit_btn, 6, 1, 1, 1)
         layout.addWidget(self.copy_btn, 7, 1, 1, 1)
@@ -47,12 +49,26 @@ class GeneralFitWidget(QWidget):
         layout.setColumnStretch(3, 1)
         layout.setColumnStretch(4, 6)
 
-        self.fit_btn.clicked.connect(self.on_fit_btn)
+        # self.fit_btn.clicked.connect(self.on_fit_btn)
+        self.constrain_btn.clicked.connect(self.on_constrain_btn)
         self.fit_all_btn.clicked.connect(self.on_fit_all_btn)
         self.bckg_fit_btn.clicked.connect(self.on_bckg_fit_btn)
         self.peaks_fit_btn.clicked.connect(self.on_peak_fit_btn)
         self.copy_btn.clicked.connect(self.on_copy_btn)
         self.export_btn.clicked.connect(self.on_export_button)
+
+    def on_constrain_btn(self, *args, idx=None):
+        if self.q_app.get_selected_idx() == -1:
+            return
+        elif idx is None:
+            idx = self.q_app.get_selected_idx()
+
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
+        result = constrain_params(result)
+        self.q_app.set_general_result(idx, result)
 
     def on_peak_fit_btn(self, *args, idx=None):
         if self.q_app.get_selected_idx() == -1:

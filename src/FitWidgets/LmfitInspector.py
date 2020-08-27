@@ -4,7 +4,7 @@ from copy import deepcopy
 import logging
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
-    QStyledItemDelegate, QStyleOptionViewItem
+    QStyledItemDelegate, QStyleOptionViewItem, QHeaderView
 from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
@@ -86,7 +86,8 @@ class LmfitInspectorModel(QAbstractItemModel):
         self._clear_tree()
 
         if self._fit_res is not None:
-            for md in self._fit_res.model.components:
+            # for md in self._fit_res.model.components:
+            for md in lmfit_utils.sort_components(self._fit_res):
                 self.rootItem.appendChild(TreeNode(md, self.rootItem))
 
                 for par in self._fit_res.params:
@@ -104,15 +105,19 @@ class LmfitInspectorModel(QAbstractItemModel):
         if not index.isValid():
             return QVariant()
 
-        item = index.internalPointer()
-        data = item.itemData
+        data = index.internalPointer().itemData
 
         if role == Qt.DisplayRole:
             if isinstance(data, lmfit.Parameter):
                 data = (data.name, '%.03E' % data.value, '± %.03E' % data.stderr
                         if data.stderr is not None else 'None', '%.03E' % data.min, '%.03E' % data.max)
             elif isinstance(data, lmfit.Model):
-                data = (':'.join((data._name, data.prefix)), ) + ('', ) * 4
+                if ('GaussianModel' in data.name) or ('LorentzianModel' in data.name) or \
+                        ('PseudoVoigtModel' in data.name):
+                    center = '%.1f: ' % self._fit_res.params[data.prefix + 'center'].value
+                else:
+                    center = ''
+                data = (center + ' '.join((data._name, data.prefix)), ) + ('', ) * 4
             return data[index.column()]
         elif role == Qt.CheckStateRole:
             if index.column() == 0 and isinstance(data, lmfit.Parameter):
@@ -252,6 +257,8 @@ class LmfitInspector(QWidget):
         self.treeview.setModel(self.treeview_md)
         self.treeview.setItemDelegate(self._delegate)
         self.treeview.expandAll()
+        self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.treeview.header().setStretchLastSection(True)
 
         self.menu = QMenu()
 

@@ -199,3 +199,31 @@ def fix_outlier_peaks(result, x_lim):
                         param_status[param] = result.params[param].vary
                         result.params[param].vary = False
     return result, param_status
+
+
+def sort_components(md: model.ModelResult):
+    def key(cmp):
+        if ('GaussianModel' in cmp.name) or ('LorentzianModel' in cmp.name) or ('PseudoVoigtModel' in cmp.name):
+            return md.params[cmp.prefix + 'center'].value
+        else:
+            return -1
+    return sorted(md.model.components, key=key)
+
+
+def constrain_params(result: model.ModelResult):
+    sigmas = []
+    for param in result.params:
+        if 'sigma' in param:
+            sigmas.append(result.params[param].value)
+
+    for param in result.params:
+        if 'amplitude' in param:
+            result.params[param].min = 0.0
+        if 'center' in param:
+            quarter_width = .5 * np.sqrt(2. * np.log(2)) * result.params[param.replace('center', 'sigma')].value
+            result.params[param].min = result.params[param].value - quarter_width
+            result.params[param].max = result.params[param].value + quarter_width
+        if 'sigma' in param:
+            result.params[param].min = 0.
+            result.params[param].max = 1.1 * np.max(sigmas)
+    return result
