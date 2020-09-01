@@ -2,9 +2,10 @@ import lmfit
 import numpy as np
 from copy import deepcopy
 import logging
+import pickle
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
-    QStyledItemDelegate, QStyleOptionViewItem, QHeaderView
+    QStyledItemDelegate, QStyleOptionViewItem, QHeaderView, QFileDialog
 from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
@@ -250,6 +251,8 @@ class LmfitInspector(QWidget):
 
         self.bplus = QPushButton('+')
         self.bminus = QPushButton('-')
+        self.bopen = QPushButton('Open')
+        self.bsave = QPushButton('Save')
         self.b_from_peaklist = QPushButton('Init from PT')
         self.treeview_md = LmfitInspectorModel()
         self._delegate = SpinBoxDelegate()
@@ -270,12 +273,50 @@ class LmfitInspector(QWidget):
         layout.addWidget(self.b_from_peaklist, 1, 1, 1, 1)
         layout.addWidget(self.bplus, 2, 1, 1, 1)
         layout.addWidget(self.bminus, 2, 3, 1, 1)
+        layout.addWidget(self.bopen, 1, 2, 1, 1)
+        layout.addWidget(self.bsave, 1, 3, 1, 1)
         layout.addWidget(self.treeview, 3, 1, 1, 3)
 
         self.bplus.clicked.connect(self.bplus_onclick)
         self.bminus.clicked.connect(self.bminus_onclick)
+        self.bopen.clicked.connect(self.bopen_onclick)
+        self.bsave.clicked.connect(self.bsave_onclick)
         self.b_from_peaklist.clicked.connect(self.from_peaklist_onclick)
         self.treeview_md.modelReset.connect(self.expander)
+
+    def bopen_onclick(self):
+        idx = self.q_app.get_selected_idx()
+        if idx == -1:
+            return
+
+        file, _ = QFileDialog.getOpenFileName(self, "Open lmfit model",  "",
+                                              "lmfit.ModelResult (*.mr);;All Files (*)")
+        try:
+            with open(file, 'rb') as f:
+                result = pickle.load(f)
+                print(result)
+        except Exception:
+            return
+
+        if isinstance(result, lmfit.model.ModelResult):
+            self.q_app.set_general_result(idx, result)
+
+    def bsave_onclick(self):
+        f_name, _ = QFileDialog.getSaveFileName(self, "Save fit model", "",
+                                                "lmfit.ModelResult (*.mr);;All Files (*)")
+        if not f_name:
+            return
+
+        idx = self.q_app.get_selected_idx()
+        if idx == -1:
+            return
+
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
+        with open(f_name, 'wb') as f:
+            pickle.dump(result, f)
 
     def from_peaklist_onclick(self):
         w = InitPopUp(parent=self)
