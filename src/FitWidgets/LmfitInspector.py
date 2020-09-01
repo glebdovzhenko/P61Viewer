@@ -117,7 +117,7 @@ class LmfitInspectorModel(QAbstractItemModel):
                     center = '%.1f: ' % self._fit_res.params[data.prefix + 'center'].value
                 else:
                     center = ''
-                data = (center + ' '.join((data._name, data.prefix)), ) + ('', ) * 4
+                data = (center + data.prefix + ' (' + data._name + ')', ) + ('', ) * 4
             return data[index.column()]
         elif role == Qt.CheckStateRole:
             if index.column() == 0 and isinstance(data, lmfit.Parameter):
@@ -302,7 +302,7 @@ class LmfitInspector(QWidget):
 
         old_res = self.q_app.get_general_result(idx)
 
-        result = lmfit_utils.add_peak_md('PseudoVoigtModel', peak_list, old_res)
+        # result = lmfit_utils.add_peak_md('PseudoVoigtModel', peak_list, old_res)
 
         stacked_list = self.q_app.stacked_peaks
         stacked_peaks = []
@@ -316,7 +316,12 @@ class LmfitInspector(QWidget):
         for peak in stacked_peaks:
             peak['center_y'] = 0.1
 
-        result = lmfit_utils.add_peak_md('PseudoVoigtModel', [{'peaks': stacked_peaks}], result)
+        for ta in peak_list:
+            stacked_peaks.extend(ta['peaks'])
+
+        stacked_peaks = list(sorted(stacked_peaks, key=lambda x: x['center_x']))
+
+        result = lmfit_utils.add_peak_md('PseudoVoigtModel', [{'peaks': stacked_peaks}], old_res)
 
         self.q_app.set_general_result(idx, result)
 

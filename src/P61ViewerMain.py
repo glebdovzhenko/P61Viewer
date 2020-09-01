@@ -63,14 +63,9 @@ class P61Viewer(QMainWindow):
         view_layout.addWidget(self.view_plot_w, 3)
         view_layout.addWidget(self.file_w, 1)
 
-        self.fit_tab = QWidget()
-        fit_layout = QHBoxLayout()
-        self.fit_tab.setLayout(fit_layout)
-        fit_layout.addWidget(self.fit_w)
-
         self.cw.addTab(self.view_tab, 'Import and view')
-        self.cw.addTab(self.fit_tab, 'Arbitrary function fit')
         self.cw.addTab(self.pa_w, 'Peak tracker')
+        self.cw.addTab(self.fit_w, 'Peak fit')
 
         self.logger.debug('Initialization complete')
 
