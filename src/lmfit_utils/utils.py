@@ -1,21 +1,7 @@
 from lmfit import model, models, lineshapes
 import numpy as np
 from functools import reduce
-
-
-def cut_pvoigt(x, amplitude=1.0, center=0.0, sigma=1.0, fraction=0.5, cutoff=3.0):
-    ys = lineshapes.pvoigt(x, amplitude, center, sigma, fraction)
-    ys[x >= center + cutoff * sigma] = 0.0
-    ys[x <= center - cutoff * sigma] = 0.0
-    return ys
-
-
-class CutPseudoVoigtModel(models.PseudoVoigtModel):
-    def __init__(self, independent_vars=['x'], prefix='', nan_policy='raise', **kwargs):
-        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
-                       'independent_vars': independent_vars})
-        model.Model.__init__(self, cut_pvoigt, **kwargs)
-        self._set_paramhints_prefix()
+from typing import Iterable, Union
 
 
 class PolynomialModel(models.PolynomialModel):
@@ -36,9 +22,35 @@ class PolynomialModel(models.PolynomialModel):
         model.Model.__init__(self, polynomial, **kwargs)
 
 
-models.CutPseudoVoigtModel = CutPseudoVoigtModel
 models.PolynomialModel = PolynomialModel
 fit_kwargs = {'method': 'least_squares'}
+peak_md_names = ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'Pearson7Model',
+                 'SkewedGaussianModel', 'SkewedVoigtModel', 'SplitLorentzianModel')
+background_md_names = ('PolynomialModel', )
+
+
+def is_peak_md(md: Union[str, model.Model]) -> bool:
+    if isinstance(md, str):
+        return md in peak_md_names
+    elif isinstance(md, model.Model):
+        for name in peak_md_names:
+            if name in md.name:
+                return True
+        else:
+            return False
+    return False
+
+
+def is_bckg_md(md: Union[str, model.Model]) -> bool:
+    if isinstance(md, str):
+        return md in background_md_names
+    elif isinstance(md, model.Model):
+        for name in background_md_names:
+            if name in md.name:
+                return True
+        else:
+            return False
+    return False
 
 
 def make_prefix(name, composite):
@@ -51,7 +63,7 @@ def make_prefix(name, composite):
     """
     prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
                 'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-                'SplitLorentzianModel': 'spl', 'CutPseudoVoigtModel': 'pv'}
+                'SplitLorentzianModel': 'spl'}
 
     if composite is None:
         return prefixes[name] + '0_'
@@ -85,13 +97,14 @@ def rm_md(prefix, composite):
     return composite
 
 
-def add_md(name, init_params, composite):
+def add_md(name, init_params, composite, prefix=None):
     """
     Adds the model intialised with init_params to the composite model.
 
     :param name:
     :param init_params:
     :param composite:
+    :param prefix:
     :return:
     """
     kwargs = {'name': name}
@@ -102,7 +115,11 @@ def add_md(name, init_params, composite):
         else:
             kwargs['degree'] = 3
 
-    kwargs['prefix'] = make_prefix(name, composite)
+    if prefix is None:
+        kwargs['prefix'] = make_prefix(name, composite)
+    else:
+        kwargs['prefix'] = prefix
+
     new_md = getattr(models, name)(**kwargs)
 
     if composite is None:
@@ -114,7 +131,7 @@ def add_md(name, init_params, composite):
 
 
 def add_peak_md(name, peak_list, composite):
-    if name not in ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'CutPseudoVoigtModel'):
+    if not is_peak_md(name):
         return composite
 
     for ta in peak_list:
@@ -149,7 +166,7 @@ def add_peak_md(name, peak_list, composite):
             elif name == 'LorentzianModel':
                 params[prefix + 'amplitude'].value = peak['center_y'] * np.pi * 0.5 * width
                 params[prefix + 'sigma'].value = 0.5 * width
-            elif name == 'PseudoVoigtModel' or name == 'CutPseudoVoigtModel':
+            elif name == 'PseudoVoigtModel':
                 params[prefix + 'amplitude'].value = peak['center_y'] * np.sqrt(2. * np.pi) * sigma / np.sqrt(
                     2. * np.log(2))
                 params[prefix + 'sigma'].value = sigma
@@ -174,7 +191,7 @@ def fix_background(result, reverse=False):
     """
     param_status = dict()
     for model in result.model.components:
-        if ('PolynomialModel' in model.name) != reverse:
+        if is_bckg_md(model) != reverse:
             for param in result.params:
                 if model.prefix in param:
                     param_status[param] = result.params[param].vary
@@ -190,9 +207,7 @@ def fix_outlier_peaks(result, x_lim):
     """
     param_status = dict()
     for model in result.model.components:
-        if ('GaussianModel' in model.name) or \
-                ('LorentzianModel' in model.name) or \
-                ('PseudoVoigtModel' in model.name):
+        if is_peak_md(model):
             if not x_lim[0] <= result.params[model.prefix + 'center'].value <= x_lim[1]:
                 for param in result.params:
                     if model.prefix in param:
@@ -201,29 +216,64 @@ def fix_outlier_peaks(result, x_lim):
     return result, param_status
 
 
-def sort_components(md: model.ModelResult):
+def sort_components(md: model.ModelResult) -> Iterable:
     def key(cmp):
-        if ('GaussianModel' in cmp.name) or ('LorentzianModel' in cmp.name) or ('PseudoVoigtModel' in cmp.name):
+        if is_peak_md(cmp):
             return md.params[cmp.prefix + 'center'].value
         else:
             return -1
     return sorted(md.model.components, key=key)
 
 
-def constrain_params(result: model.ModelResult):
+def constrain_params(md: model.ModelResult) -> model.ModelResult:
     sigmas = []
-    for param in result.params:
+    for param in md.params:
         if 'sigma' in param:
-            sigmas.append(result.params[param].value)
+            sigmas.append(md.params[param].value)
 
-    for param in result.params:
+    for param in md.params:
         if 'amplitude' in param:
-            result.params[param].min = 0.0
+            md.params[param].min = 0.0
         if 'center' in param:
-            quarter_width = .5 * np.sqrt(2. * np.log(2)) * result.params[param.replace('center', 'sigma')].value
-            result.params[param].min = result.params[param].value - quarter_width
-            result.params[param].max = result.params[param].value + quarter_width
+            quarter_width = .5 * np.sqrt(2. * np.log(2)) * md.params[param.replace('center', 'sigma')].value
+            md.params[param].min = md.params[param].value - quarter_width
+            md.params[param].max = md.params[param].value + quarter_width
         if 'sigma' in param:
-            result.params[param].min = 0.
-            result.params[param].max = 1.1 * np.max(sigmas)
+            md.params[param].min = 0.
+            md.params[param].max = 1.1 * np.max(sigmas)
+    return md
+
+
+def serialize_model_result(md: model.ModelResult) -> list:
+    result = []
+    for cmp in md.model.components:
+        serialized = dict()
+        serialized['name'] = cmp._name
+        serialized['prefix'] = cmp.prefix
+        serialized['params'] = []
+        for param in md.params:
+            if cmp.prefix in md.params[param].name:
+                serialized['params'].append(
+                    {key: getattr(md.params[param], key) for key in ('name', 'value', 'min', 'max', 'vary')}
+                )
+
+        result.append(serialized)
+
+    return result
+
+
+def deserialize_model_result(struct: list) -> model.ModelResult:
+    result = None
+    for smd in struct:
+        print(smd)
+        if smd['name'] == 'PolynomialModel':
+            init_params = {'degree': len(smd['params']) - 1}
+        else:
+            init_params = dict()
+        result = add_md(smd['name'], init_params, result, prefix=smd['prefix'])
+
+        for param in smd['params']:
+            for key in ('name', 'value', 'min', 'max', 'vary'):
+                setattr(result.params[param['name']], key, param[key])
+
     return result

@@ -2,7 +2,7 @@ import lmfit
 import numpy as np
 from copy import deepcopy
 import logging
-import pickle
+import json
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
     QStyledItemDelegate, QStyleOptionViewItem, QHeaderView, QFileDialog
@@ -292,10 +292,10 @@ class LmfitInspector(QWidget):
         file, _ = QFileDialog.getOpenFileName(self, "Open lmfit model",  "",
                                               "lmfit.ModelResult (*.mr);;All Files (*)")
         try:
-            with open(file, 'rb') as f:
-                result = pickle.load(f)
-                print(result)
-        except Exception:
+            with open(file, 'r') as f:
+                result = lmfit_utils.deserialize_model_result(json.load(f))
+        except Exception as e:
+            print(e)
             return
 
         if isinstance(result, lmfit.model.ModelResult):
@@ -315,8 +315,8 @@ class LmfitInspector(QWidget):
         if result is None:
             return
 
-        with open(f_name, 'wb') as f:
-            pickle.dump(result, f)
+        with open(f_name, 'w') as f:
+            json.dump(lmfit_utils.serialize_model_result(result), f)
 
     def from_peaklist_onclick(self):
         w = InitPopUp(parent=self)

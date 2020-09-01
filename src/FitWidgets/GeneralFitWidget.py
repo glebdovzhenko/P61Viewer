@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QErrorMessage, QFileDialog
+from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QFileDialog
 import pandas as pd
 import numpy as np
-import copy
 import logging
 
 from P61App import P61App
@@ -103,10 +102,8 @@ class GeneralFitWidget(QWidget):
             try:
                 result.fit(yy, x=xx, **fit_kwargs)
             except Exception as e:
-                msg = QErrorMessage()
-                msg.showMessage(
-                    'During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
-                msg.exec_()
+                self.logger.error('on_peak_fit_btn: during fit of %s an exception was raised: %s' %
+                                  (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
 
             for param in vary_peaks:
                 result.params[param].vary = vary_peaks[param]
@@ -147,7 +144,8 @@ class GeneralFitWidget(QWidget):
         try:
             result.fit(bckg_yy, x=bckg_xx, **fit_kwargs)
         except Exception as e:
-            pass
+            self.logger.error('on_bckg_fit_btn: during fit of %s an exception was raised: %s' %
+                              (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
 
         for param in vary_bckg:
             result.params[param].vary = vary_bckg[param]
@@ -178,9 +176,8 @@ class GeneralFitWidget(QWidget):
         try:
             result.fit(yy, x=xx, **fit_kwargs)
         except Exception as e:
-            msg = QErrorMessage()
-            msg.showMessage('During fit of %s an exception occured:\n' % self.q_app.data.loc[idx, 'ScreenName'] + str(e))
-            msg.exec_()
+            self.logger.error('on_fit_btn: during fit of %s an exception was raised: %s' %
+                              (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
 
         for param in vary_params:
             result.params[param].vary = vary_params[param]
