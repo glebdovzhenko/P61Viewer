@@ -201,6 +201,11 @@ class LmfitInspectorModel(QAbstractItemModel):
             return True
         elif role == Qt.EditRole:
             if ii.column() == 1:
+                if result.params[data.name].min > value:
+                    result.params[data.name].set(min=value)
+                if result.params[data.name].max < value:
+                    result.params[data.name].set(max=value)
+
                 result.params[data.name].set(value=value)
                 self.q_app.set_general_result(self.q_app.get_selected_idx(), result)
                 return True
