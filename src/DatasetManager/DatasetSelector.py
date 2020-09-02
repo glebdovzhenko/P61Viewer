@@ -103,12 +103,13 @@ class DatasetSelector(QWidget):
         self.checkbox.setTristate(False)
         rows = sorted(set([idx.row() for idx in self.view.selectedIndexes()]))
         for row in rows:
-            self.proxy.selected[self.proxy.mapToSource(self.proxy.index(row, 0)).row()] = bool(self.checkbox.checkState())
-
-        self.proxy.dataChanged.emit(
-            self.proxy.index(min(rows), 0),
-            self.proxy.index(max(rows), 0),
-        )
+            self.proxy.selected[self.proxy.mapToSource(self.proxy.index(row, 0)).row()] = \
+                bool(self.checkbox.checkState())
+        if rows:
+            self.proxy.dataChanged.emit(
+                self.proxy.index(min(rows), 0),
+                self.proxy.index(max(rows), 0),
+            )
 
     def checkbox_update(self):
         rows = sorted(set([idx.row() for idx in self.view.selectedIndexes()]))

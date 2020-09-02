@@ -8,6 +8,7 @@ from DatasetManager import DatasetViewer
 from FitWidgets.LmfitInspector import LmfitInspector
 from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
+from FitWidgets.ConstrainPopUp import ConstrainPopUp
 from PlotWidgets import FitPlot
 from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, constrain_params
 
@@ -57,17 +58,8 @@ class GeneralFitWidget(QWidget):
         self.export_btn.clicked.connect(self.on_export_button)
 
     def on_constrain_btn(self, *args, idx=None):
-        if self.q_app.get_selected_idx() == -1:
-            return
-        elif idx is None:
-            idx = self.q_app.get_selected_idx()
-
-        result = self.q_app.get_general_result(idx)
-        if result is None:
-            return
-
-        result = constrain_params(result)
-        self.q_app.set_general_result(idx, result)
+        w = ConstrainPopUp(parent=self)
+        w.exec_()
 
     def on_peak_fit_btn(self, *args, idx=None):
         if self.q_app.get_selected_idx() == -1:

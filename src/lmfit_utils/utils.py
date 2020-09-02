@@ -225,22 +225,22 @@ def sort_components(md: model.ModelResult) -> Iterable:
     return sorted(md.model.components, key=key)
 
 
-def constrain_params(md: model.ModelResult) -> model.ModelResult:
-    sigmas = []
-    for param in md.params:
-        if 'sigma' in param:
-            sigmas.append(md.params[param].value)
+def constrain_params(md: model.ModelResult,
+                     center_vary: float,
+                     height_min: float, height_max: float,
+                     sigma_min: float, sigma_max: float) -> model.ModelResult:
 
     for param in md.params:
-        if 'amplitude' in param:
-            md.params[param].min = 0.0
+        if 'height' in param:
+            md.params[param].min = max(0.0, height_min)
+            md.params[param].max = height_max
         if 'center' in param:
-            quarter_width = .5 * np.sqrt(2. * np.log(2)) * md.params[param.replace('center', 'sigma')].value
-            md.params[param].min = md.params[param].value - quarter_width
-            md.params[param].max = md.params[param].value + quarter_width
+            vary = md.params[param.replace('center', 'sigma')].value * center_vary
+            md.params[param].min = md.params[param].value - vary
+            md.params[param].max = md.params[param].value + vary
         if 'sigma' in param:
-            md.params[param].min = 0.
-            md.params[param].max = 1.1 * np.max(sigmas)
+            md.params[param].min = md.params[param].value * sigma_min
+            md.params[param].max = md.params[param].value * sigma_max
     return md
 
 
@@ -265,7 +265,6 @@ def serialize_model_result(md: model.ModelResult) -> list:
 def deserialize_model_result(struct: list) -> model.ModelResult:
     result = None
     for smd in struct:
-        print(smd)
         if smd['name'] == 'PolynomialModel':
             init_params = {'degree': len(smd['params']) - 1}
         else:
