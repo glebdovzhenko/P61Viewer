@@ -1,4 +1,5 @@
 from lmfit import model, models, lineshapes
+import scipy
 import numpy as np
 from functools import reduce
 from typing import Iterable, Union
@@ -22,11 +23,31 @@ class PolynomialModel(models.PolynomialModel):
         model.Model.__init__(self, polynomial, **kwargs)
 
 
+class InterpolationModel(model.Model):
+    def __init__(self, **kwargs):
+        def LinearInterpolation(x, interp_fn=0., peak_base=3.):
+            return np.zeros(shape=x.shape)
+
+        model.Model.__init__(self, LinearInterpolation, **kwargs)
+        self.refine = True
+
+    def make_params(self, verbose=False, **kwargs):
+        pars = model.Model.make_params(self, verbose, **kwargs)
+        pars[self.prefix + 'peak_base'].vary = False
+        pars[self.prefix + 'peak_base'].min = 0.
+        pars[self.prefix + 'peak_base'].max = 7.
+        return pars
+
+
 models.PolynomialModel = PolynomialModel
+models.InterpolationModel = InterpolationModel
 fit_kwargs = {'method': 'least_squares'}
 peak_md_names = ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'Pearson7Model',
                  'SkewedGaussianModel', 'SkewedVoigtModel', 'SplitLorentzianModel')
-background_md_names = ('PolynomialModel', )
+background_md_names = ('PolynomialModel', 'InterpolationModel')
+prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
+                'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
+                'SplitLorentzianModel': 'spl', 'InterpolationModel': 'int'}
 
 
 def is_peak_md(md: Union[str, model.Model]) -> bool:
@@ -61,9 +82,6 @@ def make_prefix(name, composite):
     :param composite:
     :return:
     """
-    prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
-                'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-                'SplitLorentzianModel': 'spl'}
 
     if composite is None:
         return prefixes[name] + '0_'
@@ -276,3 +294,53 @@ def deserialize_model_result(struct: list) -> model.ModelResult:
                 setattr(result.params[param['name']], key, param[key])
 
     return result
+
+
+def get_peak_intervals(mr: model.ModelResult, peak_base=3.) -> Iterable:
+    def recursive_merge(inter, start_index=0):
+        for i in range(start_index, len(inter) - 1):
+            if inter[i][1] > inter[i + 1][0]:
+                new_start = inter[i][0]
+                new_end = inter[i + 1][1]
+                inter[i] = [new_start, new_end]
+                del inter[i + 1]
+                return recursive_merge(inter.copy(), start_index=i)
+        return inter
+
+    peak_intervals = []
+    for cmp in mr.model.components:
+        if is_peak_md(cmp):
+            peak_intervals.append([mr.params[cmp.prefix + 'center'].value -
+                                   peak_base * mr.params[cmp.prefix + 'sigma'].value,
+                                   mr.params[cmp.prefix + 'center'].value +
+                                   peak_base * mr.params[cmp.prefix + 'sigma'].value
+                                   ])
+    return recursive_merge(peak_intervals)
+
+
+def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResult:
+    interp, base, refine = None, None, False
+    for cmp in mr.model.components:
+        if cmp._name == 'InterpolationModel':
+            interp = cmp
+            base = mr.params[cmp.prefix + 'peak_base'].value
+            refine = mr.params[cmp.prefix + 'interp_fn'].vary
+
+    if refine:
+        i_xx, i_yy = kwargs['x'], kwargs['data']
+        for cmp in mr.model.components:
+            if is_peak_md(cmp):
+                base_min = mr.params[cmp.prefix + 'center'].value - base * mr.params[cmp.prefix + 'sigma'].value
+                base_max = mr.params[cmp.prefix + 'center'].value + base * mr.params[cmp.prefix + 'sigma'].value
+                i_yy = i_yy[(i_xx <= base_min) | (i_xx >= base_max)]
+                i_xx = i_xx[(i_xx <= base_min) | (i_xx >= base_max)]
+        func = scipy.interpolate.interp1d(i_xx, i_yy, kind='linear')
+        interp.func = lambda x, interp_fn, peak_base: func(x)
+
+    return mr
+
+
+def fit(mr: model.ModelResult, **kwargs) -> model.ModelResult:
+    mr = refine_interpolation_md(mr, **kwargs)
+    mr.fit(**kwargs)
+    return mr

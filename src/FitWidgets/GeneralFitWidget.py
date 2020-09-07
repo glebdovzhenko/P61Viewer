@@ -10,7 +10,7 @@ from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from FitWidgets.ConstrainPopUp import ConstrainPopUp
 from PlotWidgets import FitPlot
-from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, constrain_params
+from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_peak_intervals
 
 
 class GeneralFitWidget(QWidget):
@@ -71,37 +71,26 @@ class GeneralFitWidget(QWidget):
         if result is None:
             return
 
-        peak_list = self.q_app.stacked_peaks
-        if peak_list is None:
-            return
-
         result, vary_bckg = fix_background(result)
-        # import datetime
-        # result_backup = copy.deepcopy(result)
-        #
-        # for method in ('leastsq', 'least_squares', 'differential_evolution', 'brute'):
-        #     t_ = datetime.datetime.now()
-        for ta in peak_list:
+
+        for l, r in get_peak_intervals(result, peak_base=5):
             xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
             x_lim = self.plot_w.get_axes_xlim()
-            yy = yy[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
-            xx = xx[(xx > x_lim[0]) & (xx > ta['area'][0]) & (xx < x_lim[1]) & (xx < ta['area'][1])]
+            yy = yy[(xx > x_lim[0]) & (xx > l) & (xx < x_lim[1]) & (xx < r)]
+            xx = xx[(xx > x_lim[0]) & (xx > l) & (xx < x_lim[1]) & (xx < r)]
             if xx.shape[0] == 0:
                 continue
 
             result, vary_peaks = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
 
             try:
-                result.fit(yy, x=xx, **fit_kwargs)
+                result = fit(result, data=yy, x=xx, **fit_kwargs)
             except Exception as e:
                 self.logger.error('on_peak_fit_btn: during fit of %s an exception was raised: %s' %
                                   (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
 
             for param in vary_peaks:
                 result.params[param].vary = vary_peaks[param]
-
-            # self.logger.info('on_peak_fit_btn: fit using %s took %s' % (method, str(datetime.datetime.now() - t_)))
-            # result = copy.deepcopy(result_backup)
 
         for param in vary_bckg:
             result.params[param].vary = vary_bckg[param]
@@ -118,10 +107,6 @@ class GeneralFitWidget(QWidget):
         if result is None:
             return
 
-        peak_list = self.q_app.stacked_peaks
-        if peak_list is None:
-            return
-
         result, vary_bckg = fix_background(result, reverse=True)
 
         bckg_xx, bckg_yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
@@ -129,12 +114,12 @@ class GeneralFitWidget(QWidget):
         sel = (x_lim[0] < bckg_xx) & (x_lim[1] > bckg_xx)
         bckg_xx, bckg_yy = bckg_xx[sel], bckg_yy[sel]
 
-        for ta in peak_list:
-            bckg_yy = bckg_yy[(bckg_xx < ta['area'][0]) | (bckg_xx > ta['area'][1])]
-            bckg_xx = bckg_xx[(bckg_xx < ta['area'][0]) | (bckg_xx > ta['area'][1])]
+        for l, r in get_peak_intervals(result):
+            bckg_yy = bckg_yy[(bckg_xx < l) | (bckg_xx > r)]
+            bckg_xx = bckg_xx[(bckg_xx < l) | (bckg_xx > r)]
 
         try:
-            result.fit(bckg_yy, x=bckg_xx, **fit_kwargs)
+            result = fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs)
         except Exception as e:
             self.logger.error('on_bckg_fit_btn: during fit of %s an exception was raised: %s' %
                               (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
@@ -166,7 +151,8 @@ class GeneralFitWidget(QWidget):
         result, vary_params = fix_outlier_peaks(result, x_lim)
 
         try:
-            result.fit(yy, x=xx, **fit_kwargs)
+            # result.fit(yy, x=xx, **fit_kwargs)
+            result = fit(result, data=yy, x=xx, **fit_kwargs)
         except Exception as e:
             self.logger.error('on_fit_btn: during fit of %s an exception was raised: %s' %
                               (self.q_app.data.loc[idx, 'ScreenName'], str(e)))

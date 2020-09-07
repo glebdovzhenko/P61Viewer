@@ -5,7 +5,7 @@ import logging
 import json
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout, QMenu, QAction, QInputDialog, QTreeView, \
-    QStyledItemDelegate, QStyleOptionViewItem, QHeaderView, QFileDialog
+    QStyledItemDelegate, QStyleOptionViewItem, QHeaderView, QFileDialog, QCheckBox
 from PyQt5.Qt import QAbstractItemModel, Qt, QModelIndex, QVariant
 
 from FitWidgets.FloatEdit import FloatEdit
@@ -246,10 +246,6 @@ class LmfitInspector(QWidget):
     """
 
     """
-    prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
-                'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-                'SplitLorentzianModel': 'spl'}
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.q_app = P61App.instance()
@@ -270,7 +266,7 @@ class LmfitInspector(QWidget):
 
         self.menu = QMenu()
 
-        for k in self.prefixes.keys():
+        for k in lmfit_utils.prefixes.keys():
             self.menu.addAction(k)
 
         layout = QGridLayout()
