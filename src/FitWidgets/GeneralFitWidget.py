@@ -73,7 +73,7 @@ class GeneralFitWidget(QWidget):
 
         result, vary_bckg = fix_background(result)
 
-        for l, r in get_peak_intervals(result, peak_base=5):
+        for l, r in get_peak_intervals(result):
             xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
             x_lim = self.plot_w.get_axes_xlim()
             yy = yy[(xx > x_lim[0]) & (xx > l) & (xx < x_lim[1]) & (xx < r)]

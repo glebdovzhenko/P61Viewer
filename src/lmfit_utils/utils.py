@@ -22,6 +22,14 @@ class PolynomialModel(models.PolynomialModel):
 
         model.Model.__init__(self, polynomial, **kwargs)
 
+    def make_params(self, verbose=False, **kwargs):
+        pars = super().make_params(verbose, **kwargs)
+        pars.add(name=self.prefix + 'peak_base',
+                 value=3.,
+                 min=0., max=7.,
+                 vary=False)
+        return pars
+
 
 class InterpolationModel(model.Model):
     def __init__(self, **kwargs):
@@ -296,7 +304,7 @@ def deserialize_model_result(struct: list) -> model.ModelResult:
     return result
 
 
-def get_peak_intervals(mr: model.ModelResult, peak_base=3.) -> Iterable:
+def get_peak_intervals(mr: model.ModelResult, peak_base=None) -> Iterable:
     def recursive_merge(inter, start_index=0):
         for i in range(start_index, len(inter) - 1):
             if inter[i][1] > inter[i + 1][0]:
@@ -306,6 +314,14 @@ def get_peak_intervals(mr: model.ModelResult, peak_base=3.) -> Iterable:
                 del inter[i + 1]
                 return recursive_merge(inter.copy(), start_index=i)
         return inter
+
+    if peak_base is None:
+        for par in mr.params:
+            if 'peak_base' in mr.params[par].name:
+                peak_base = mr.params[par].value
+                break
+        else:
+            peak_base = 3.
 
     peak_intervals = []
     for cmp in mr.model.components:

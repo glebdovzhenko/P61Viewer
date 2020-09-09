@@ -249,6 +249,7 @@ class LmfitInspector(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.q_app = P61App.instance()
+        self.logger = logging.getLogger(str(self.__class__))
 
         self.bplus = QPushButton('+')
         self.bminus = QPushButton('-')
@@ -296,7 +297,7 @@ class LmfitInspector(QWidget):
             with open(file, 'r') as f:
                 result = lmfit_utils.deserialize_model_result(json.load(f))
         except Exception as e:
-            print(e)
+            self.logger.error('bopen_onclick: during opening of %s an exception was raised: %s' % (file, str(e)))
             return
 
         if isinstance(result, lmfit.model.ModelResult):
