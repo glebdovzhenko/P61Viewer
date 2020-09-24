@@ -203,7 +203,15 @@ class P61App(QApplication):
             self.stackedPeaksChanged.emit()
 
     def sort_data(self, **kwargs):
+        if kwargs['by'] == 'GeneralFitResult':
+            self.data['_tmp'] = self.data['GeneralFitResult'].apply(lambda x: 0 if x is None else x.chisqr)
+            kwargs['by'] = '_tmp'
+
         self.data.sort_values(**kwargs)
+
+        if kwargs['by'] == '_tmp':
+            self.data.drop(['_tmp'], axis=1, inplace=True)
+
         self.data.reset_index(drop=True, inplace=True)
         self.logger.debug('sort_data: Emitting dataSorted')
         self.dataSorted.emit()

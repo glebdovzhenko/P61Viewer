@@ -107,7 +107,7 @@ class DataSetStorageModel(QAbstractTableModel):
             return False
 
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
-        tmp = {0: 'ScreenName', 1: 'Channel', 2: 'DeadTime', 3: 'ScreenName'}
+        tmp = {0: 'ScreenName', 1: 'Channel', 2: 'DeadTime', 3: 'GeneralFitResult'}
         self.q_app.sort_data(by=tmp[column], inplace=True, ascending=bool(order))
         self.dataChanged.emit(
             self.index(0, 0),

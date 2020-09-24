@@ -1,4 +1,5 @@
-from lmfit import model, models, lineshapes
+from lmfit import model, models
+import copy
 import scipy
 import numpy as np
 from functools import reduce
@@ -216,13 +217,15 @@ def fix_background(result, reverse=False):
     :return:
     """
     param_status = dict()
+    param_stderr = dict()
     for model in result.model.components:
         if is_bckg_md(model) != reverse:
             for param in result.params:
                 if model.prefix in param:
                     param_status[param] = result.params[param].vary
+                    param_stderr[param] = result.params[param].stderr
                     result.params[param].vary = False
-    return result, param_status
+    return result, param_status, param_stderr
 
 
 def fix_outlier_peaks(result, x_lim):
@@ -232,14 +235,16 @@ def fix_outlier_peaks(result, x_lim):
     :return:
     """
     param_status = dict()
+    param_stderr = dict()
     for model in result.model.components:
         if is_peak_md(model):
             if not x_lim[0] <= result.params[model.prefix + 'center'].value <= x_lim[1]:
                 for param in result.params:
                     if model.prefix in param:
                         param_status[param] = result.params[param].vary
+                        param_stderr[param] = result.params[param].stderr
                         result.params[param].vary = False
-    return result, param_status
+    return result, param_status, param_stderr
 
 
 def sort_components(md: model.ModelResult) -> Iterable:
@@ -360,3 +365,10 @@ def fit(mr: model.ModelResult, **kwargs) -> model.ModelResult:
     mr = refine_interpolation_md(mr, **kwargs)
     mr.fit(**kwargs)
     return mr
+
+
+def update_varied_params(mr1: model.ModelResult, mr2: model.ModelResult) -> model.ModelResult:
+    for par in mr2.params:
+        if mr2.params[par].vary and (par in mr1.params):
+            mr1.params[par] = copy.copy(mr2.params[par])
+    return mr1

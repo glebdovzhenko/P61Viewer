@@ -10,7 +10,7 @@ from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from FitWidgets.ConstrainPopUp import ConstrainPopUp
 from PlotWidgets import FitPlot
-from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_peak_intervals
+from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_peak_intervals, update_varied_params
 
 
 class GeneralFitWidget(QWidget):
@@ -71,7 +71,7 @@ class GeneralFitWidget(QWidget):
         if result is None:
             return
 
-        result, vary_bckg = fix_background(result)
+        result, vary_bckg, bckg_stderr = fix_background(result)
 
         for l, r in get_peak_intervals(result):
             xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
@@ -81,19 +81,22 @@ class GeneralFitWidget(QWidget):
             if xx.shape[0] == 0:
                 continue
 
-            result, vary_peaks = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
+            result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
 
             try:
-                result = fit(result, data=yy, x=xx, **fit_kwargs)
+                # result = fit(result, data=yy, x=xx, **fit_kwargs)
+                result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
             except Exception as e:
                 self.logger.error('on_peak_fit_btn: during fit of %s an exception was raised: %s' %
                                   (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
 
             for param in vary_peaks:
                 result.params[param].vary = vary_peaks[param]
+                result.params[param].stderr = peaks_stderr[param]
 
         for param in vary_bckg:
             result.params[param].vary = vary_bckg[param]
+            result.params[param].stderr = bckg_stderr[param]
 
         self.q_app.set_general_result(idx, result)
 
@@ -107,7 +110,7 @@ class GeneralFitWidget(QWidget):
         if result is None:
             return
 
-        result, vary_bckg = fix_background(result, reverse=True)
+        result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
 
         bckg_xx, bckg_yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
         x_lim = self.plot_w.get_axes_xlim()
@@ -126,6 +129,7 @@ class GeneralFitWidget(QWidget):
 
         for param in vary_bckg:
             result.params[param].vary = vary_bckg[param]
+            result.params[param].stderr = bckg_stderr[param]
 
         self.q_app.set_general_result(idx, result)
 
@@ -148,7 +152,7 @@ class GeneralFitWidget(QWidget):
         sel = (x_lim[0] < xx) & (x_lim[1] > xx)
         xx, yy = xx[sel], yy[sel]
 
-        result, vary_params = fix_outlier_peaks(result, x_lim)
+        result, vary_params, params_stderr = fix_outlier_peaks(result, x_lim)
 
         try:
             # result.fit(yy, x=xx, **fit_kwargs)
@@ -159,6 +163,7 @@ class GeneralFitWidget(QWidget):
 
         for param in vary_params:
             result.params[param].vary = vary_params[param]
+            result.params[param].stderr = params_stderr[param]
 
         self.q_app.set_general_result(idx, result)
 
