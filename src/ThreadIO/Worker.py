@@ -1,6 +1,5 @@
-from PyQt5.QtCore import QRunnable, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import QRunnable, pyqtSlot
 import logging
-
 
 from P61App import P61App
 
@@ -30,7 +29,8 @@ class Worker(QRunnable):
             self.logger.debug('run: Emitting threadWorkerException(%s)' % (str(e),))
             self.threadWorkerException.emit(e)
         else:
+            self.logger.debug('run: Emitting threadWorkerResult(%s)' % (str(self.result),))
             self.threadWorkerResult.emit(self.result)
         finally:
+            self.logger.debug('run: Emitting threadWorkerFinished')
             self.threadWorkerFinished.emit()
-
