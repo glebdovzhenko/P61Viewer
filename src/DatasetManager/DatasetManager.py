@@ -1,12 +1,42 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QWidget, QTableView, QAbstractItemView, QPushButton, QCheckBox, QGridLayout, QFileDialog, \
-    QErrorMessage, QMessageBox, QHeaderView
+    QErrorMessage, QMessageBox, QHeaderView, QProgressDialog
 import os
 import pandas as pd
 import logging
 
 from P61App import P61App
+from ThreadIO import Worker
 from DatasetIO import DatasetReaders
+
+
+class FileOpenWorker(Worker):
+    def __init__(self, files):
+        def fn(fs):
+            failed, opened = [], pd.DataFrame(columns=self.q_app.data.columns)
+            for ii, file in enumerate(fs):
+                if self.stop:
+                    break
+                try:
+                    for reader in DatasetReaders:
+                        if reader().validate(file):
+                            opened = pd.concat((opened, reader().read(file)), ignore_index=True)
+                            break
+                    else:
+                        failed.append(file)
+                except Exception as e:
+                    self.logger.info(str(e))
+                    failed.append(file)
+
+                self.threadWorkerStatus.emit(ii)
+            return failed, opened
+
+        self.stop = False
+
+        super(FileOpenWorker, self).__init__(fn, args=[files], kwargs={})
+
+    def halt(self):
+        self.stop = True
 
 
 class DatasetManager(QWidget):
@@ -14,6 +44,7 @@ class DatasetManager(QWidget):
         QWidget.__init__(self, parent, *args)
         self.q_app = P61App.instance()
         self.logger = logging.getLogger(str(self.__class__))
+        self.progress = None
 
         self.view = QTableView()
         self.view.setModel(self.q_app.data_model)
@@ -54,6 +85,8 @@ class DatasetManager(QWidget):
         self.checkbox_update()
 
     def bplus_onclick(self):
+        if self.progress is not None:
+            return
         fd = QFileDialog()
         files, _ = fd.getOpenFileNames(
             self,
@@ -63,20 +96,31 @@ class DatasetManager(QWidget):
             options=QFileDialog.Options()
         )
 
-        failed, opened = [], pd.DataFrame(columns=self.q_app.data.columns)
-        for file in files:
-            try:
-                for reader in DatasetReaders:
-                    if reader().validate(file):
-                        opened = pd.concat((opened, reader().read(file)), ignore_index=True)
-                        break
-                else:
-                    failed.append(file)
-            except Exception as e:
-                self.logger.info(str(e))
-                failed.append(file)
+        self.progress = QProgressDialog("Opening files", "Cancel", 0, len(files))
+        fw = FileOpenWorker(files)
+        fw.threadWorkerException.connect(self.on_tw_exception)
+        fw.threadWorkerResult.connect(self.on_tw_result)
+        fw.threadWorkerFinished.connect(self.on_tw_finished)
+        fw.threadWorkerStatus.connect(self.progress.setValue)
 
-        # opened = opened.astype({'DeadTime': })
+        cb = QPushButton('Cancel')
+        cb.clicked.connect(lambda *args: fw.halt())
+        self.progress.setCancelButton(cb)
+        self.progress.show()
+        self.q_app.thread_pool.start(fw)
+
+    def on_tw_finished(self):
+        if self.progress is not None:
+            self.progress.close()
+            self.progress = None
+
+    def on_tw_exception(self, e):
+        if self.progress is not None:
+            self.progress.close()
+            self.progress = None
+
+    def on_tw_result(self, result):
+        failed, opened = result
         self.q_app.data_model.insertRows(0, opened.shape[0])
         self.q_app.data[0:opened.shape[0]] = opened
         self.q_app.data_model.dataChanged.emit(
@@ -115,6 +159,8 @@ class DatasetManager(QWidget):
         return reversed(result)
 
     def bminus_onclick(self):
+        if self.progress is not None:
+            return
         rows = list(set(idx.row() for idx in self.view.selectedIndexes()))
         for position, amount in self.to_consecutive(sorted(rows)):
             self.q_app.data_model.removeRows(position, amount)
@@ -122,6 +168,8 @@ class DatasetManager(QWidget):
         self.q_app.dataRowsRemoved.emit(rows)
 
     def bexport_onclick(self):
+        if self.progress is not None:
+            return
         fd = QFileDialog()
         fd.setOption(fd.ShowDirsOnly, True)
         dirname = fd.getExistingDirectory(self, caption='Export spectra to')

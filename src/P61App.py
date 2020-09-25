@@ -85,6 +85,7 @@ class P61App(QApplication):
     threadWorkerException = pyqtSignal(object)
     threadWorkerResult = pyqtSignal(object)
     threadWorkerFinished = pyqtSignal()
+    threadWorkerStatus = pyqtSignal(int)
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)

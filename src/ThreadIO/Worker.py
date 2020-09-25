@@ -20,6 +20,7 @@ class Worker(QRunnable):
         self.threadWorkerException = self.q_app.threadWorkerException
         self.threadWorkerResult = self.q_app.threadWorkerResult
         self.threadWorkerFinished = self.q_app.threadWorkerFinished
+        self.threadWorkerStatus = self.q_app.threadWorkerStatus
 
     @pyqtSlot()
     def run(self) -> None:
@@ -32,3 +33,4 @@ class Worker(QRunnable):
             self.threadWorkerResult.emit(self.result)
         finally:
             self.threadWorkerFinished.emit()
+
