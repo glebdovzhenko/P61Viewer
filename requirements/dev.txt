@@ -1,5 +1,5 @@
 # This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
+# $ conda create --name <env> --file <this file> -c anaconda -c conda-forge
 # platform: win-64
 alabaster=0.7.12=py_0
 altgraph=0.17=py_0

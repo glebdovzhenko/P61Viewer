@@ -4,7 +4,7 @@ src/P61App.py
 
 """
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QThreadPool
 import pandas as pd
 import numpy as np
 import logging
@@ -76,10 +76,15 @@ class P61App(QApplication):
     dataRowsRemoved = pyqtSignal(list)
     dataActiveChanged = pyqtSignal(list)
     selectedIndexChanged = pyqtSignal(int)
+    dataSorted = pyqtSignal()
+
     peakListChanged = pyqtSignal(list)
     genFitResChanged = pyqtSignal(list)
     stackedPeaksChanged = pyqtSignal()
-    dataSorted = pyqtSignal()
+
+    threadWorkerException = pyqtSignal(object)
+    threadWorkerResult = pyqtSignal(object)
+    threadWorkerFinished = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)
@@ -92,6 +97,7 @@ class P61App(QApplication):
         self.stacked_peaks = None
 
         self.logger = logging.getLogger(str(self.__class__))
+        self.thread_pool = QThreadPool(parent=self)
 
         # data storage for one-per application items
         self.params = {
