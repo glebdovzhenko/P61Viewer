@@ -8,6 +8,16 @@ This python file serves as the executable script for the application.
 
 Launches the :code:`P61App` (QApplication_ child class) and a :code:`P61Viewer` (QMainWindow_ child class) instances.
 """
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
+
+if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+    QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+    QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QTabWidget, QSystemTrayIcon
 from PyQt5.QtGui import QIcon
 import sys
@@ -19,6 +29,7 @@ from PeakTrackerWidgets import PeakAnalysisWidget
 from P61App import P61App
 
 import logging
+
 
 
 class P61Viewer(QMainWindow):
