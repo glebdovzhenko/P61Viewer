@@ -122,7 +122,8 @@ class GeneralFitWidget(QWidget):
             bckg_xx = bckg_xx[(bckg_xx < l) | (bckg_xx > r)]
 
         try:
-            result = fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs)
+            # result = fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs)
+            result = update_varied_params(result, fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs))
         except Exception as e:
             self.logger.error('on_bckg_fit_btn: during fit of %s an exception was raised: %s' %
                               (self.q_app.data.loc[idx, 'ScreenName'], str(e)))

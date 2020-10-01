@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
     # '../../test_files/exports/Probe_TBB_2379_sin2psi_06082015.csv'
-    d = pd.read_csv('/Users/glebdovzhenko/Dropbox/PycharmProjects/P61Viewer/test_files/exports/sequential.csv',
+    d = pd.read_csv('C:\\Users\\dovzheng\\PycharmProjects\\P61Viewer\\test_files\\result.csv',
                     header=0, index_col=0)
     fig = plt.figure()
     for col in d.columns:
