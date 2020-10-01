@@ -31,7 +31,6 @@ from P61App import P61App
 import logging
 
 
-
 class P61Viewer(QMainWindow):
     """
     Main window class for the application. Collects all widgets in the same layout and instantiates them.

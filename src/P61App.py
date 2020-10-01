@@ -82,10 +82,15 @@ class P61App(QApplication):
     genFitResChanged = pyqtSignal(list)
     stackedPeaksChanged = pyqtSignal()
 
-    threadWorkerException = pyqtSignal(object)
-    threadWorkerResult = pyqtSignal(object)
-    threadWorkerFinished = pyqtSignal()
-    threadWorkerStatus = pyqtSignal(int)
+    foWorkerException = pyqtSignal(object)
+    foWorkerResult = pyqtSignal(object)
+    foWorkerFinished = pyqtSignal()
+    foWorkerStatus = pyqtSignal(int)
+
+    fitWorkerException = pyqtSignal(object)
+    fitWorkerResult = pyqtSignal(object)
+    fitWorkerFinished = pyqtSignal()
+    fitWorkerStatus = pyqtSignal(int)
 
     def __init__(self, *args, **kwargs):
         QApplication.__init__(self, *args, **kwargs)

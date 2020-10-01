@@ -35,6 +35,11 @@ class FileOpenWorker(Worker):
 
         super(FileOpenWorker, self).__init__(fn, args=[files], kwargs={})
 
+        self.threadWorkerException = self.q_app.foWorkerException
+        self.threadWorkerResult = self.q_app.foWorkerResult
+        self.threadWorkerFinished = self.q_app.foWorkerFinished
+        self.threadWorkerStatus = self.q_app.foWorkerStatus
+
     def halt(self):
         self.stop = True
 
@@ -110,16 +115,19 @@ class DatasetManager(QWidget):
         self.q_app.thread_pool.start(fw)
 
     def on_tw_finished(self):
+        self.logger.debug('on_tw_finished: Handling FileOpenWorker.threadWorkerFinished')
         if self.progress is not None:
             self.progress.close()
             self.progress = None
 
     def on_tw_exception(self, e):
+        self.logger.debug('on_tw_exception: Handling FileOpenWorker.threadWorkerException')
         if self.progress is not None:
             self.progress.close()
             self.progress = None
 
     def on_tw_result(self, result):
+        self.logger.debug('on_tw_result: Handling FileOpenWorker.threadWorkerResult')
         failed, opened = result
         self.q_app.data_model.insertRows(0, opened.shape[0])
         self.q_app.data[0:opened.shape[0]] = opened
@@ -128,7 +136,7 @@ class DatasetManager(QWidget):
             self.q_app.data_model.index(opened.shape[0], self.q_app.data_model.columnCount())
         )
 
-        self.logger.debug('bplus_onclick: Emitting dataRowsInserted(%d, %d)' % (0, opened.shape[0]))
+        self.logger.debug('on_tw_result: Emitting dataRowsInserted(%d, %d)' % (0, opened.shape[0]))
         self.q_app.dataRowsInserted.emit(0, opened.shape[0])
 
         if failed:

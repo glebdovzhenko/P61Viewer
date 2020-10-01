@@ -16,10 +16,10 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.result = None
 
-        self.threadWorkerException = self.q_app.threadWorkerException
-        self.threadWorkerResult = self.q_app.threadWorkerResult
-        self.threadWorkerFinished = self.q_app.threadWorkerFinished
-        self.threadWorkerStatus = self.q_app.threadWorkerStatus
+        self.threadWorkerException = None
+        self.threadWorkerResult = None
+        self.threadWorkerFinished = None
+        self.threadWorkerStatus = None
 
     @pyqtSlot()
     def run(self) -> None:
