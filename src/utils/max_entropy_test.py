@@ -11,123 +11,95 @@ def plot_prep(x):
             'marker': '.', 'linestyle': ''}
 
 
-def max_entropy_torch(observed, weights, delta):
-    """
-    :param observed:
-    :return:
+def t_entropy(pp):
+    return -torch.sum(pp * torch.log(pp))
 
-    """
 
-    def upd_prediction():
-        average = 0.5 * (torch.cat((mem_predicted[1:], torch.tensor([mem_predicted.data[-1]], dtype=torch.double))) +
-                         torch.cat((torch.tensor([mem_predicted.data[0]], dtype=torch.double), mem_predicted[:-1])))
+def t_c0(pp, ww=None):
+    if ww is not None:
+        return torch.abs(torch.sum(ww * pp))
+    else:
+        return torch.abs(torch.sum(pp))
 
-        return torch.exp(
-            - l0
-            - l1 * 2. * weights * (mem_predicted - observed) / mem_predicted.shape[0]
-            - l2 * 4. * weights * (mem_predicted - average) / mem_predicted.shape[0]
-        )
 
-    def c0():
-        return torch.abs(torch.sum(mem_predicted - observed))
+def t_c1(pp, oo, ww):
+    return torch.mean(ww * (pp - oo) ** 2)
 
-    def c1():
-        return torch.abs(torch.mean(weights * (mem_predicted - observed) ** 2) - 1.)
 
-    def c2():
-        return torch.mean(weights[:-1] * (mem_predicted[:-1] - mem_predicted[1:]) ** 2)
+def t_c2(pp, ww):
+    return torch.mean(ww[:-1] * (pp[:-1] - pp[1:]) ** 2)
 
-    def status():
-        return 'c0: %f, c1: %f, c2: %f -- l0: %f, l1: %f, l2: %f' %\
-               (c0().data, c1().data, c2().data, l0.data, l1.data, l2.data)
 
-    track = {'c0': [], 'c1': [], 'c2': []}
+def maximize_entropy(observed: np.ndarray, weights: np.ndarray):
+    """"""
+    observed = torch.tensor(observed, requires_grad=False)
+    weights = torch.tensor(weights, requires_grad=False)
 
-    mem_predicted = torch.tensor(observed, requires_grad=True)
-    observed = torch.tensor(observed)
-    weights = torch.tensor(weights)
-    l0, l1, l2 = torch.tensor(-1.59, requires_grad=True), \
-                 torch.tensor(2.68, requires_grad=True), \
-                 torch.tensor(0., requires_grad=True)
+    predicted = observed.detach().clone()
+    track = {'S': [], 'c0': [], 'c1': [], 'c2': []}
 
-    outer_opt = torch.optim.Adam([l1], lr=1E-3)
-    inner_opt = torch.optim.Adam([mem_predicted, l0], lr=1E-3)
+    lr = 1E-2
+    chisqr_window = 1E-2
+    for ii in range(30000):
 
-    mem_predicted = upd_prediction()
-    # l1 = l1.detach()
-    i = 0
-    while c1().data > 40:
-        for _ in range(100):
-            outer_opt.zero_grad()
-            mem_predicted = upd_prediction()
+        p_s, p_c0, p_c1, p_c2 = (predicted.detach().clone().requires_grad_(True),
+                                 predicted.detach().clone().requires_grad_(True),
+                                 predicted.detach().clone().requires_grad_(True),
+                                 predicted.detach().clone().requires_grad_(True))
 
-            metric = c1()
-            metric.backward(retain_graph=True)
-            outer_opt.step()
+        ent = -t_entropy(p_s)
+        ent.backward()
+        grad = p_s.grad
 
-            j = 0
+        c2 = t_c2(p_c2, weights)
+        if c2.data > 0.3:
+            c2.backward()
+            c2_grad = p_c2.grad
+            if torch.norm(c2_grad) > 0:
+                c2_grad = c2_grad / torch.norm(c2_grad)
+                grad = c2_grad * torch.dot(grad, c2_grad)
 
-        while c0().data > 10:
-            inner_opt.zero_grad()
-            mem_predicted = upd_prediction()
+        c0 = t_c0(p_c0)
+        c0.backward()
+        c0_grad = p_c0.grad
+        if torch.norm(c0_grad) > 0:
+            c0_grad = c0_grad / torch.norm(c0_grad)
+            grad = grad - c0_grad * torch.dot(grad, c0_grad)
 
-            metric = c0()
-            metric.backward(retain_graph=True)
-            inner_opt.step()
-            track['c0'].append(c0().data)
-            track['c1'].append(c1().data)
-            track['c2'].append(c2().data)
+        c1 = t_c1(p_c1, observed, weights)
+        if 1. - chisqr_window <= c1.data <= 1. + chisqr_window:
+            c1.backward()
+            c1_grad = p_c1.grad
+            if torch.norm(c1_grad) > 0:
+                c1_grad = c1_grad / torch.norm(c1_grad)
+                grad = grad - c1_grad * torch.dot(grad, c1_grad)
 
-            if j % 10 == 0:
-                print(i, j, 'c0: %f, c1: %f, c2: %f -- l0: %f, l1: %f, l2: %f' %
-                      (c0().data, c1().data, c2().data, l0.data, l1.data, l2.data))
-            j += 1
+        track['S'].append(-ent.data)
+        track['c0'].append(c0.data)
+        track['c1'].append(c1.data)
+        track['c2'].append(c2.data)
 
-        if i % 10 == 0:
-            print(i, j, 'c0: %f, c1: %f, c2: %f -- l0: %f, l1: %f, l2: %f' %
-                  (c0().data, c1().data, c2().data, l0.data, l1.data, l2.data))
-        i += 1
+        predicted -= lr * grad
+        print("%d :: S=%f : c0=%f : c1=%f : c2=%f" % (ii, track['S'][-1], track['c0'][-1],
+                                                      track['c1'][-1], track['c2'][-1]))
 
-    for lbl in ('c0', 'c1', 'c2'):
-        plt.plot(track[lbl], label=lbl)
-        plt.legend()
+    plt.figure()
+    ax = plt.subplot(411)
+    plt.title('Entropy maximization track')
+    plt.plot(track['S'], label='Entropy')
+    plt.legend()
+    plt.subplot(412, sharex=ax)
+    plt.plot(track['c0'], label='Total count')
+    plt.legend()
+    plt.subplot(413, sharex=ax)
+    plt.plot(track['c1'], label='$\chi^{2}$')
+    plt.legend()
+    plt.subplot(414, sharex=ax)
+    plt.plot(track['c2'], label='E[dy/dx]')
+    plt.legend()
     plt.show()
 
-    return mem_predicted.detach().numpy()
-
-
-def max_entropy_numpy(observed, weights, delta):
-    def upd_prediction():
-        average = 0.5 * (np.concatenate((mem_predicted[1:], np.array([mem_predicted[-1]]))) +
-                         np.concatenate((np.array([mem_predicted[0]]), mem_predicted[:-1])))
-        return np.exp(
-            - l0
-            - l1 * 2. * weights * (mem_predicted - observed) / mem_predicted.shape[0]
-            - l2 * 4. * weights * (mem_predicted - average) / mem_predicted.shape[0]
-        )
-
-    def chisqr():
-        return np.mean(weights * (mem_predicted - observed) ** 2)
-
-    def c0():
-        return np.abs(np.sum(mem_predicted - observed))
-
-    def c1():
-        return np.abs(np.mean(weights * (mem_predicted - observed) ** 2) - 1.)
-
-    def c2():
-        return np.mean(weights[:-1] * (mem_predicted[:-1] - mem_predicted[1:]) ** 2)
-
-    l0, l1, l2 = 1E-3, 1E-3, 1E-3
-    mem_predicted = upd_prediction(observed.copy())
-
-    for _ in range(10):
-        l1 *= np.mean(weights * (mem_predicted - observed) ** 2)
-        mem_predicted = upd_prediction(mem_predicted)
-        print('c0: %f, c1: %f, c2: %f -- l0: %f, l1: %f, l2: %f' %
-              (c0(mem_predicted), c1(mem_predicted), c2(mem_predicted), l0, l1, l2))
-
-    return mem_predicted
+    return predicted.detach().data
 
 
 if __name__ == '__main__':
@@ -136,14 +108,12 @@ if __name__ == '__main__':
     for f_name in os.listdir(wd):
         dd = pd.read_csv(os.path.join(wd, f_name), header=0, index_col='eV', dtype=np.float)
 
-        dd = dd[62000:65000]
+        # dd = dd[62000:65000]
         xx, yy = np.array(dd.index).flatten(), np.array(dd.values).flatten()
         xx, yy = xx[(~np.isnan(yy)) & (yy > 0)], yy[(~np.isnan(yy)) & (yy > 0)]
 
-        predicted = max_entropy_torch(yy, np.sqrt(yy), 0.1)
-        # predicted = max_entropy_numpy(yy, np.sqrt(yy), 0.1)
+        yy_opt = maximize_entropy(yy, np.ones(shape=yy.shape) * yy.shape[0] / np.sum(yy))
 
-        plt.plot(xx, yy, '.-')
-        plt.plot(xx, predicted)
+        plt.plot(xx, yy, linestyle='', marker='.')
+        plt.plot(xx, yy_opt, linestyle='--', marker='')
         plt.show()
-        break
