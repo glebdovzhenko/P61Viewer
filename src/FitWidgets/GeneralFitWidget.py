@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QFileDialog
+from PyQt5.QtCore import Qt, QWaitCondition, QMutex
 import pandas as pd
 import numpy as np
 import logging
+import copy
 
 from P61App import P61App
 from DatasetManager import DatasetViewer
@@ -10,7 +12,68 @@ from FitWidgets.CopyPopUp import CopyPopUp
 from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from FitWidgets.ConstrainPopUp import ConstrainPopUp
 from PlotWidgets import FitPlot
+from ThreadIO import Worker
 from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_peak_intervals, update_varied_params
+
+
+class FitWorker(Worker):
+    def __init__(self, x, y, res, fit_type):
+        def fn_peak(xx, yy, result):
+            result, vary_bckg, bckg_stderr = fix_background(result)
+
+            for l, r in get_peak_intervals(result):
+                xx_, yy_ = xx.copy(), yy.copy()
+                yy_ = yy_[(xx_ > l) & (xx_ < r)]
+                xx_ = xx_[(xx_ > l) & (xx_ < r)]
+                if xx_.shape[0] == 0:
+                    continue
+
+                result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
+                result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
+
+                for param in vary_peaks:
+                    result.params[param].vary = vary_peaks[param]
+                    result.params[param].stderr = peaks_stderr[param]
+
+            for param in vary_bckg:
+                result.params[param].vary = vary_bckg[param]
+                result.params[param].stderr = bckg_stderr[param]
+
+            return result
+
+        def fn_bckg(xx, yy, result):
+            result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
+            for l, r in get_peak_intervals(result):
+                yy = yy[(xx < l) | (xx > r)]
+                xx = xx[(xx < l) | (xx > r)]
+
+            result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
+
+            for param in vary_bckg:
+                result.params[param].vary = vary_bckg[param]
+                result.params[param].stderr = bckg_stderr[param]
+
+            return result
+
+        def fn_all(xx, yy, result):
+            result = fn_bckg(xx, yy, result)
+            result = fn_peak(xx, yy, result)
+            result = fn_bckg(xx, yy, result)
+            return result
+
+        if fit_type == 'peaks':
+            super(FitWorker, self).__init__(fn_peak, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
+        elif fit_type == 'bckg':
+            super(FitWorker, self).__init__(fn_bckg, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
+        elif fit_type == 'all':
+            super(FitWorker, self).__init__(fn_all, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
+        else:
+            raise ValueError('fit_type argument should be \'peaks\' or \'bckg\'')
+
+        self.threadWorkerException = self.q_app.fitWorkerException
+        self.threadWorkerResult = self.q_app.fitWorkerResult
+        self.threadWorkerFinished = self.q_app.fitWorkerFinished
+        self.threadWorkerStatus = self.q_app.fitWorkerStatus
 
 
 class GeneralFitWidget(QWidget):
@@ -18,6 +81,8 @@ class GeneralFitWidget(QWidget):
         QWidget.__init__(self, parent=parent)
         self.q_app = P61App.instance()
         self.logger = logging.getLogger(str(self.__class__))
+
+        self.fit_idx = None
 
         self.lmfit_inspector = LmfitInspector()
 
@@ -57,13 +122,32 @@ class GeneralFitWidget(QWidget):
         self.copy_btn.clicked.connect(self.on_copy_btn)
         self.export_btn.clicked.connect(self.on_export_button)
 
+        self.q_app.fitWorkerResult.connect(self.on_tw_result, Qt.QueuedConnection)
+        self.q_app.fitWorkerException.connect(self.on_tw_exception, Qt.QueuedConnection)
+        self.q_app.fitWorkerFinished.connect(self.on_tw_finished, Qt.QueuedConnection)
+
+    def on_tw_finished(self):
+        self.logger.debug('on_tw_exception: Handling FitWorker.threadWorkerFinished')
+        self.fit_idx = None
+
+    def on_tw_result(self, result):
+        self.logger.debug('on_tw_exception: Handling FitWorker.threadWorkerResult')
+        self.q_app.set_general_result(self.fit_idx, result)
+
+    def on_tw_exception(self):
+        self.logger.debug('on_tw_exception: Handling FitWorker.threadWorkerException')
+
     def on_constrain_btn(self, *args, idx=None):
         w = ConstrainPopUp(parent=self)
         w.exec_()
 
     def on_peak_fit_btn(self, *args, idx=None):
+        if self.fit_idx is not None:
+            return
+
         if self.q_app.get_selected_idx() == -1:
             return
+
         elif idx is None:
             idx = self.q_app.get_selected_idx()
 
@@ -71,74 +155,19 @@ class GeneralFitWidget(QWidget):
         if result is None:
             return
 
-        result, vary_bckg, bckg_stderr = fix_background(result)
+        xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
+        x_lim = self.plot_w.get_axes_xlim()
+        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
-        for l, r in get_peak_intervals(result):
-            xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
-            x_lim = self.plot_w.get_axes_xlim()
-            yy = yy[(xx > x_lim[0]) & (xx > l) & (xx < x_lim[1]) & (xx < r)]
-            xx = xx[(xx > x_lim[0]) & (xx > l) & (xx < x_lim[1]) & (xx < r)]
-            if xx.shape[0] == 0:
-                continue
-
-            result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx), np.max(xx)))
-
-            try:
-                # result = fit(result, data=yy, x=xx, **fit_kwargs)
-                result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
-            except Exception as e:
-                self.logger.error('on_peak_fit_btn: during fit of %s an exception was raised: %s' %
-                                  (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
-
-            for param in vary_peaks:
-                result.params[param].vary = vary_peaks[param]
-                result.params[param].stderr = peaks_stderr[param]
-
-        for param in vary_bckg:
-            result.params[param].vary = vary_bckg[param]
-            result.params[param].stderr = bckg_stderr[param]
-
-        self.q_app.set_general_result(idx, result)
+        fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='peaks')
+        self.fit_idx = idx
+        self.q_app.thread_pool.start(fw)
 
     def on_bckg_fit_btn(self, *args, idx=None):
-        if self.q_app.get_selected_idx() == -1:
-            return
-        elif idx is None:
-            idx = self.q_app.get_selected_idx()
-
-        result = self.q_app.get_general_result(idx)
-        if result is None:
+        if self.fit_idx is not None:
             return
 
-        result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
-
-        bckg_xx, bckg_yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
-        x_lim = self.plot_w.get_axes_xlim()
-        sel = (x_lim[0] < bckg_xx) & (x_lim[1] > bckg_xx)
-        bckg_xx, bckg_yy = bckg_xx[sel], bckg_yy[sel]
-
-        for l, r in get_peak_intervals(result):
-            bckg_yy = bckg_yy[(bckg_xx < l) | (bckg_xx > r)]
-            bckg_xx = bckg_xx[(bckg_xx < l) | (bckg_xx > r)]
-
-        try:
-            # result = fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs)
-            result = update_varied_params(result, fit(result, data=bckg_yy, x=bckg_xx, **fit_kwargs))
-        except Exception as e:
-            self.logger.error('on_bckg_fit_btn: during fit of %s an exception was raised: %s' %
-                              (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
-
-        for param in vary_bckg:
-            result.params[param].vary = vary_bckg[param]
-            result.params[param].stderr = bckg_stderr[param]
-
-        self.q_app.set_general_result(idx, result)
-
-    def on_copy_btn(self, *args):
-        w = CopyPopUp(parent=self)
-        w.exec_()
-
-    def on_fit_btn(self, *args, idx=None):
         if self.q_app.get_selected_idx() == -1:
             return
         elif idx is None:
@@ -150,23 +179,38 @@ class GeneralFitWidget(QWidget):
 
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
         x_lim = self.plot_w.get_axes_xlim()
-        sel = (x_lim[0] < xx) & (x_lim[1] > xx)
-        xx, yy = xx[sel], yy[sel]
+        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
-        result, vary_params, params_stderr = fix_outlier_peaks(result, x_lim)
+        fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='bckg')
+        self.fit_idx = idx
+        self.q_app.thread_pool.start(fw)
 
-        try:
-            # result.fit(yy, x=xx, **fit_kwargs)
-            result = fit(result, data=yy, x=xx, **fit_kwargs)
-        except Exception as e:
-            self.logger.error('on_fit_btn: during fit of %s an exception was raised: %s' %
-                              (self.q_app.data.loc[idx, 'ScreenName'], str(e)))
+    def on_fit_btn(self, *args, idx=None):
+        if self.fit_idx is not None:
+            return
 
-        for param in vary_params:
-            result.params[param].vary = vary_params[param]
-            result.params[param].stderr = params_stderr[param]
+        if self.q_app.get_selected_idx() == -1:
+            return
+        elif idx is None:
+            idx = self.q_app.get_selected_idx()
 
-        self.q_app.set_general_result(idx, result)
+        result = self.q_app.get_general_result(idx)
+        if result is None:
+            return
+
+        xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
+        x_lim = self.plot_w.get_axes_xlim()
+        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
+
+        fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='all')
+        self.fit_idx = idx
+        self.q_app.thread_pool.start(fw)
+
+    def on_copy_btn(self, *args):
+        w = CopyPopUp(parent=self)
+        w.exec_()
 
     def on_fit_all_btn(self):
         w = SeqFitPopUp(parent=self)

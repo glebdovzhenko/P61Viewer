@@ -1,43 +1,12 @@
-from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel, QComboBox, QProgressDialog, QCheckBox
+from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel, QComboBox, QProgressDialog, \
+    QCheckBox
 from PyQt5.Qt import Qt
 import copy
 import logging
+import time
 
 from P61App import P61App
-from ThreadIO import Worker
 from DatasetManager import DatasetSelector
-
-
-class FitWorker(Worker):
-    def __init__(self, ids, fit_type, bckg, peaks, everything):
-        def fn(ids, fit_type, bckg, peaks, everything):
-            for ii, (prev_idx, idx) in enumerate(zip(ids[:-1], ids[1:])):
-                if self.stop:
-                    return
-                if fit_type == 2:
-                    self.q_app.data.loc[idx, 'GeneralFitResult'] = \
-                        copy.deepcopy(self.q_app.data.loc[prev_idx, 'GeneralFitResult'])
-
-                if bckg is not None:
-                    bckg(idx=idx)
-                if peaks is not None:
-                    peaks(idx=idx)
-                if everything is not None:
-                    everything(idx=idx)
-
-                self.threadWorkerStatus.emit(ii)
-            return
-
-        self.stop = False
-        super(FitWorker, self).__init__(fn, args=[ids, fit_type, bckg, peaks, everything], kwargs={})
-
-        self.threadWorkerException = self.q_app.fitWorkerException
-        self.threadWorkerResult = self.q_app.fitWorkerResult
-        self.threadWorkerFinished = self.q_app.fitWorkerFinished
-        self.threadWorkerStatus = self.q_app.fitWorkerStatus
-
-    def halt(self):
-        self.stop = True
 
 
 class SeqFitPopUp(QDialog):
@@ -48,6 +17,7 @@ class SeqFitPopUp(QDialog):
         self.logger = logging.getLogger(str(self.__class__))
 
         self.progress = None
+        self.sequence = None
 
         self.current_name = QLabel(parent=self)
         self.combo = QComboBox(parent=self)
@@ -74,19 +44,7 @@ class SeqFitPopUp(QDialog):
 
         self.btn_ok.clicked.connect(self.on_btn_ok)
         self.combo.currentIndexChanged.connect(self.on_combo_index_change)
-
-    def on_tw_finished(self):
-        self.logger.debug('on_tw_finished: Handling FitOpenWorker.threadWorkerFinished')
-        if self.progress is not None:
-            self.progress.close()
-            self.progress = None
-            self.close()
-
-    def on_tw_exception(self, e):
-        self.logger.debug('on_tw_exception: Handling FitOpenWorker.threadWorkerException')
-        if self.progress is not None:
-            self.progress.close()
-            self.progress = None
+        self.q_app.fitWorkerFinished.connect(self.on_tw_finished, Qt.QueuedConnection)
 
     def on_combo_index_change(self):
         if self.q_app.get_selected_idx() == -1:
@@ -112,35 +70,37 @@ class SeqFitPopUp(QDialog):
 
         self.progress = QProgressDialog("Sequential refinement", "Cancel", 0, len(fit_ids))
         self.progress.setWindowModality(Qt.ApplicationModal)
-
-        fw = FitWorker(fit_ids, fit_type,
-                       self.parent().on_bckg_fit_btn if self.cb_bckg.isChecked() else None,
-                       self.parent().on_peak_fit_btn if self.cb_peaks.isChecked() else None,
-                       self.parent().on_fit_btn if self.cb_all.isChecked() else None)
-
-        fw.threadWorkerException.connect(self.on_tw_exception)
-        fw.threadWorkerFinished.connect(self.on_tw_finished)
-        fw.threadWorkerStatus.connect(self.progress.setValue)
-
         cb = QPushButton('Cancel')
-        cb.clicked.connect(lambda *args: fw.halt())
+        cb.clicked.connect(self.on_cancel)
         self.progress.setCancelButton(cb)
         self.progress.show()
-        self.q_app.thread_pool.start(fw)
 
-        # TODO: add cancel functionality
-        # progress = QProgressDialog("Batch Fit", "Cancel", 0, len(fit_ids))
-        # progress.setWindowModality(Qt.WindowModal)
-        # for ii, (prev_idx, idx) in enumerate(zip([self.q_app.get_selected_idx()] + fit_ids[:-1], fit_ids)):
-        #     progress.setValue(ii)
-        #     if fit_type == 2:
-        #         self.q_app.data.loc[idx, 'GeneralFitResult'] = \
-        #             copy.deepcopy(self.q_app.data.loc[prev_idx, 'GeneralFitResult'])
-        #
-        #     if self.cb_bckg.isChecked():
-        #         self.parent().on_bckg_fit_btn(idx=idx)
-        #     if self.cb_peaks.isChecked():
-        #         self.parent().on_peak_fit_btn(idx=idx)
-        #     if self.cb_all.isChecked():
-        #         self.parent().on_fit_btn(idx=idx)
-        # progress.setValue(len(fit_ids))
+        self.sequence = enumerate(zip(fit_ids[:-1], fit_ids[1:]))
+        self.on_tw_finished()
+
+    def on_cancel(self):
+        self.sequence = None
+
+    def on_tw_finished(self):
+        if self.parent().fit_idx is not None:
+            self.parent().fit_idx = None
+
+        try:
+            ii, (prev_idx, idx) = next(self.sequence)
+        except (StopIteration, TypeError):
+            self.progress.close()
+            self.close()
+            return
+
+        if self.combo.currentIndex() == 2:
+            self.q_app.data.loc[idx, 'GeneralFitResult'] = \
+                copy.deepcopy(self.q_app.data.loc[prev_idx, 'GeneralFitResult'])
+
+        if self.cb_bckg.isChecked() and not self.cb_peaks.isChecked():
+            self.parent().on_bckg_fit_btn(idx=idx)
+        elif self.cb_peaks.isChecked() and not self.cb_bckg.isChecked():
+            self.parent().on_peak_fit_btn(idx=idx)
+        elif self.cb_peaks.isChecked() and self.cb_bckg.isChecked():
+            self.parent().on_fit_btn(idx=idx)
+
+        self.progress.setValue(ii)
