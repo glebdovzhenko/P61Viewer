@@ -139,7 +139,7 @@ class MainPlot2D(pg.GraphicsLayoutWidget):
                                                  pen=str(hex(data['Color'])).replace('0x', '#'))
 
     def on_data_rows_removed(self, rows):
-        self.logger.debug('on_data_rows_removed: Handling dataRowsInserted(%s)' % (str(rows), ))
+        self.logger.debug('on_data_rows_removed: Handling dataRowsRemoved(%s)' % (str(rows), ))
         for ii in sorted(rows, reverse=True):
             self._line_ax.removeItem(self._lines[ii])
             self._lines.pop(ii)
