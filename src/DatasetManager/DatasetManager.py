@@ -84,6 +84,9 @@ class DatasetManager(QWidget):
         # signals and handlers
         self.view.selectionModel().selectionChanged.connect(self.checkbox_update)
         self.q_app.dataActiveChanged.connect(self.on_data_ac)
+        self.q_app.foWorkerException.connect(self.on_tw_exception)
+        self.q_app.foWorkerResult.connect(self.on_tw_result)
+        self.q_app.foWorkerFinished.connect(self.on_tw_finished)
 
     def on_data_ac(self, rows):
         self.logger.debug('on_data_ac: Handling dataActiveChanged(%s)' % (str(rows), ))
@@ -103,10 +106,7 @@ class DatasetManager(QWidget):
 
         self.progress = QProgressDialog("Opening files", "Cancel", 0, len(files))
         fw = FileOpenWorker(files)
-        fw.threadWorkerException.connect(self.on_tw_exception)
-        fw.threadWorkerResult.connect(self.on_tw_result)
-        fw.threadWorkerFinished.connect(self.on_tw_finished)
-        fw.threadWorkerStatus.connect(self.progress.setValue)
+        self.q_app.foWorkerStatus.connect(self.progress.setValue)
 
         cb = QPushButton('Cancel')
         cb.clicked.connect(lambda *args: fw.halt())
