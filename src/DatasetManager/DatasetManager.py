@@ -112,7 +112,11 @@ class DatasetManager(QWidget):
         cb.clicked.connect(lambda *args: fw.halt())
         self.progress.setCancelButton(cb)
         self.progress.show()
-        self.q_app.thread_pool.start(fw)
+
+        if self.q_app.config['use_threads']:
+            self.q_app.thread_pool.start(fw)
+        else:
+            fw.run()
 
     def on_tw_finished(self):
         self.logger.debug('on_tw_finished: Handling FileOpenWorker.threadWorkerFinished')

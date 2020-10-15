@@ -105,6 +105,10 @@ class P61App(QApplication):
         self.logger = logging.getLogger(str(self.__class__))
         self.thread_pool = QThreadPool(parent=self)
 
+        self.config = {
+            'use_threads': False
+        }
+
         # data storage for one-per application items
         self.params = {
             'LmFitModelColors': dict(),

@@ -19,6 +19,7 @@ from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_
 class FitWorker(Worker):
     def __init__(self, x, y, res, fit_type):
         def fn_peak(xx, yy, result):
+
             result, vary_bckg, bckg_stderr = fix_background(result)
 
             for l, r in get_peak_intervals(result):
@@ -42,7 +43,9 @@ class FitWorker(Worker):
             return result
 
         def fn_bckg(xx, yy, result):
+
             result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
+
             for l, r in get_peak_intervals(result):
                 yy = yy[(xx < l) | (xx > r)]
                 xx = xx[(xx < l) | (xx > r)]
@@ -162,7 +165,10 @@ class GeneralFitWidget(QWidget):
 
         fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='peaks')
         self.fit_idx = idx
-        self.q_app.thread_pool.start(fw)
+        if self.q_app.config['use_threads']:
+            self.q_app.thread_pool.start(fw)
+        else:
+            fw.run()
 
     def on_bckg_fit_btn(self, *args, idx=None):
         if self.fit_idx is not None:
@@ -182,9 +188,12 @@ class GeneralFitWidget(QWidget):
         yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
         xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
-        fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='bckg')
+        fw = FitWorker(copy.deepcopy(xx), copy.deepcopy(yy), copy.deepcopy(result), fit_type='bckg')
         self.fit_idx = idx
-        self.q_app.thread_pool.start(fw)
+        if self.q_app.config['use_threads']:
+            self.q_app.thread_pool.start(fw)
+        else:
+            fw.run()
 
     def on_fit_btn(self, *args, idx=None):
         if self.fit_idx is not None:
@@ -206,7 +215,10 @@ class GeneralFitWidget(QWidget):
 
         fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='all')
         self.fit_idx = idx
-        self.q_app.thread_pool.start(fw)
+        if self.q_app.config['use_threads']:
+            self.q_app.thread_pool.start(fw)
+        else:
+            fw.run()
 
     def on_copy_btn(self, *args):
         w = CopyPopUp(parent=self)
