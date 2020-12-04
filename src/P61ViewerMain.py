@@ -70,7 +70,7 @@ class P61Viewer(QMainWindow):
         # set up layouts
         view_layout = QHBoxLayout()
         self.view_tab.setLayout(view_layout)
-        view_layout.addWidget(self.view_plot_w, 3)
+        view_layout.addWidget(self.view_plot_w, 2)
         view_layout.addWidget(self.file_w, 1)
 
         self.cw.addTab(self.view_tab, 'Import and view')
@@ -81,8 +81,10 @@ class P61Viewer(QMainWindow):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
-                        handlers=[logging.FileHandler("debug.log", mode='w'), logging.StreamHandler()])
+    logging.basicConfig(level=logging.DEBUG,
+                        format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
+                        handlers=[logging.FileHandler("debug.log", mode='w'),
+                                  logging.StreamHandler()])
 
     logger = logging.getLogger(__name__)
     logger.info('Starting up...')
