@@ -309,7 +309,7 @@ def deserialize_model_result(struct: list) -> model.ModelResult:
     return result
 
 
-def get_peak_intervals(mr: model.ModelResult, peak_base=None) -> Iterable:
+def get_peak_intervals(mr: model.ModelResult, overlap_base=None, interval_base=None) -> Iterable:
     def recursive_merge(inter, start_index=0):
         for i in range(start_index, len(inter) - 1):
             if inter[i][1] > inter[i + 1][0]:
@@ -320,23 +320,48 @@ def get_peak_intervals(mr: model.ModelResult, peak_base=None) -> Iterable:
                 return recursive_merge(inter.copy(), start_index=i)
         return inter
 
-    if peak_base is None:
+    if overlap_base is None:
         for par in mr.params:
             if 'peak_base' in mr.params[par].name:
-                peak_base = mr.params[par].value
+                overlap_base = mr.params[par].value
                 break
         else:
-            peak_base = 3.
+            overlap_base = 3.
 
-    peak_intervals = []
+    if interval_base is None:
+        interval_base = overlap_base
+
+    if interval_base < overlap_base:
+        raise ValueError('Overlap base of a peak should be less than its whole base')
+
+    overlap_intervals = []
     for cmp in mr.model.components:
         if is_peak_md(cmp):
-            peak_intervals.append([mr.params[cmp.prefix + 'center'].value -
-                                   peak_base * mr.params[cmp.prefix + 'sigma'].value,
-                                   mr.params[cmp.prefix + 'center'].value +
-                                   peak_base * mr.params[cmp.prefix + 'sigma'].value
-                                   ])
-    return recursive_merge(peak_intervals)
+            overlap_intervals.append([mr.params[cmp.prefix + 'center'].value -
+                                      overlap_base * mr.params[cmp.prefix + 'sigma'].value,
+                                      mr.params[cmp.prefix + 'center'].value +
+                                      overlap_base * mr.params[cmp.prefix + 'sigma'].value
+                                     ])
+
+    overlap_intervals = recursive_merge(overlap_intervals)
+    result = []
+    for l, r in overlap_intervals:
+        tmp = []
+        for cmp in mr.model.components:
+            if is_peak_md(cmp):
+                if l < mr.params[cmp.prefix + 'center'].value < r:
+                    tmp.append([
+                        mr.params[cmp.prefix + 'center'].value -
+                        interval_base * mr.params[cmp.prefix + 'sigma'].value,
+                        mr.params[cmp.prefix + 'center'].value +
+                        interval_base * mr.params[cmp.prefix + 'sigma'].value
+                    ])
+        tmp = recursive_merge(tmp)
+
+        result.extend(tmp)
+
+    print(result)
+    return result
 
 
 def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResult:

@@ -22,7 +22,7 @@ class FitWorker(Worker):
 
             result, vary_bckg, bckg_stderr = fix_background(result)
 
-            for l, r in get_peak_intervals(result):
+            for l, r in get_peak_intervals(result, overlap_base=0.1, interval_base=3.):
                 xx_, yy_ = xx.copy(), yy.copy()
                 yy_ = yy_[(xx_ > l) & (xx_ < r)]
                 xx_ = xx_[(xx_ > l) & (xx_ < r)]
