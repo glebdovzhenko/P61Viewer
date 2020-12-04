@@ -129,28 +129,50 @@ class MainPlot2D(pg.GraphicsLayoutWidget):
         self.q_app.dataRowsInserted.connect(self.on_data_rows_appended)
         self.q_app.dataRowsRemoved.connect(self.on_data_rows_removed)
         self.q_app.dataActiveChanged.connect(self.on_data_active_changed)
+        self.q_app.dataSorted.connect(self.on_data_sorted)
+
+    def line_init(self, ii):
+        data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
+        self._lines[ii] = self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
+                                             pen=str(hex(data['Color'])).replace('0x', '#'))
+
+    def line_remove(self, ii):
+        self._line_ax.removeItem(self._lines[ii])
+        self._lines.pop(ii)
+
+    def line_set_visibility(self, ii):
+        if self.q_app.data.loc[ii, 'Active']:
+            self._lines[ii].setPen(str(hex(self.q_app.data.loc[ii, 'Color'])).replace('0x', '#'))
+        else:
+            self._lines[ii].setPen(None)
 
     def on_data_rows_appended(self, pos, n_rows):
         self.logger.debug('on_data_rows_appended: Handling dataRowsInserted(%d, %d)' % (pos, n_rows))
         self._lines = self._lines[:pos] + [None] * n_rows + self._lines[pos:]
         for ii in range(pos, pos + n_rows):
-            data = self.q_app.data.loc[ii, ['DataX', 'DataY', 'Color']]
-            self._lines[ii] = self._line_ax.plot(1E3 * data['DataX'], data['DataY'],
-                                                 pen=str(hex(data['Color'])).replace('0x', '#'))
+            self.line_init(ii)
 
     def on_data_rows_removed(self, rows):
         self.logger.debug('on_data_rows_removed: Handling dataRowsRemoved(%s)' % (str(rows), ))
         for ii in sorted(rows, reverse=True):
-            self._line_ax.removeItem(self._lines[ii])
-            self._lines.pop(ii)
+            self.line_remove(ii)
 
     def on_data_active_changed(self, rows):
         self.logger.debug('on_data_active_changed: Handling dataActiveChanged(%s)' % (str(rows),))
         for ii in rows:
-            if self.q_app.data.loc[ii, 'Active']:
-                self._lines[ii].setPen(str(hex(self.q_app.data.loc[ii, 'Color'])).replace('0x', '#'))
-            else:
-                self._lines[ii].setPen(None)
+            self.line_set_visibility(ii)
+
+    def on_data_sorted(self):
+        self.logger.debug('on_data_sorted: Handling dataSorted')
+        for ii in reversed(range(len(self._lines))):
+            self.line_remove(ii)
+
+        ids = self.q_app.get_all_ids()
+        self._lines = [None] * len(ids)
+
+        for ii in ids:
+            self.line_init(ii)
+            self.line_set_visibility(ii)
 
 
 if __name__ == '__main__':
