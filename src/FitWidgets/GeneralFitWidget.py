@@ -235,15 +235,17 @@ class GeneralFitWidget(QWidget):
 
         def expand_result(row):
             if row['GeneralFitResult'] is None:
-                return pd.Series({'ScreenName': row['ScreenName']})
+                return pd.Series({'ScreenName': row['ScreenName'], 'DeadTime': row['DeadTime']})
             else:
-                n_row = {'ScreenName': row['ScreenName'], 'chisqr': row['GeneralFitResult'].chisqr}
+                n_row = {'ScreenName': row['ScreenName'], 'DeadTime': row['DeadTime'],
+                         'chisqr': row['GeneralFitResult'].chisqr}
                 for p in row['GeneralFitResult'].params:
                     n_row = {**n_row, p: row['GeneralFitResult'].params[p].value, p + '_std': row['GeneralFitResult'].params[p].stderr}
                 return pd.Series(n_row)
 
         result = pd.DataFrame()
-        result = result.append(self.q_app.data.loc[self.q_app.data['Active'], ['ScreenName', 'GeneralFitResult']])
+        result = result.append(self.q_app.data.loc[self.q_app.data['Active'], ['ScreenName', 'DeadTime',
+                                                                               'GeneralFitResult']])
         result = result.apply(expand_result, axis=1)
         result.to_csv(f_name)
 
