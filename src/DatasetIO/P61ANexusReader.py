@@ -12,6 +12,7 @@ class P61ANexusReader:
     all_event = ('scaler', 'allevent')
     all_good = ('scaler', 'allgood')
     hist = ('histogram', )
+    columns = ('DataX', 'DataY', 'DataID', 'Channel', 'ScreenName', 'Active', 'Color', 'DeadTime')
 
     def __init__(self):
         self.q_app = P61App.instance()
@@ -29,7 +30,10 @@ class P61ANexusReader:
 
     def read(self, f_name, sum_frames=True):
         kev_per_bin = 5E-2
-        result = pd.DataFrame(columns=self.q_app.data.columns)
+        if self.q_app is not None:
+            result = pd.DataFrame(columns=self.q_app.data.columns)
+        else:
+            result = pd.DataFrame(columns=self.columns)
 
         with h5py.File(f_name, 'r') as f:
             for ii, channel in enumerate((self.ch0, self.ch1)):
@@ -41,7 +45,10 @@ class P61ANexusReader:
                 frames[-1] = 0.0
                 kev = (np.arange(frames.shape[0]) + 0.5) * kev_per_bin
 
-                row = {c: None for c in self.q_app.data.columns}
+                if self.q_app is not None:
+                    row = {c: None for c in self.q_app.data.columns}
+                else:
+                    row = {c: None for c in self.columns}
 
                 if ('/'.join(channel + self.all_event) in f) and ('/'.join(channel + self.all_good) in f):
                     allevent = np.sum(f['/'.join(channel + self.all_event)], axis=0)
@@ -55,9 +62,10 @@ class P61ANexusReader:
                     'Channel': ii,
                     'ScreenName': os.path.basename(f_name) + ':' + '%02d' % ii,
                     'Active': True,
-                    'Color': next(self.q_app.params['ColorWheel'])
                 })
 
+                if self.q_app is not None:
+                    row.update({'Color': next(self.q_app.params['ColorWheel'])})
                 result.loc[result.shape[0]] = row
 
         result = result.astype('object')

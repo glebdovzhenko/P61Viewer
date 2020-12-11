@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 import torch
-import h5py
+from src.DatasetIO import P61ANexusReader, EDDIReader
 
 
 def plot_prep(x):
@@ -86,34 +86,41 @@ def maximize_entropy(observed: np.ndarray, weights: np.ndarray):
             print("%d :: S=%f : Sum=%f : chisqr=%f : E[dy/dx]=%f" %
                   (ii, track['S'][-1], track['c0'][-1], track['c1'][-1], track['c2'][-1]))
 
-    # plt.figure()
-    # ax = plt.subplot(411)
-    # plt.title('Entropy maximization track')
-    # plt.plot(track['S'], label='Entropy')
-    # plt.legend()
-    # plt.subplot(412, sharex=ax)
-    # plt.plot(track['c0'], label='Total count')
-    # plt.legend()
-    # plt.subplot(413, sharex=ax)
-    # plt.plot(track['c1'], label='$\chi^{2}$')
-    # plt.legend()
-    # plt.subplot(414, sharex=ax)
-    # plt.plot(track['c2'], label='E[dy/dx]')
-    # plt.legend()
-    # plt.show()
+    plt.figure()
+    ax = plt.subplot(411)
+    plt.title('Entropy maximization track')
+    plt.plot(track['S'], label='Entropy')
+    plt.legend()
+    plt.subplot(412, sharex=ax)
+    plt.plot(track['c0'], label='Total count')
+    plt.legend()
+    plt.subplot(413, sharex=ax)
+    plt.plot(track['c1'], label='$\chi^{2}$')
+    plt.legend()
+    plt.subplot(414, sharex=ax)
+    plt.plot(track['c2'], label='E[dy/dx]')
+    plt.legend()
+    plt.show()
 
     return predicted.detach().data
 
 
 if __name__ == '__main__':
-    wd = os.path.join('..', '..', 'test_files', 'generated', 'probe_5-5_sin2psi')
+    # reader = EDDIReader()
+    # data = reader.read(r'C:\Users\dovzheng\PycharmProjects\P61Viewer\test_files\collected\Probe_5-5_sin2psi_04082015')
 
-    for f_name in filter(lambda x: x[-4:] == '.csv', os.listdir(wd)):
-        dd = pd.read_csv(os.path.join(wd, f_name), header=0, index_col='eV', dtype=np.float)
+    reader = P61ANexusReader()
+    wd = r'C:\Users\dovzheng\Experiments\2020-12-11_Diffraction5'
+    data = pd.DataFrame(columns=reader.columns)
+    for f_name in os.listdir(wd)[:10]:
+        data = pd.concat((data, reader.read(os.path.join(wd, f_name))), ignore_index=True)
 
-        # dd = dd[62000:65000]
-        xx, yy = np.array(dd.index).flatten(), np.array(dd.values).flatten()
+    for ii in data.index:
+        xx, yy = data.loc[ii, 'DataX'].astype(np.float), data.loc[ii, 'DataY'].astype(np.float)
+        print(data.loc[ii, 'ScreenName'])
         xx_, yy = xx[(~np.isnan(yy)) & (yy > 0)], yy[(~np.isnan(yy)) & (yy > 0)]
+        if yy.shape[0] == 0:
+            continue
 
         yy_opt = maximize_entropy(yy, np.ones(shape=yy.shape) * yy.shape[0] / np.sum(yy))
         yy_opt = np.interp(xx, xx_, yy_opt)
@@ -123,9 +130,3 @@ if __name__ == '__main__':
         plt.ylabel('Intensity, counts')
         plt.legend()
         plt.show()
-
-        # d = pd.DataFrame({'x': xx * 1E-3, 'y': yy_opt})
-        # d.set_index('x', inplace=True)
-        # with open(os.path.join(wd, f_name.replace('.csv', '.xy')), 'w') as f:
-        #     f.write('# Custom header\n' + '# keV counts\n')
-        #     d.to_csv(f, sep=' ', header=False)

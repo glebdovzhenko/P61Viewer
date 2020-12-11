@@ -7,6 +7,7 @@ from P61App import P61App
 
 class EDDIReader:
     comments = ('#F', '#E', '#D', '#C')
+    columns = ('DataX', 'DataY', 'DataID', 'Channel', 'ScreenName', 'Active', 'Color', 'DeadTime')
 
     def __init__(self):
         self.q_app = P61App.instance()
@@ -23,7 +24,10 @@ class EDDIReader:
             return False
 
     def read(self, f_name):
-        result = pd.DataFrame(columns=self.q_app.data.columns)
+        if self.q_app is not None:
+            result = pd.DataFrame(columns=self.q_app.data.columns)
+        else:
+            result = pd.DataFrame(columns=self.columns)
         channel_to_kev = {'A': 0.0, 'B': 1.0, 'C': 0.0}
 
         with open(f_name, 'r') as f:
@@ -59,7 +63,10 @@ class EDDIReader:
                     buffer = buffer[(kev > 2) & (kev < 120)]
                     kev = kev[(kev > 2) & (kev < 120)]
 
-                    row = {c: None for c in self.q_app.data.columns}
+                    if self.q_app is not None:
+                        row = {c: None for c in self.q_app.data.columns}
+                    else:
+                        row = {c: None for c in self.columns}
 
                     row.update({
                         'DataX': kev,
@@ -67,8 +74,10 @@ class EDDIReader:
                         'DataID': f_name + ':S%03d' % index,
                         'ScreenName': os.path.basename(f_name) + ':S%03d' % index,
                         'Active': True,
-                        'Color': next(self.q_app.params['ColorWheel'])
                     })
+
+                    if self.q_app is not None:
+                        row.update({'Color': next(self.q_app.params['ColorWheel'])})
 
                     result.loc[result.shape[0]] = row
                     buffer = None
