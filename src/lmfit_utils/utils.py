@@ -4,48 +4,18 @@ import scipy
 import numpy as np
 from functools import reduce
 from typing import Iterable, Union
+import logging
 
-
-class PolynomialModel(models.PolynomialModel):
-    def __init__(self, degree, independent_vars=['x'], prefix='',
-                 nan_policy='raise', **kwargs):
-        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
-                       'independent_vars': independent_vars})
-        if not isinstance(degree, int) or degree > self.MAX_DEGREE:
-            raise TypeError(self.DEGREE_ERR % self.MAX_DEGREE)
-
-        self.poly_degree = degree
-        pnames = ['c%i' % (i) for i in range(degree + 1)]
-        kwargs['param_names'] = pnames
-
-        def polynomial(x, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0):
-            return np.abs(np.polyval([c7, c6, c5, c4, c3, c2, c1, c0], x))
-
-        model.Model.__init__(self, polynomial, **kwargs)
-
-    def make_params(self, verbose=False, **kwargs):
-        pars = super().make_params(verbose, **kwargs)
-        pars.add(name=self.prefix + 'peak_base',
-                 value=3.,
-                 min=0., max=7.,
-                 vary=False)
-        return pars
+logger = logging.getLogger('lmfit_utils')
 
 
 class InterpolationModel(model.Model):
     def __init__(self, **kwargs):
-        def LinearInterpolation(x, interp_fn=0., peak_base=3.):
+        def LinearInterpolation(x, interp_fn=0.):
             return np.zeros(shape=x.shape)
 
         model.Model.__init__(self, LinearInterpolation, **kwargs)
         self.refine = True
-
-    def make_params(self, verbose=False, **kwargs):
-        pars = model.Model.make_params(self, verbose, **kwargs)
-        pars[self.prefix + 'peak_base'].vary = False
-        pars[self.prefix + 'peak_base'].min = 0.
-        pars[self.prefix + 'peak_base'].max = 7.
-        return pars
 
 
 def upd_peak_mds(md):
@@ -66,9 +36,6 @@ def upd_peak_mds(md):
     md.make_params = make_params
 
 
-models.PolynomialModel = PolynomialModel
-models.InterpolationModel = InterpolationModel
-
 upd_peak_mds(models.GaussianModel)
 upd_peak_mds(models.LorentzianModel)
 upd_peak_mds(models.PseudoVoigtModel)
@@ -76,26 +43,46 @@ upd_peak_mds(models.Pearson7Model)
 upd_peak_mds(models.SkewedGaussianModel)
 upd_peak_mds(models.SkewedVoigtModel)
 upd_peak_mds(models.SplitLorentzianModel)
+models.InterpolationModel = InterpolationModel
+
 
 fit_kwargs = {'method': 'least_squares'}
-peak_md_names = ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'Pearson7Model',
-                 'SkewedGaussianModel', 'SkewedVoigtModel', 'SplitLorentzianModel')
-background_md_names = ('PolynomialModel', 'InterpolationModel')
-prefixes = {'GaussianModel': 'gau', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
-            'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-            'SplitLorentzianModel': 'spl', 'InterpolationModel': 'int'}
+peak_md_names = ('GaussianModel',
+                 'LorentzianModel',
+                 'PseudoVoigtModel',
+                 'Pearson7Model',
+                 'SkewedGaussianModel',
+                 'SkewedVoigtModel',
+                 'SplitLorentzianModel')
+background_md_names = ('PolynomialModel',
+                       'InterpolationModel')
+prefixes = {'GaussianModel': 'gau',
+            'LorentzianModel': 'lor',
+            'Pearson7Model': 'pvii',
+            'PolynomialModel': 'pol',
+            'PseudoVoigtModel': 'pv',
+            'SkewedGaussianModel': 'sg',
+            'SkewedVoigtModel': 'sv',
+            'SplitLorentzianModel': 'spl',
+            'InterpolationModel': 'int'}
 
 
-def is_param_editable(p: model.Parameter):
+def is_param_editable(p: model.Parameter) -> bool:
+    """
+    Returns True if the user should be allowed to edit this parameter in GUI.
+    """
     if p.expr is not None:
         return False
-    elif ('fwhm' in p.name) or ('height' in p.name):
+    elif ('fwhm' in p.name) or ('height' in p.name) or ('interp_fn' in p.name):
         return False
     else:
         return True
 
 
-def is_param_refinable(p: model.Parameter):
+def is_param_refinable(p: model.Parameter) -> bool:
+    """
+    Returns True if the user should be allowed to refine this parameter in GUI.
+    """
     if p.expr is not None:
         return False
     elif ('fwhm' in p.name) or ('height' in p.name) or ('base' in p.name):
@@ -128,48 +115,49 @@ def is_bckg_md(md: Union[str, model.Model]) -> bool:
     return False
 
 
-def make_prefix(name, composite):
+def make_prefix(name: str, mr: model.ModelResult) -> str:
     """
-    Generates a unique prefix for the new model.
+    Generates a unique prefix for a new model to be added to the ModelResult as a component.
 
     :param name:
-    :param composite:
+    :param mr:
     :return:
     """
 
-    if composite is None:
+    if mr is None:
         return prefixes[name] + '0_'
 
-    used_prefixes = [md.prefix for md in composite.model.components]
+    used_prefixes = [md.prefix for md in mr.model.components]
     for ii in range(100):
         if prefixes[name] + '%d_' % ii not in used_prefixes:
             return prefixes[name] + '%d_' % ii
 
 
-def rm_md(prefix, composite):
+def rm_md(prefix: str, mr: model.ModelResult) -> Union[model.ModelResult, None]:
     """
-    Removes the model identified by prefix from the composite model
+    Removes the model identified by prefix from the ModelResult
 
     :param prefix:
-    :param composite:
+    :param mr:
     :return:
     """
-    if len(composite.model.components) == 1:
+    if len(mr.model.components) == 1:
         return None
 
-    new_md = reduce(lambda a, b: a + b, (cmp for cmp in composite.model.components if cmp.prefix != prefix))
-    new_params = composite.params.copy()
-    for par in composite.params:
-        if prefix in composite.params[par].name:
+    new_md = reduce(lambda a, b: a + b, (cmp for cmp in mr.model.components if cmp.prefix != prefix))
+    new_params = mr.params.copy()
+    for par in mr.params:
+        if prefix in mr.params[par].name:
             new_params.pop(par)
 
-    composite.model = new_md
-    composite.params = new_params
+    mr.model = new_md
+    mr.params = new_params
 
-    return composite
+    return mr
 
 
-def add_md(name, init_params, composite, prefix=None):
+def add_md(name: str, init_params: dict, composite: Union[None, model.ModelResult],
+           prefix: Union[None, str] = None) -> model.ModelResult:
     """
     Adds the model intialised with init_params to the composite model.
 
@@ -222,9 +210,6 @@ def add_peak_md(name, peak_list, composite):
             params[prefix + 'center'].min = peak['center_x'] - .25 * width
             params[prefix + 'center'].max = peak['center_x'] + .25 * width
 
-            params[prefix + 'sigma'].max = 10.
-            params[prefix + 'sigma'].min = 0.01
-
             params[prefix + 'height'].max = 1.5 * peak['center_y']
 
             if 'Cut' in name:
@@ -243,6 +228,9 @@ def add_peak_md(name, peak_list, composite):
                     2. * np.log(2))
                 params[prefix + 'sigma'].value = sigma
                 params[prefix + 'fraction'].value = 0.
+
+            params[prefix + 'sigma'].max = 1.1 * params[prefix + 'sigma'].value
+            params[prefix + 'sigma'].min = 0.9 * params[prefix + 'sigma'].value
 
             if composite is not None:
                 c_params = composite.params
@@ -354,41 +342,29 @@ def deserialize_model_result(struct: list) -> model.ModelResult:
     return result
 
 
-def get_peak_intervals(mr: model.ModelResult, overlap_base=None, interval_base=None) -> Iterable:
+def get_peak_intervals(mr: model.ModelResult) -> Iterable:
     def recursive_merge(inter, start_index=0):
         for i in range(start_index, len(inter) - 1):
-            if inter[i][1] > inter[i + 1][0]:
-                new_start = inter[i][0]
-                new_end = inter[i + 1][1]
-                inter[i] = [new_start, new_end]
+            if (min(inter[i + 1]) <= inter[i][0] <= max(inter[i + 1])) or \
+                    (min(inter[i + 1]) <= inter[i][1] <= max(inter[i + 1])):
+                inter[i] = [min(inter[i][0], inter[i + 1][0]), max(inter[i][1], inter[i + 1][1])]
                 del inter[i + 1]
                 return recursive_merge(inter.copy(), start_index=i)
         return inter
-
-    if overlap_base is None:
-        for par in mr.params:
-            if 'peak_base' in mr.params[par].name:
-                overlap_base = mr.params[par].value
-                break
-        else:
-            overlap_base = 3.
-
-    if interval_base is None:
-        interval_base = overlap_base
-
-    if interval_base < overlap_base:
-        raise ValueError('Overlap base of a peak should be less than its whole base')
 
     overlap_intervals = []
     for cmp in mr.model.components:
         if is_peak_md(cmp):
             overlap_intervals.append([mr.params[cmp.prefix + 'center'].value -
-                                      overlap_base * mr.params[cmp.prefix + 'sigma'].value,
-                                      mr.params[cmp.prefix + 'center'].value +
-                                      overlap_base * mr.params[cmp.prefix + 'sigma'].value
-                                     ])
+                                      mr.params[cmp.prefix + 'overlap_base'].value *
+                                      mr.params[cmp.prefix + 'sigma'].value,
 
-    overlap_intervals = recursive_merge(overlap_intervals)
+                                      mr.params[cmp.prefix + 'center'].value +
+                                      mr.params[cmp.prefix + 'overlap_base'].value *
+                                      mr.params[cmp.prefix + 'sigma'].value
+                                      ])
+    overlap_intervals = recursive_merge(overlap_intervals, 0)
+
     result = []
     for l, r in overlap_intervals:
         tmp = []
@@ -397,15 +373,13 @@ def get_peak_intervals(mr: model.ModelResult, overlap_base=None, interval_base=N
                 if l < mr.params[cmp.prefix + 'center'].value < r:
                     tmp.append([
                         mr.params[cmp.prefix + 'center'].value -
-                        interval_base * mr.params[cmp.prefix + 'sigma'].value,
+                        mr.params[cmp.prefix + 'base'].value * mr.params[cmp.prefix + 'sigma'].value,
                         mr.params[cmp.prefix + 'center'].value +
-                        interval_base * mr.params[cmp.prefix + 'sigma'].value
+                        mr.params[cmp.prefix + 'base'].value * mr.params[cmp.prefix + 'sigma'].value
                     ])
-        tmp = recursive_merge(tmp)
+        result.extend(recursive_merge(tmp, 0))
 
-        result.extend(tmp)
-
-    return result
+    return list(sorted(result, key=lambda x: x[0]))
 
 
 def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResult:
@@ -413,19 +387,20 @@ def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResul
     for cmp in mr.model.components:
         if cmp._name == 'InterpolationModel':
             interp = cmp
-            base = mr.params[cmp.prefix + 'peak_base'].value
             refine = mr.params[cmp.prefix + 'interp_fn'].vary
 
     if refine:
         i_xx, i_yy = kwargs['x'], kwargs['data']
         for cmp in mr.model.components:
             if is_peak_md(cmp):
-                base_min = mr.params[cmp.prefix + 'center'].value - base * mr.params[cmp.prefix + 'sigma'].value
-                base_max = mr.params[cmp.prefix + 'center'].value + base * mr.params[cmp.prefix + 'sigma'].value
+                base_min = mr.params[cmp.prefix + 'center'].value - \
+                           mr.params[cmp.prefix + 'base'].value * mr.params[cmp.prefix + 'sigma'].value
+                base_max = mr.params[cmp.prefix + 'center'].value + \
+                           mr.params[cmp.prefix + 'base'].value * mr.params[cmp.prefix + 'sigma'].value
                 i_yy = i_yy[(i_xx <= base_min) | (i_xx >= base_max)]
                 i_xx = i_xx[(i_xx <= base_min) | (i_xx >= base_max)]
         func = scipy.interpolate.interp1d(i_xx, i_yy, kind='linear')
-        interp.func = lambda x, interp_fn, peak_base: func(x)
+        interp.func = lambda x, interp_fn: func(x)
 
     return mr
 
@@ -443,9 +418,60 @@ def update_varied_params(mr1: model.ModelResult, mr2: model.ModelResult) -> mode
     return mr1
 
 
-def refine_peaks(xx, yy, result):
-    pass
+def update_varied_constraints(mr: model.ModelResult, d_center=0.25, d_sigma=0.1) -> model.ModelResult:
+    for par in mr.params:
+        if not mr.params[par].vary:
+            continue
+        if 'center' in par:
+            mr.params[par].min = mr.params[par].value - d_center * mr.params[par.replace('center', 'sigma')].value
+            mr.params[par].max = mr.params[par].value + d_center * mr.params[par.replace('center', 'sigma')].value
+        if 'sigma' in par:
+            mr.params[par].min = (1. - d_sigma) * mr.params[par].value
+            mr.params[par].max = (1. + d_sigma) * mr.params[par].value
+    return mr
 
 
-def refine_bckg(xx, yy, result):
-    pass
+def fit_peaks(xx, yy, result):
+    result, vary_bckg, bckg_stderr = fix_background(result)
+
+    for l, r in get_peak_intervals(result):
+        logger.debug('fit_peaks: selected interval [%.01f, %.01f]' % (l, r))
+        xx_, yy_ = xx.copy(), yy.copy()
+        yy_ = yy_[(xx_ > l) & (xx_ < r)]
+        xx_ = xx_[(xx_ > l) & (xx_ < r)]
+        if xx_.shape[0] == 0:
+            continue
+
+        result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
+        result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
+        result = update_varied_constraints(result)
+
+        for param in vary_peaks:
+            result.params[param].vary = vary_peaks[param]
+            result.params[param].stderr = peaks_stderr[param]
+
+    for param in vary_bckg:
+        result.params[param].vary = vary_bckg[param]
+        result.params[param].stderr = bckg_stderr[param]
+
+    return result
+
+
+def fit_bckg(xx, yy, result):
+    result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
+
+    minx, maxx, miny, maxy = xx[0], xx[-1], yy[0], yy[-1]
+    for l, r in get_peak_intervals(result):
+        yy = yy[(xx < l) | (xx > r)]
+        xx = xx[(xx < l) | (xx > r)]
+
+    xx = np.concatenate(([minx], xx, [maxx]))
+    yy = np.concatenate(([miny], yy, [maxy]))
+
+    result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
+
+    for param in vary_bckg:
+        result.params[param].vary = vary_bckg[param]
+        result.params[param].stderr = bckg_stderr[param]
+
+    return result

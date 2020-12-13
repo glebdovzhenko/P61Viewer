@@ -13,61 +13,21 @@ from FitWidgets.SeqFitPopUp import SeqFitPopUp
 from FitWidgets.ConstrainPopUp import ConstrainPopUp
 from PlotWidgets import FitPlot
 from ThreadIO import Worker
-from lmfit_utils import fix_background, fix_outlier_peaks, fit_kwargs, fit, get_peak_intervals, update_varied_params
+from lmfit_utils import fit_peaks, fit_bckg
 
 
 class FitWorker(Worker):
     def __init__(self, x, y, res, fit_type):
-        def fn_peak(xx, yy, result):
-
-            result, vary_bckg, bckg_stderr = fix_background(result)
-
-            for l, r in get_peak_intervals(result, overlap_base=0.1, interval_base=3.):
-                xx_, yy_ = xx.copy(), yy.copy()
-                yy_ = yy_[(xx_ > l) & (xx_ < r)]
-                xx_ = xx_[(xx_ > l) & (xx_ < r)]
-                if xx_.shape[0] == 0:
-                    continue
-
-                result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
-                result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
-
-                for param in vary_peaks:
-                    result.params[param].vary = vary_peaks[param]
-                    result.params[param].stderr = peaks_stderr[param]
-
-            for param in vary_bckg:
-                result.params[param].vary = vary_bckg[param]
-                result.params[param].stderr = bckg_stderr[param]
-
-            return result
-
-        def fn_bckg(xx, yy, result):
-
-            result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
-
-            for l, r in get_peak_intervals(result):
-                yy = yy[(xx < l) | (xx > r)]
-                xx = xx[(xx < l) | (xx > r)]
-
-            result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
-
-            for param in vary_bckg:
-                result.params[param].vary = vary_bckg[param]
-                result.params[param].stderr = bckg_stderr[param]
-
-            return result
-
         def fn_all(xx, yy, result):
-            result = fn_bckg(xx, yy, result)
-            result = fn_peak(xx, yy, result)
-            result = fn_bckg(xx, yy, result)
+            result = fit_bckg(xx, yy, result)
+            result = fit_peaks(xx, yy, result)
+            result = fit_bckg(xx, yy, result)
             return result
 
         if fit_type == 'peaks':
-            super(FitWorker, self).__init__(fn_peak, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
+            super(FitWorker, self).__init__(fit_peaks, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
         elif fit_type == 'bckg':
-            super(FitWorker, self).__init__(fn_bckg, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
+            super(FitWorker, self).__init__(fit_bckg, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
         elif fit_type == 'all':
             super(FitWorker, self).__init__(fn_all, args=[], kwargs={'xx': x, 'yy': y, 'result': res})
         else:
@@ -130,11 +90,11 @@ class GeneralFitWidget(QWidget):
         self.q_app.fitWorkerFinished.connect(self.on_tw_finished, Qt.QueuedConnection)
 
     def on_tw_finished(self):
-        self.logger.debug('on_tw_exception: Handling FitWorker.threadWorkerFinished')
+        self.logger.debug('on_tw_finished: Handling FitWorker.threadWorkerFinished')
         self.fit_idx = None
 
     def on_tw_result(self, result):
-        self.logger.debug('on_tw_exception: Handling FitWorker.threadWorkerResult')
+        self.logger.debug('on_tw_result: Handling FitWorker.threadWorkerResult')
         self.q_app.set_general_result(self.fit_idx, result)
 
     def on_tw_exception(self):
@@ -159,9 +119,9 @@ class GeneralFitWidget(QWidget):
             return
 
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
-        x_lim = self.plot_w.get_axes_xlim()
-        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
-        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # x_lim = self.plot_w.get_axes_xlim()
+        # yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
         fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='peaks')
         self.fit_idx = idx
@@ -184,9 +144,9 @@ class GeneralFitWidget(QWidget):
             return
 
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
-        x_lim = self.plot_w.get_axes_xlim()
-        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
-        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # x_lim = self.plot_w.get_axes_xlim()
+        # yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
         fw = FitWorker(copy.deepcopy(xx), copy.deepcopy(yy), copy.deepcopy(result), fit_type='bckg')
         self.fit_idx = idx
@@ -209,9 +169,9 @@ class GeneralFitWidget(QWidget):
             return
 
         xx, yy = self.q_app.data.loc[idx, 'DataX'], self.q_app.data.loc[idx, 'DataY']
-        x_lim = self.plot_w.get_axes_xlim()
-        yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
-        xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # x_lim = self.plot_w.get_axes_xlim()
+        # yy = yy[(xx > x_lim[0]) & (xx < x_lim[1])]
+        # xx = xx[(xx > x_lim[0]) & (xx < x_lim[1])]
 
         fw = FitWorker(xx, yy, copy.deepcopy(result), fit_type='all')
         self.fit_idx = idx

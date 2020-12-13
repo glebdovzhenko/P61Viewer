@@ -67,7 +67,20 @@ class FitPlot(pg.GraphicsLayoutWidget):
                         self.q_app.params['LmFitModelColors'][cmp] = next(self.q_app.params['ColorWheel2'])
                     self._line_ax.plot(1E3 * xx, cmps[cmp], pen=pg.mkPen(
                         color=str(hex(self.q_app.params['LmFitModelColors'][cmp])).replace('0x', '#')),
-                                       name=cmp)  # label=cmp
+                                       name=cmp)
+
+                    # if cmp + 'center' in data['GeneralFitResult'].params:
+                    #     xc = data['GeneralFitResult'].params[cmp + 'center'].value
+                    #     xb = data['GeneralFitResult'].params[cmp + 'sigma'].value * data['GeneralFitResult'].params[cmp + 'base'].value
+                    #
+                    #     self._line_ax.plot([1E3 * (xc - xb), 1E3 * (xc + xb)],
+                    #                        [1.1 * max(cmps[cmp]), 1.1 * max(cmps[cmp])], pen=pg.mkPen(
+                    #         color=str(hex(self.q_app.params['LmFitModelColors'][cmp])).replace('0x', '#')),
+                    #                        name=cmp)
+
+                    self._line_ax.plot(1E3 * xx, cmps[cmp], pen=pg.mkPen(
+                        color=str(hex(self.q_app.params['LmFitModelColors'][cmp])).replace('0x', '#')),
+                                       name=cmp)
 
                 self._line_ax.plot(1E3 * xx, data['GeneralFitResult'].eval(data['GeneralFitResult'].params, x=xx),
                                    pen=pg.mkPen(color='#d62728'), name='Fit')
