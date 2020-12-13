@@ -106,7 +106,7 @@ class P61App(QApplication):
         self.thread_pool = QThreadPool(parent=self)
 
         self.config = {
-            'use_threads': False
+            'use_threads': True
         }
 
         # data storage for one-per application items
@@ -123,15 +123,13 @@ class P61App(QApplication):
                               index=np.arange(position, position + rows).astype(np.int))
         self.data = pd.concat((d1, insert, d2.set_index(d2.index + rows)))
 
-        self.logger.debug('insert_rows: Inserted %d rows to position %d' %
-                          (rows, position))
+        self.logger.debug('insert_rows: Inserted %d rows to position %d' % (rows, position))
 
     def remove_rows(self, position, rows):
         self.data.drop(index=np.arange(position, position + rows).astype(np.int), inplace=True)
         self.data.set_index(np.arange(self.data.shape[0]), inplace=True)
 
-        self.logger.debug('remove_rows: Removed %d rows from position %d' %
-                          (rows, position))
+        self.logger.debug('remove_rows: Removed %d rows from position %d' % (rows, position))
 
     @staticmethod
     def _color_wheel(key):
