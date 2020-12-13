@@ -112,7 +112,7 @@ if __name__ == '__main__':
     reader = P61ANexusReader()
     wd = r'C:\Users\dovzheng\Experiments\2020-12-11_Diffraction5'
     data = pd.DataFrame(columns=reader.columns)
-    for f_name in os.listdir(wd)[:10]:
+    for f_name in os.listdir(wd)[150:170]:
         data = pd.concat((data, reader.read(os.path.join(wd, f_name))), ignore_index=True)
 
     for ii in data.index:

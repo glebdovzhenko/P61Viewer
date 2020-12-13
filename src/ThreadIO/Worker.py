@@ -29,7 +29,7 @@ class Worker(QRunnable):
             self.logger.debug('run: Emitting threadWorkerException(%s)' % (str(e),))
             self.threadWorkerException.emit(e)
         else:
-            self.logger.debug('run: Emitting threadWorkerResult(%s)' % (str(self.result),))
+            self.logger.debug('run: Emitting threadWorkerResult')
             self.threadWorkerResult.emit(self.result)
         finally:
             self.logger.debug('run: Emitting threadWorkerFinished')

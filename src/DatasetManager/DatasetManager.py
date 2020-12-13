@@ -63,6 +63,8 @@ class DatasetManager(QWidget):
         self.bplus = QPushButton('+')
         self.bminus = QPushButton('-')
         self.checkbox = QCheckBox('')
+        self.ch0_checkbox = QCheckBox('Ch0')
+        self.ch1_checkbox = QCheckBox('Ch1')
         self.bexport = QPushButton('Export')
         self.checkbox.setTristate(False)
         self.bplus.setFixedSize(QSize(51, 32))
@@ -71,14 +73,18 @@ class DatasetManager(QWidget):
         self.bminus.clicked.connect(self.bminus_onclick)
         self.bexport.clicked.connect(self.bexport_onclick)
         self.checkbox.clicked.connect(self.checkbox_onclick)
+        self.ch0_checkbox.clicked.connect(self.ch0_cb_onclick)
+        self.ch1_checkbox.clicked.connect(self.ch1_cb_onclick)
 
         # layouts
         layout = QGridLayout()
         self.setLayout(layout)
         layout.addWidget(self.checkbox, 1, 1, 1, 1)
-        layout.addWidget(self.bplus, 1, 3, 1, 1)
-        layout.addWidget(self.bminus, 1, 4, 1, 1)
-        layout.addWidget(self.view, 2, 1, 1, 4)
+        layout.addWidget(self.ch0_checkbox, 1, 2, 1, 1)
+        layout.addWidget(self.ch1_checkbox, 1, 3, 1, 1)
+        layout.addWidget(self.bplus, 1, 5, 1, 1)
+        layout.addWidget(self.bminus, 1, 6, 1, 1)
+        layout.addWidget(self.view, 2, 1, 1, 6)
         layout.addWidget(self.bexport, 3, 3, 1, 2)
 
         # signals and handlers
@@ -88,9 +94,23 @@ class DatasetManager(QWidget):
         self.q_app.foWorkerResult.connect(self.on_tw_result)
         self.q_app.foWorkerFinished.connect(self.on_tw_finished)
 
+    def ch_cb_update(self):
+        status = (self.q_app.data.loc[self.q_app.data['Channel'] == 0, 'Active'],
+                  self.q_app.data.loc[self.q_app.data['Channel'] == 1, 'Active'])
+        cb = (self.ch0_checkbox, self.ch1_checkbox)
+
+        for status, cb in zip(status, cb):
+            if all(status):
+                cb.setCheckState(Qt.Checked)
+            elif not any(status):
+                cb.setCheckState(Qt.Unchecked)
+            else:
+                cb.setCheckState(Qt.PartiallyChecked)
+
     def on_data_ac(self, rows):
         self.logger.debug('on_data_ac: Handling dataActiveChanged(%s)' % (str(rows), ))
         self.checkbox_update()
+        self.ch_cb_update()
 
     def bplus_onclick(self):
         if self.progress is not None:
@@ -143,6 +163,8 @@ class DatasetManager(QWidget):
         self.logger.debug('on_tw_result: Emitting dataRowsInserted(%d, %d)' % (0, opened.shape[0]))
         self.q_app.dataRowsInserted.emit(0, opened.shape[0])
 
+        self.ch_cb_update()
+
         if failed:
             msg = QErrorMessage()
             msg.showMessage('Could not open files:\n' + '\n'.join(failed))
@@ -179,6 +201,8 @@ class DatasetManager(QWidget):
         self.logger.debug('bminus_onclick: Emitting dataRowsRemoved(%s)' % (str(rows), ))
         self.q_app.dataRowsRemoved.emit(rows)
 
+        self.ch_cb_update()
+
     def bexport_onclick(self):
         if self.progress is not None:
             return
@@ -212,6 +236,9 @@ class DatasetManager(QWidget):
     def checkbox_onclick(self):
         self.checkbox.setTristate(False)
         rows = sorted(set([idx.row() for idx in self.view.selectedIndexes()]))
+        if len(rows) == 0:
+            return
+
         for row in rows:
             self.q_app.set_active_status(row, bool(self.checkbox.checkState()), emit=False)
 
@@ -221,6 +248,30 @@ class DatasetManager(QWidget):
         )
 
         self.logger.debug('checkbox_onclick: Emitting dataActiveChanged(%s)' % (str(rows),))
+        self.q_app.dataActiveChanged.emit(rows)
+
+    def ch0_cb_onclick(self, *args, **kwargs):
+        self.ch_cb_onclick(self.ch0_checkbox, 0)
+
+    def ch1_cb_onclick(self, *args, **kwargs):
+        self.ch_cb_onclick(self.ch1_checkbox, 1)
+
+    def ch_cb_onclick(self, cb, ch):
+        cb.setTristate(False)
+
+        rows = self.q_app.data.loc[self.q_app.data['Channel'] == ch].index.tolist()
+        if len(rows) == 0:
+            return
+
+        for row in rows:
+            self.q_app.set_active_status(row, bool(cb.checkState()), emit=False)
+
+        self.q_app.data_model.dataChanged.emit(
+            self.q_app.data_model.index(min(rows), 0),
+            self.q_app.data_model.index(max(rows), 0),
+        )
+
+        self.logger.debug('ch_cb_onclick: Emitting dataActiveChanged(%s)' % (str(rows),))
         self.q_app.dataActiveChanged.emit(rows)
 
     def checkbox_update(self):
