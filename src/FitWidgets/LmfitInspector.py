@@ -113,8 +113,7 @@ class LmfitInspectorModel(QAbstractItemModel):
                 data = (data.name, '%.03E' % data.value, '± %.03E' % data.stderr
                         if data.stderr is not None else 'None', '%.03E' % data.min, '%.03E' % data.max)
             elif isinstance(data, lmfit.Model):
-                if ('GaussianModel' in data.name) or ('LorentzianModel' in data.name) or \
-                        ('PseudoVoigtModel' in data.name):
+                if lmfit_utils.is_peak_md(data):
                     center = '%.1f: ' % self._fit_res.params[data.prefix + 'center'].value
                 else:
                     center = ''
@@ -122,12 +121,15 @@ class LmfitInspectorModel(QAbstractItemModel):
             return data[index.column()]
         elif role == Qt.CheckStateRole:
             if index.column() == 0 and isinstance(data, lmfit.Parameter):
-                if data.expr is None:
+                if lmfit_utils.is_param_refinable(data):
                     return Qt.Checked if data.vary else Qt.Unchecked
         elif role == Qt.EditRole:
             if isinstance(data, lmfit.Parameter):
-                data = (data.name, '%.03E' % data.value, '± %.03E' % data.stderr
-                        if data.stderr is not None else 'None', '%.03E' % data.min, '%.03E' % data.max)
+                data = (data.name,
+                        '%.03E' % data.value,
+                        '± %.03E' % data.stderr if data.stderr is not None else 'None',
+                        '%.03E' % data.min,
+                        '%.03E' % data.max)
                 return data[index.column()]
 
         return QVariant()
@@ -139,7 +141,10 @@ class LmfitInspectorModel(QAbstractItemModel):
         if index.column() == 0:
             return QAbstractItemModel.flags(self, index) | Qt.ItemIsUserCheckable
         elif index.column() in (1, 3, 4) and isinstance(index.internalPointer().itemData, lmfit.Parameter):
-            return QAbstractItemModel.flags(self, index) | Qt.ItemIsEditable
+            if lmfit_utils.is_param_editable(index.internalPointer().itemData):
+                return QAbstractItemModel.flags(self, index) | Qt.ItemIsEditable
+            else:
+                return QAbstractItemModel.flags(self, index)
         else:
             return QAbstractItemModel.flags(self, index)
 

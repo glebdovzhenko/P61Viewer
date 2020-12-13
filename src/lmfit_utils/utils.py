@@ -48,15 +48,60 @@ class InterpolationModel(model.Model):
         return pars
 
 
+def upd_peak_mds(md):
+    def make_params(self, verbose=False, **kwargs):
+        pars = super(md, self).make_params(verbose, **kwargs)
+        pars[self.prefix + 'amplitude'].min = 0.
+
+        pars.add(name=self.prefix + 'base',
+                 value=3.,
+                 min=0., max=7.,
+                 vary=False)
+        pars.add(name=self.prefix + 'overlap_base',
+                 value=3.,
+                 min=0., max=7.,
+                 vary=False)
+        return pars
+
+    md.make_params = make_params
+
+
 models.PolynomialModel = PolynomialModel
 models.InterpolationModel = InterpolationModel
+
+upd_peak_mds(models.GaussianModel)
+upd_peak_mds(models.LorentzianModel)
+upd_peak_mds(models.PseudoVoigtModel)
+upd_peak_mds(models.Pearson7Model)
+upd_peak_mds(models.SkewedGaussianModel)
+upd_peak_mds(models.SkewedVoigtModel)
+upd_peak_mds(models.SplitLorentzianModel)
+
 fit_kwargs = {'method': 'least_squares'}
 peak_md_names = ('GaussianModel', 'LorentzianModel', 'PseudoVoigtModel', 'Pearson7Model',
                  'SkewedGaussianModel', 'SkewedVoigtModel', 'SplitLorentzianModel')
 background_md_names = ('PolynomialModel', 'InterpolationModel')
-prefixes = {'GaussianModel': 'g', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
-                'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
-                'SplitLorentzianModel': 'spl', 'InterpolationModel': 'int'}
+prefixes = {'GaussianModel': 'gau', 'LorentzianModel': 'lor', 'Pearson7Model': 'pvii', 'PolynomialModel': 'pol',
+            'PseudoVoigtModel': 'pv', 'SkewedGaussianModel': 'sg', 'SkewedVoigtModel': 'sv',
+            'SplitLorentzianModel': 'spl', 'InterpolationModel': 'int'}
+
+
+def is_param_editable(p: model.Parameter):
+    if p.expr is not None:
+        return False
+    elif ('fwhm' in p.name) or ('height' in p.name):
+        return False
+    else:
+        return True
+
+
+def is_param_refinable(p: model.Parameter):
+    if p.expr is not None:
+        return False
+    elif ('fwhm' in p.name) or ('height' in p.name) or ('base' in p.name):
+        return False
+    else:
+        return True
 
 
 def is_peak_md(md: Union[str, model.Model]) -> bool:
@@ -360,7 +405,6 @@ def get_peak_intervals(mr: model.ModelResult, overlap_base=None, interval_base=N
 
         result.extend(tmp)
 
-    print(result)
     return result
 
 
@@ -397,3 +441,11 @@ def update_varied_params(mr1: model.ModelResult, mr2: model.ModelResult) -> mode
         if mr2.params[par].vary and (par in mr1.params):
             mr1.params[par] = copy.copy(mr2.params[par])
     return mr1
+
+
+def refine_peaks(xx, yy, result):
+    pass
+
+
+def refine_bckg(xx, yy, result):
+    pass
