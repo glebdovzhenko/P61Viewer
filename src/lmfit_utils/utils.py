@@ -489,21 +489,22 @@ def update_varied_constraints(mr: model.ModelResult, d_center=0.25, d_sigma=0.1)
 def fit_peaks(xx, yy, result):
     result, vary_bckg, bckg_stderr = fix_background(result)
 
-    for l, r in get_peak_intervals(result):
-        logger.info('fit_peaks: refining interval [%.01f, %.01f]' % (l, r))
-        xx_, yy_ = xx.copy(), yy.copy()
-        yy_ = yy_[(xx_ > l) & (xx_ < r)]
-        xx_ = xx_[(xx_ > l) & (xx_ < r)]
-        if xx_.shape[0] == 0:
-            continue
+    if any((result.params[p].vary for p in result.params)):
+        for l, r in get_peak_intervals(result):
+            logger.info('fit_peaks: refining interval [%.01f, %.01f]' % (l, r))
+            xx_, yy_ = xx.copy(), yy.copy()
+            yy_ = yy_[(xx_ > l) & (xx_ < r)]
+            xx_ = xx_[(xx_ > l) & (xx_ < r)]
+            if xx_.shape[0] == 0:
+                continue
 
-        result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
-        result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
-        result = update_varied_constraints(result)
+            result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
+            result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
+            result = update_varied_constraints(result)
 
-        for param in vary_peaks:
-            result.params[param].vary = vary_peaks[param]
-            result.params[param].stderr = peaks_stderr[param]
+            for param in vary_peaks:
+                result.params[param].vary = vary_peaks[param]
+                result.params[param].stderr = peaks_stderr[param]
 
     for param in vary_bckg:
         result.params[param].vary = vary_bckg[param]
@@ -515,15 +516,16 @@ def fit_peaks(xx, yy, result):
 def fit_bckg(xx, yy, result):
     result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
 
-    minx, maxx, miny, maxy = xx[0], xx[-1], yy[0], yy[-1]
-    for l, r in get_peak_intervals(result):
-        yy = yy[(xx < l) | (xx > r)]
-        xx = xx[(xx < l) | (xx > r)]
+    if any((result.params[p].vary for p in result.params)):
+        minx, maxx, miny, maxy = xx[0], xx[-1], yy[0], yy[-1]
+        for l, r in get_peak_intervals(result):
+            yy = yy[(xx < l) | (xx > r)]
+            xx = xx[(xx < l) | (xx > r)]
 
-    xx = np.concatenate(([minx], xx, [maxx]))
-    yy = np.concatenate(([miny], yy, [maxy]))
+        xx = np.concatenate(([minx], xx, [maxx]))
+        yy = np.concatenate(([miny], yy, [maxy]))
 
-    result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
+        result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
 
     for param in vary_bckg:
         result.params[param].vary = vary_bckg[param]

@@ -154,7 +154,7 @@ class P61App(QApplication):
     def get_selected_idx(self):
         if self.params['SelectedActiveIdx'] == -1:
             return -1
-        return self.data[self.data['Active']].index[self.params['SelectedActiveIdx']]
+        return self.data.index[self.params['SelectedActiveIdx']]
 
     def get_selected_active_idx(self):
         return self.params['SelectedActiveIdx']

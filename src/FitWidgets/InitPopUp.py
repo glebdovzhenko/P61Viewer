@@ -1,10 +1,8 @@
-from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton, QLabel
-import copy
-import numpy as np
+from PyQt5.QtWidgets import QDialog, QGridLayout, QPushButton
 import logging
 
 from P61App import P61App
-from DatasetManager import DatasetSelector, DatasetViewer
+from DatasetManager import DatasetSelector
 
 
 class InitPopUp(QDialog):

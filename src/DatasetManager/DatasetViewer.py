@@ -15,7 +15,7 @@ class ViewerProxyModel(QSortFilterProxyModel):
         self.q_app.dataSorted.connect(self.on_data_sorted)
 
     def on_data_sorted(self):
-        self.logger.debug('on_data_sorted: Handling dataSorted)')
+        self.logger.debug('on_data_sorted: Handling dataSorted')
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent: QModelIndex):
@@ -67,4 +67,4 @@ class DatasetViewer(QTableView):
         si = self.selectedIndexes()
         if si:
             idx, _ = si
-            self.q_app.set_selected_active_idx(self.model().index(idx.row(), 0).row())
+            self.q_app.set_selected_active_idx(self.model().mapToSource(self.model().index(idx.row(), 0)).row())

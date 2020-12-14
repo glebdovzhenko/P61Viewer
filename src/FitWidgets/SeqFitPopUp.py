@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QDialog, QAbstractItemView, QGridLayout, QPushButton
 from PyQt5.Qt import Qt
 import copy
 import logging
-import time
 
 from P61App import P61App
 from DatasetManager import DatasetSelector
@@ -66,7 +65,11 @@ class SeqFitPopUp(QDialog):
             self.q_app.data.loc[fit_ids, 'GeneralFitResult'] = [self.q_app.get_general_result(
                 self.q_app.get_selected_idx())] * len(fit_ids)
 
-        fit_ids = [self.q_app.get_selected_idx()] + fit_ids
+        if self.q_app.get_selected_idx() in fit_ids:
+            fit_ids.remove(self.q_app.get_selected_idx())
+        fit_ids = [self.q_app.get_selected_idx(), self.q_app.get_selected_idx()] + fit_ids
+
+        self.logger.debug('on_btn_ok: Launching sequential refinement type %d on ids %s' % (fit_type, str(fit_ids[1:])))
 
         self.progress = QProgressDialog("Sequential refinement", "Cancel", 0, len(fit_ids))
         self.progress.setWindowModality(Qt.ApplicationModal)
