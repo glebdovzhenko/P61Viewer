@@ -10,8 +10,9 @@ logger = logging.getLogger('lmfit_utils')
 
 
 class InterpolationModel(model.Model):
+    # TODO: make fit not crash if the xmin-xmax range is extended
     def __init__(self, **kwargs):
-        def LinearInterpolation(x, interp_fn=0.):
+        def LinearInterpolation(x, interp_fn=0., xmin=0., xmax=200.):
             return np.zeros(shape=x.shape)
 
         model.Model.__init__(self, LinearInterpolation, **kwargs)
@@ -85,7 +86,8 @@ def is_param_refinable(p: model.Parameter) -> bool:
     """
     if p.expr is not None:
         return False
-    elif ('fwhm' in p.name) or ('height' in p.name) or ('base' in p.name):
+    elif ('fwhm' in p.name) or ('height' in p.name) or ('base' in p.name) or \
+            ('xmin' in p.name) or ('xmax' in p.name):
         return False
     else:
         return True
@@ -383,11 +385,13 @@ def get_peak_intervals(mr: model.ModelResult) -> Iterable:
 
 
 def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResult:
-    interp, base, refine = None, None, False
+    interp, refine, xmin, xmax = None, False, None, None
     for cmp in mr.model.components:
         if cmp._name == 'InterpolationModel':
             interp = cmp
             refine = mr.params[cmp.prefix + 'interp_fn'].vary
+            xmin = mr.params[cmp.prefix + 'xmin'].value
+            xmax = mr.params[cmp.prefix + 'xmax'].value
 
     if refine:
         i_xx, i_yy = kwargs['x'], kwargs['data']
@@ -399,8 +403,31 @@ def refine_interpolation_md(mr: model.ModelResult, **kwargs) -> model.ModelResul
                            mr.params[cmp.prefix + 'base'].value * mr.params[cmp.prefix + 'sigma'].value
                 i_yy = i_yy[(i_xx <= base_min) | (i_xx >= base_max)]
                 i_xx = i_xx[(i_xx <= base_min) | (i_xx >= base_max)]
+
+                if base_min <= xmin <= base_max:
+                    xmin = i_xx[i_xx <= base_min]
+                    if xmin.shape[0] == 0:
+                        xmin = base_min
+                    else:
+                        xmin = np.max(xmin)
+
+                if base_min <= xmax <= base_max:
+                    xmax = i_xx[i_xx >= base_max]
+                    if xmax.shape[0] == 0:
+                        xmax = base_max
+                    else:
+                        xmax = np.min(xmax)
+
+        i_yy = i_yy[(i_xx >= xmin) & (i_xx <= xmax)]
+        i_xx = i_xx[(i_xx >= xmin) & (i_xx <= xmax)]
         func = scipy.interpolate.interp1d(i_xx, i_yy, kind='linear')
-        interp.func = lambda x, interp_fn: func(x)
+
+        def new_fn(x, interp_fn, xmin, xmax):
+            res = np.zeros(x.shape)
+            res[(x > xmin) & (x < xmax)] = func(x[(x > xmin) & (x < xmax)])
+            return res
+
+        interp.func = new_fn
 
     return mr
 
@@ -435,7 +462,7 @@ def fit_peaks(xx, yy, result):
     result, vary_bckg, bckg_stderr = fix_background(result)
 
     for l, r in get_peak_intervals(result):
-        logger.debug('fit_peaks: selected interval [%.01f, %.01f]' % (l, r))
+        logger.info('fit_peaks: refining interval [%.01f, %.01f]' % (l, r))
         xx_, yy_ = xx.copy(), yy.copy()
         yy_ = yy_[(xx_ > l) & (xx_ < r)]
         xx_ = xx_[(xx_ > l) & (xx_ < r)]
