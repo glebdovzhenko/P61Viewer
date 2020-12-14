@@ -19,6 +19,33 @@ class InterpolationModel(model.Model):
         self.refine = True
 
 
+class PolynomialModel(model.Model):
+    def __init__(self, degree, independent_vars=['x'], prefix='',
+                 nan_policy='raise', **kwargs):
+        kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
+                       'independent_vars': independent_vars})
+
+        self.poly_degree = degree
+        pnames = ['c%i' % i for i in range(degree + 1)]
+        kwargs['param_names'] = pnames + ['xmin', 'xmax']
+
+        def polynomial(x, xmin=0, xmax=200, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0):
+            y = np.zeros(x.shape)
+            y[(x > xmin) & (x < xmax)] = np.polyval([c7, c6, c5, c4, c3, c2, c1, c0], x[(x > xmin) & (x < xmax)])
+            return np.abs(y)
+
+        super().__init__(polynomial, **kwargs)
+
+    def make_params(self, verbose=False, **kwargs):
+        params = super().make_params()
+        for par in params:
+            params[par].value = 0.
+        params[self.prefix + 'xmin'].vary = False
+        params[self.prefix + 'xmax'].vary = False
+        params[self.prefix + 'xmax'].value = 200.
+        return params
+
+
 def upd_peak_mds(md):
     def make_params(self, verbose=False, **kwargs):
         pars = super(md, self).make_params(verbose, **kwargs)
@@ -45,6 +72,7 @@ upd_peak_mds(models.SkewedGaussianModel)
 upd_peak_mds(models.SkewedVoigtModel)
 upd_peak_mds(models.SplitLorentzianModel)
 models.InterpolationModel = InterpolationModel
+models.PolynomialModel = PolynomialModel
 
 
 fit_kwargs = {'method': 'least_squares'}
