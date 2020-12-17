@@ -491,7 +491,6 @@ def fit_peaks(xx, yy, result):
 
     if any((result.params[p].vary for p in result.params)):
         for l, r in get_peak_intervals(result):
-            logger.info('fit_peaks: refining interval [%.01f, %.01f]' % (l, r))
             xx_, yy_ = xx.copy(), yy.copy()
             yy_ = yy_[(xx_ > l) & (xx_ < r)]
             xx_ = xx_[(xx_ > l) & (xx_ < r)]
@@ -499,8 +498,10 @@ def fit_peaks(xx, yy, result):
                 continue
 
             result, vary_peaks, peaks_stderr = fix_outlier_peaks(result, (np.min(xx_), np.max(xx_)))
+            logger.info('fit_peaks: refining %d params on [%.01f, %.01f]' %
+                        (sum((int(result.params[p].vary) for p in result.params)), l, r))
             result = update_varied_params(result, fit(result, data=yy_, x=xx_, **fit_kwargs))
-            result = update_varied_constraints(result)
+            # result = update_varied_constraints(result)
 
             for param in vary_peaks:
                 result.params[param].vary = vary_peaks[param]
@@ -513,18 +514,20 @@ def fit_peaks(xx, yy, result):
     return result
 
 
-def fit_bckg(xx, yy, result):
+def fit_bckg(xx, yy, result, use_all_pts=True):
     result, vary_bckg, bckg_stderr = fix_background(result, reverse=True)
 
     if any((result.params[p].vary for p in result.params)):
-        minx, maxx, miny, maxy = xx[0], xx[-1], yy[0], yy[-1]
-        for l, r in get_peak_intervals(result):
-            yy = yy[(xx < l) | (xx > r)]
-            xx = xx[(xx < l) | (xx > r)]
+        if not use_all_pts:
+            minx, maxx, miny, maxy = xx[0], xx[-1], yy[0], yy[-1]
+            for l, r in get_peak_intervals(result):
+                yy = yy[(xx < l) | (xx > r)]
+                xx = xx[(xx < l) | (xx > r)]
 
-        xx = np.concatenate(([minx], xx, [maxx]))
-        yy = np.concatenate(([miny], yy, [maxy]))
+            xx = np.concatenate(([minx], xx, [maxx]))
+            yy = np.concatenate(([miny], yy, [maxy]))
 
+        logger.info('fit_bckg: refining %d params' % sum((int(result.params[p].vary) for p in result.params)))
         result = update_varied_params(result, fit(result, data=yy, x=xx, **fit_kwargs))
 
     for param in vary_bckg:
