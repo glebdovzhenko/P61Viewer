@@ -32,7 +32,8 @@ class PolynomialModel(model.Model):
         def polynomial(x, xmin=0, xmax=200, c0=0, c1=0, c2=0, c3=0, c4=0, c5=0, c6=0, c7=0):
             y = np.zeros(x.shape)
             y[(x > xmin) & (x < xmax)] = np.polyval([c7, c6, c5, c4, c3, c2, c1, c0], x[(x > xmin) & (x < xmax)])
-            return np.abs(y)
+            y[y < 0] = 0
+            return y
 
         super().__init__(polynomial, **kwargs)
 
@@ -56,7 +57,7 @@ def upd_peak_mds(md):
                  min=0., max=7.,
                  vary=False)
         pars.add(name=self.prefix + 'overlap_base',
-                 value=3.,
+                 value=1E-2,
                  min=0., max=7.,
                  vary=False)
         return pars

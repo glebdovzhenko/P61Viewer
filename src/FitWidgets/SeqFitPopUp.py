@@ -25,7 +25,7 @@ class SeqFitPopUp(QDialog):
         self.cb_bckg.setChecked(True)
         self.cb_peaks = QCheckBox('Fit peaks')
         self.cb_peaks.setChecked(True)
-        self.cb_all = QCheckBox('Fit everything')
+        # self.cb_all = QCheckBox('Fit everything')
         self.btn_ok = QPushButton('Fit', parent=self)
         self.selection_list = DatasetSelector(parent=self)
 
@@ -35,9 +35,9 @@ class SeqFitPopUp(QDialog):
         self.setLayout(layout)
         layout.addWidget(self.combo, 1, 1, 1, 1)
         layout.addWidget(self.current_name, 2, 1, 1, 1)
-        layout.addWidget(self.cb_bckg, 3, 1, 1, 1)
         layout.addWidget(self.cb_peaks, 4, 1, 1, 1)
-        layout.addWidget(self.cb_all, 5, 1, 1, 1)
+        layout.addWidget(self.cb_bckg, 5, 1, 1, 1)
+        # layout.addWidget(self.cb_all, 5, 1, 1, 1)
         layout.addWidget(self.btn_ok, 6, 1, 1, 1)
         layout.addWidget(self.selection_list, 1, 2, 6, 1)
 
@@ -99,10 +99,10 @@ class SeqFitPopUp(QDialog):
             self.q_app.data.loc[idx, 'GeneralFitResult'] = \
                 copy.deepcopy(self.q_app.data.loc[prev_idx, 'GeneralFitResult'])
 
-        if self.cb_bckg.isChecked() and not self.cb_peaks.isChecked():
-            self.parent().on_bckg_fit_btn(idx=idx)
-        elif self.cb_peaks.isChecked() and not self.cb_bckg.isChecked():
+        if self.cb_peaks.isChecked() and not self.cb_bckg.isChecked():
             self.parent().on_peak_fit_btn(idx=idx)
+        elif self.cb_bckg.isChecked() and not self.cb_peaks.isChecked():
+            self.parent().on_bckg_fit_btn(idx=idx)
         elif self.cb_peaks.isChecked() and self.cb_bckg.isChecked():
             self.parent().on_fit_btn(idx=idx)
 
