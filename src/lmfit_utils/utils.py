@@ -360,7 +360,7 @@ def deserialize_model_result(struct: list) -> model.ModelResult:
     result = None
     for smd in struct:
         if smd['name'] == 'PolynomialModel':
-            init_params = {'degree': len(smd['params']) - 1}
+            init_params = {'degree': len([p for p in smd['params'] if smd['prefix'] + 'c' in p['name']]) - 1}
         else:
             init_params = dict()
         result = add_md(smd['name'], init_params, result, prefix=smd['prefix'])
